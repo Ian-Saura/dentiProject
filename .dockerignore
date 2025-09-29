@@ -1,0 +1,81 @@
+# DentiProject Docker Ignore
+
+# Development files
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+venv_production/
+mi_entorno/
+.env
+.venv
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!DOCKER_DEPLOYMENT.md
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Old backend files
+old_backends/
+backend_simple_test.py
+backend_complete.py
+backend_standalone.py
+backend_with_real_data.py
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Database files (handled by Docker volumes)
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads (handled by Docker volumes)
+uploads/
+
+# SSL certificates (should be mounted)
+ssl/
+*.pem
+*.key
+*.crt

@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: denti_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: denti_root_pass
+      MYSQL_DATABASE: consultorio_db
+      MYSQL_USER: denti_user
+      MYSQL_PASSWORD: denti_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./tablas_app.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - denti_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # FastAPI Backend (BFF - Backend for Frontend)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: denti_backend
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=mysql+pymysql://denti_user:denti_pass@mysql:3306/consultorio_db
+      - JWT_SECRET_KEY=super-secret-production-jwt-key-change-this-in-real-deployment
+      - CORS_ORIGINS=http://localhost:3000,http://localhost
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - denti_network
+    volumes:
+      - ./uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: denti_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - denti_network
+
+  # Nginx Reverse Proxy (Production Ready)
+  nginx:
+    image: nginx:alpine
+    container_name: denti_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - denti_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  denti_network:
+    driver: bridge
