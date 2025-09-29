@@ -1,0 +1,50 @@
+{
+  "app_py": {
+    "class UserManager": true,
+    "class DataManager": true,
+    "def calcular_costo_hora_real": true,
+    "def get_resumen": true,
+    "def show_calculadora_inteligente": true,
+    "def ejecutar_migracion_flexible": true,
+    "def aplicar_filtros_busqueda": true,
+    "def aplicar_filtros_visualizacion": true
+  },
+  "backend": {
+    "running": false
+  },
+  "frontend": {
+    "running": false
+  },
+  "comparison": {
+    "Authentication": {
+      "app_py": false,
+      "backend": false,
+      "frontend": false
+    },
+    "Dashboard Analytics": {
+      "app_py": false,
+      "backend": false,
+      "frontend": false
+    },
+    "Cost Analysis": {
+      "app_py": false,
+      "backend": false,
+      "frontend": false
+    },
+    "Price Calculator": {
+      "app_py": false,
+      "backend": false,
+      "frontend": false
+    },
+    "Data Import": {
+      "app_py": false,
+      "backend": false,
+      "frontend": false
+    },
+    "Search/Filter": {
+      "app_py": false,
+      "backend": false,
+      "frontend": false
+    }
+  }
+}
