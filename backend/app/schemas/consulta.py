@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import enum
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field, validator
@@ -73,7 +73,7 @@ class ConsultaOut(BaseModel):
     observaciones: Optional[str]
     notas_privadas: Optional[str]
     descuento_aplicado: float
-    fecha_creacion: date
+    fecha_creacion: datetime  # Changed from date to datetime to match model
 
     class Config:
         from_attributes = True

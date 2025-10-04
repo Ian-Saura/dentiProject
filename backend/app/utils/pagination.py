@@ -17,3 +17,9 @@ def create_paginated_response(data: List[Any], total: int) -> Dict[str, Any]:
         "total": total,
         "headers": {"X-Total-Count": str(total)}
     }
+
+
+def add_total_count_header(response: Response, total: int) -> Response:
+    """Add X-Total-Count header to response"""
+    response.headers["X-Total-Count"] = str(total)
+    return response

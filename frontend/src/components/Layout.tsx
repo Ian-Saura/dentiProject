@@ -52,8 +52,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white shadow-xl">
           <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200">
             <div className="flex items-center space-x-2">
-              <Activity className="h-8 w-8 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900">Manny App</span>
+              <img src="/logo-manny.png" alt="Manny" className="h-10 w-10 object-contain" />
+              <span className="text-xl font-bold text-gray-900">Manny</span>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="text-gray-400 hover:text-gray-600">
               <X className="h-6 w-6" />
@@ -87,8 +87,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
           <div className="flex h-16 items-center px-4 border-b border-gray-200">
             <div className="flex items-center space-x-2">
-              <Activity className="h-8 w-8 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900">Manny App</span>
+              <img src="/logo-manny.png" alt="Manny" className="h-10 w-10 object-contain" />
+              <span className="text-xl font-bold text-gray-900">Manny</span>
             </div>
           </div>
           

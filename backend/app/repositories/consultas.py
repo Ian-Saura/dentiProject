@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from sqlalchemy import or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models import Consulta, PrestacionUsuario
 from app.schemas import ConsultaCreate, ConsultaUpdate
@@ -18,7 +18,11 @@ def list_consultas(
     order_by: Optional[str] = None,
     filtros: Optional[Dict[str, any]] = None,
 ) -> List[Consulta]:
-    query = select(Consulta).where(Consulta.usuario_id == usuario_id)
+    query = (
+        select(Consulta)
+        .where(Consulta.usuario_id == usuario_id)
+        .options(joinedload(Consulta.paciente), joinedload(Consulta.prestacion_usuario))
+    )
 
     if filtros:
         if "from" in filtros and filtros["from"]:

@@ -13,6 +13,11 @@ engine = create_engine(settings.sync_database_url, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+def get_sync_engine():
+    """Get synchronous SQLAlchemy engine"""
+    return engine
+
+
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:

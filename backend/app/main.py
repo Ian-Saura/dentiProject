@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.routes import router as health_router
 from app.api.v1.routes_auth import router as auth_router
@@ -34,6 +35,15 @@ app = FastAPI(
 # Middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(RequestIdMiddleware)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Routers
 app.include_router(health_router, prefix=settings.api_prefix)

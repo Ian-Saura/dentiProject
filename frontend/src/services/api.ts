@@ -2,8 +2,10 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
 
 // Create axios instance
+// In Docker: Use /v1 directly (Nginx proxy handles it)
+// In dev: Use /api (Vite proxy handles it)
 const api: AxiosInstance = axios.create({
-  baseURL: '/api', // Proxied to http://localhost:8000/v1
+  baseURL: import.meta.env.PROD ? '/v1' : '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

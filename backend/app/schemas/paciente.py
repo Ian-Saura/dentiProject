@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, validator
@@ -60,7 +60,7 @@ class PacienteOut(BaseModel):
     alergias: Optional[str]
     medicamentos_actuales: Optional[str]
     observaciones_medicas: Optional[str]
-    fecha_registro: date
+    fecha_registro: datetime  # Changed from date to datetime to match model
     activo: bool
 
     class Config:
