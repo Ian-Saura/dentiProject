@@ -2,6 +2,14 @@
 dental_data.json
 my_cost_config.json
 
+# Security - DO NOT COMMIT
+SECURITY.md
+.env
+*.env
+!*.env.example
+backend/.env
+backend/env.docker
+
 # Python
 __pycache__/
 *.py[cod]
@@ -10,6 +18,8 @@ __pycache__/
 .Python
 env/
 venv/
+mi_entorno/
+venv_production/
 
 # OS
 .DS_Store
@@ -19,4 +29,31 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Dependencies
 frontend/node_modules/*
+node_modules/
+
+# Build artifacts
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sql.gz
+
+# Uploads
+uploads/
+
+# Backups
+backups/
+*.backup

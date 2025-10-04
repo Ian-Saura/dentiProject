@@ -8,7 +8,7 @@ The backend is **fully functional** and serves as a proper **BFF (Backend for Fr
 
 ## Overview
 
-This backend implements a complete REST API that mirrors the functionality of `app.py` (v6), using the MySQL schema in `tablas_app.sql` (11 tables + view). All endpoints enforce tenancy by `usuario_id` from JWT tokens, except read-only catalogs.
+This backend implements a complete REST API that mirrors the functionality of `app.py` (v6), using the PostgreSQL schema in `init_db.sql` (11 tables + view). All endpoints enforce tenancy by `usuario_id` from JWT tokens, except read-only catalogs.
 
 ## 🏗️ BFF Architecture
 
@@ -84,7 +84,7 @@ This script will:
 
 4. **Load schema:**
    ```bash
-   mysql -u user -p consultorio_db < ../tablas_app.sql
+   psql -U user -d consultorio_db -f ../init_db.sql
    ```
 
 5. **Start server:**

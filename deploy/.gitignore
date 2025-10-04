@@ -1,0 +1,16 @@
+# Ignorar archivos sensibles
+*.env
+.env.*
+credentials.txt
+passwords.txt
+
+# Claves SSH privadas
+id_rsa*
+*.pem
+*.key
+
+# Archivos temporales
+*.tar.gz
+*.zip
+*.log
+

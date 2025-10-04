@@ -1,3 +1,4 @@
+from .roles import Role, Permission
 from .usuarios import Usuario
 from .pacientes import Paciente
 from .consultas import Consulta
@@ -10,8 +11,11 @@ from .prestaciones_insumos_basicos import PrestacionInsumoBasico
 from .prestaciones_usuario import PrestacionUsuario
 from .configuracion_usuario import ConfiguracionUsuario
 from .vistas import VPrestacionPrecio
+from .auditoria import Auditoria
 
 __all__ = [
+    "Role",
+    "Permission",
     "Usuario",
     "Paciente",
     "Consulta",
@@ -24,4 +28,5 @@ __all__ = [
     "PrestacionUsuario",
     "ConfiguracionUsuario",
     "VPrestacionPrecio",
+    "Auditoria",
 ]

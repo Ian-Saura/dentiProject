@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -31,8 +31,8 @@ class GastoOut(BaseModel):
     monto_mensual_ars: float
     observaciones: Optional[str]
     activo: bool
-    fecha_creacion: date
-    fecha_actualizacion: date
+    fecha_creacion: datetime  # Changed from date to datetime to match model
+    fecha_actualizacion: datetime  # Changed from date to datetime to match model
 
     class Config:
         from_attributes = True

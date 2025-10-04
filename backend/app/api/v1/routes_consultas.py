@@ -21,7 +21,7 @@ def list_consultas(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
     _ = Depends(require_roles()),
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(50, ge=1, le=10000),  # Increased limit for reports
     offset: int = Query(0, ge=0),
     order_by: str = Query(None),
     from_: str = Query(None, alias="from"),

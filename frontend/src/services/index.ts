@@ -1,5 +1,6 @@
 // Export all services
 export { authService } from './auth';
+export { adminService } from './admin';
 export { analyticsService } from './analytics';
 export { consultasService } from './consultas';
 export { calculadoraService } from './calculadora';

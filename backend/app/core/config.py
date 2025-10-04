@@ -10,17 +10,31 @@ class Settings(BaseSettings):
     api_prefix: str = Field(default="/v1")
 
     database_url: str = Field(
-        default="mysql+asyncmy://user:password@localhost:3306/consultorio_db",
+        default="postgresql+asyncpg://user:password@localhost:5432/consultorio_db",
         alias="DATABASE_URL",
     )
     sync_database_url: str = Field(
-        default="mysql+pymysql://user:password@localhost:3306/consultorio_db",
+        default="postgresql://user:password@localhost:5432/consultorio_db",
         alias="SYNC_DATABASE_URL",
     )
 
     jwt_secret_key: str = Field(default="super-secret-key", alias="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256")
     access_token_expire_minutes: int = Field(default=60)
+
+    # Google OAuth
+    google_client_id: str = Field(
+        default="your-google-client-id-here",
+        alias="GOOGLE_CLIENT_ID"
+    )
+    google_client_secret: str = Field(
+        default="your-google-client-secret-here",
+        alias="GOOGLE_CLIENT_SECRET"
+    )
+    google_redirect_uri: str = Field(
+        default="http://localhost:8000/v1/auth/google/callback",
+        alias="GOOGLE_REDIRECT_URI"
+    )
 
     enable_gzip: bool = Field(default=True)
 

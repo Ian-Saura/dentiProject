@@ -5,7 +5,7 @@ from fastapi import Response
 
 def validate_pagination_params(limit: int = 50, offset: int = 0) -> Dict[str, int]:
     """Validate and normalize pagination parameters"""
-    limit = min(max(1, limit), 100)  # 1-100
+    limit = min(max(1, limit), 10000)  # 1-10000 (increased for reports)
     offset = max(0, offset)
     return {"limit": limit, "offset": offset}
 

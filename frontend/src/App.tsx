@@ -2,10 +2,13 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 
 // Pages
 import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
+import AdminPage from '@/pages/AdminPage';
 import DashboardPage from '@/pages/DashboardPage';
 import ConsultasPage from '@/pages/ConsultasPage';
 import PacientesPage from '@/pages/PacientesPage';
@@ -14,6 +17,9 @@ import CalculadoraPage from '@/pages/CalculadoraPage';
 import ConfiguracionPage from '@/pages/ConfiguracionPage';
 import ImportPage from '@/pages/ImportPage';
 import FinancialReportsPage from '@/pages/FinancialReportsPage';
+
+// Google OAuth Client ID
+const GOOGLE_CLIENT_ID = '814453800673-39hb3apvtc1d5bdo68k9cq83isn75n2j.apps.googleusercontent.com';
 
 // Components
 import Layout from '@/components/Layout';
@@ -54,12 +60,26 @@ const AppRoutes: React.FC = () => {
         path="/login" 
         element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} 
       />
+      <Route 
+        path="/register" 
+        element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} 
+      />
       <Route
         path="/"
         element={
           <ProtectedRoute>
             <Layout>
               <DashboardPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <AdminPage />
             </Layout>
           </ProtectedRoute>
         }
@@ -141,12 +161,13 @@ const AppRoutes: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-gray-50">
-            <AppRoutes />
-            <Toaster
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Router>
+            <div className="min-h-screen bg-gray-50">
+              <AppRoutes />
+              <Toaster
               position="top-right"
               toastOptions={{
                 duration: 4000,
@@ -174,6 +195,7 @@ const App: React.FC = () => {
         </Router>
       </AuthProvider>
     </QueryClientProvider>
+    </GoogleOAuthProvider>
   );
 };
 

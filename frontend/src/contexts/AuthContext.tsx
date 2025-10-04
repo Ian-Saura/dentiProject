@@ -3,11 +3,24 @@ import { User } from '@/types';
 import { authService } from '@/services';
 import { toast } from 'react-hot-toast';
 
+interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  nombre: string;
+  apellido?: string;
+  telefono?: string;
+  especialidad: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
   login: (username: string, password: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
+  googleLogin: (credential: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -63,27 +76,60 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string) => {
     try {
       setIsLoading(true);
-      const authResponse = await authService.login(username, password);
+      const response = await authService.login(username, password);
       
-      // For now, create a mock user object since we don't have user info endpoint
-      // In a real app, you'd fetch user info after login
-      const mockUser: User = {
-        id: 1,
-        username,
-        nombre: username === 'admin' ? 'Dr. Administrador' : 'Usuario',
-        apellido: '',
-        email: `${username}@manny.com`,
-        especialidad: 'odontologia',
-        plan: 'premium',
-        fecha_registro: new Date().toISOString(),
-        activo: true,
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('user_info', JSON.stringify(mockUser));
+      setUser(response.user);
+      localStorage.setItem('user_info', JSON.stringify(response.user));
       toast.success('¡Bienvenido!');
+      
+      // Check if onboarding is required
+      if (response.requires_onboarding) {
+        toast('Por favor completa tu perfil', { icon: '👋' });
+      }
     } catch (error) {
       toast.error('Error al iniciar sesión');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (data: RegisterData) => {
+    try {
+      setIsLoading(true);
+      const response = await authService.register(data);
+      
+      setUser(response.user);
+      localStorage.setItem('user_info', JSON.stringify(response.user));
+      toast.success('¡Cuenta creada exitosamente!');
+      
+      // Always requires onboarding for new users
+      if (response.requires_onboarding) {
+        toast('Bienvenido! Completa tu perfil para comenzar', { icon: '🎉' });
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.detail || 'Error al registrar usuario';
+      toast.error(errorMsg);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const googleLogin = async (credential: string) => {
+    try {
+      setIsLoading(true);
+      const response = await authService.googleLogin(credential);
+      
+      setUser(response.user);
+      localStorage.setItem('user_info', JSON.stringify(response.user));
+      toast.success('¡Autenticación exitosa con Google!');
+      
+      if (response.requires_onboarding) {
+        toast('Completa tu perfil para continuar', { icon: '👋' });
+      }
+    } catch (error) {
+      toast.error('Error al autenticar con Google');
       throw error;
     } finally {
       setIsLoading(false);
@@ -96,11 +142,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     toast.success('Sesión cerrada');
   };
 
+  // Check if user is admin (you can adjust this logic based on your role structure)
+  const isAdmin = user?.username === 'admin' || user?.plan === 'admin';
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     isLoading,
+    isAdmin,
     login,
+    register,
+    googleLogin,
     logout,
   };
 

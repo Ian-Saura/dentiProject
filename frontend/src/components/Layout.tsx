@@ -14,6 +14,7 @@ import {
   User,
   Activity,
   TrendingUp,
+  Shield,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -22,7 +23,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const location = useLocation();
 
   const navigation = [
@@ -33,6 +34,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Calculadora', href: '/calculadora', icon: Calculator },
     { name: 'Configuración', href: '/configuracion', icon: Settings },
     { name: 'Importar Datos', href: '/import', icon: Upload },
+    ...(isAdmin ? [{ name: 'Admin Panel', href: '/admin', icon: Shield }] : []),
   ];
 
   const getEspecialidadEmoji = (especialidad: string) => {

@@ -1,19 +1,56 @@
 import api from './api';
 import { AuthResponse, User } from '@/types';
 
+interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  nombre: string;
+  apellido?: string;
+  telefono?: string;
+  especialidad: string;
+}
+
+interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+  requires_onboarding: boolean;
+}
+
 export const authService = {
-  async login(username: string, password: string): Promise<AuthResponse> {
+  async login(username: string, password: string): Promise<LoginResponse> {
     const formData = new FormData();
     formData.append('username', username);
     formData.append('password', password);
     
-    const response = await api.post<AuthResponse>('/auth/login', formData, {
+    const response = await api.post<LoginResponse>('/auth/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
     
-    // Store token and user info
+    // Store token
+    localStorage.setItem('access_token', response.data.access_token);
+    
+    return response.data;
+  },
+
+  async register(data: RegisterData): Promise<LoginResponse> {
+    const response = await api.post<LoginResponse>('/auth/register', data);
+    
+    // Store token
+    localStorage.setItem('access_token', response.data.access_token);
+    
+    return response.data;
+  },
+
+  async googleLogin(credential: string): Promise<LoginResponse> {
+    const response = await api.post<LoginResponse>('/auth/google/token', {
+      credential: credential,
+    });
+    
+    // Store token
     localStorage.setItem('access_token', response.data.access_token);
     
     return response.data;
@@ -32,7 +69,6 @@ export const authService = {
     return localStorage.getItem('access_token');
   },
 
-  // Get current user info (would need to be implemented in backend)
   async getCurrentUser(): Promise<User> {
     const response = await api.get<User>('/auth/me');
     localStorage.setItem('user_info', JSON.stringify(response.data));

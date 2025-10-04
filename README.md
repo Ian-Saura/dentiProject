@@ -11,7 +11,7 @@ A comprehensive management system for dental practices with financial tracking, 
 ### Access the Application
 ```
 URL: http://localhost
-Login: admin / Homero123
+Login: Contact administrator for credentials
 ```
 
 ⚠️ **IMPORTANT**: Always use `http://localhost` (NOT `localhost:3000`)
@@ -82,13 +82,13 @@ docker-compose logs -f
 ### Services
 - **Backend**: FastAPI (Python 3.11)
 - **Frontend**: React + TypeScript + Vite
-- **Database**: MySQL 8.0
+- **Database**: PostgreSQL 16
 - **Proxy**: Nginx
 
 ### Ports
 - `80`: Nginx reverse proxy (main access point)
 - `8000`: Backend API (direct access)
-- `3306`: MySQL database
+- `5432`: PostgreSQL database
 - `3000`: Frontend (internal, accessed via Nginx)
 
 ---
@@ -129,14 +129,14 @@ dentiProject/
 
 **Backend** (`backend/env.docker`):
 ```env
-DATABASE_URL=mysql+pymysql://denti_user:denti_pass@mysql:3306/consultorio_db
+DATABASE_URL=postgresql+asyncpg://denti_user:denti_pass@db:5432/consultorio_db
 JWT_SECRET_KEY=super-secret-key-change-in-production
 CORS_ORIGINS=http://localhost:3000,http://localhost
 ```
 
 ### Database
-- **Host**: mysql (Docker service name)
-- **Port**: 3306
+- **Host**: db (Docker service name)
+- **Port**: 5432
 - **Database**: consultorio_db
 - **User**: denti_user
 - **Password**: denti_pass
@@ -172,8 +172,8 @@ docker-compose build frontend
 
 ### Database Management
 ```bash
-# Access MySQL CLI
-docker-compose exec mysql mysql -u denti_user -pdenti_pass consultorio_db
+# Access PostgreSQL CLI
+docker-compose exec db psql -U denti_user -d consultorio_db
 
 # Run migrations
 docker-compose exec backend alembic upgrade head
@@ -215,8 +215,8 @@ docker-compose restart backend
 
 ### Database Connection Issues
 ```bash
-# Check MySQL is running
-docker-compose ps mysql
+# Check PostgreSQL is running
+docker-compose ps db
 
 # Check database connectivity
 docker-compose exec backend python -c "from app.db.session import get_db; db = next(get_db()); print('✅ Connected')"
@@ -268,7 +268,7 @@ http://localhost:8000/v1/docs
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [React Documentation](https://react.dev/)
 - [Docker Documentation](https://docs.docker.com/)
-- [MySQL Documentation](https://dev.mysql.com/doc/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 
 ---
 

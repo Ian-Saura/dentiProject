@@ -24,8 +24,8 @@ def create_tables():
     Base.metadata.create_all(bind=engine)
     print("✅ Tables created successfully")
 
-def create_admin_user():
-    """Create default admin user"""
+def create_admin_user(password: str = None):
+    """Create default admin user with secure password"""
     print("👤 Creating admin user...")
     
     db = SessionLocal()
@@ -34,7 +34,16 @@ def create_admin_user():
         admin = db.query(Usuario).filter(Usuario.username == "admin").first()
         
         if not admin:
-            hashed_password = get_password_hash("Homero123")
+            # Use provided password or prompt for one
+            if not password:
+                import os
+                password = os.getenv("ADMIN_PASSWORD")
+                if not password:
+                    print("⚠️  No ADMIN_PASSWORD environment variable set")
+                    print("⚠️  Please run: python backend/create_admin.py")
+                    raise ValueError("Admin password not provided")
+            
+            hashed_password = get_password_hash(password)
             admin = Usuario(
                 username="admin",
                 password_hash=hashed_password,
@@ -134,12 +143,12 @@ def main():
         
         print("\n" + "=" * 50)
         print("✅ Database initialized successfully!")
-        print("\n🔐 Admin Credentials:")
-        print("   Username: admin")
-        print("   Password: Homero123")
+        print("\n⚠️  IMPORTANT: Create admin user with secure password:")
+        print("   Run: python backend/create_admin.py")
         print("\n📊 Next steps:")
-        print("   1. Run: python populate_db.py (optional - adds sample data)")
-        print("   2. Start backend: uvicorn app.main:app --reload")
+        print("   1. Create admin user (required)")
+        print("   2. Run: python populate_db.py (optional - adds sample data)")
+        print("   3. Start backend: uvicorn app.main:app --reload")
         print("=" * 50)
         
         return 0

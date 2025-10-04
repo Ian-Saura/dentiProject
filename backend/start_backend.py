@@ -13,7 +13,7 @@ def check_dependencies():
     """Check if required dependencies are installed"""
     required_packages = [
         'fastapi', 'uvicorn', 'sqlalchemy', 
-        'pyjwt', 'passlib', 'pymysql'
+        'pyjwt', 'passlib', 'psycopg2'
     ]
     
     missing_packages = []
