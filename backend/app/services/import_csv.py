@@ -21,18 +21,46 @@ class ImportCsvService:
         db: Session, usuario_id: int, csv_content: bytes, col_paciente: str, col_tratamiento: str, col_monto: str,
         col_fecha: str = None, col_medio_pago: str = None
     ) -> Dict[str, Any]:
+        """
+        Importar consultas desde CSV
+        
+        Args:
+            db: Sesión de base de datos
+            usuario_id: ID del usuario
+            csv_content: Contenido del archivo CSV en bytes
+            col_paciente: Nombre de la columna del paciente
+            col_tratamiento: Nombre de la columna del tratamiento
+            col_monto: Nombre de la columna del monto
+            col_fecha: Nombre de la columna de fecha (opcional)
+            col_medio_pago: Nombre de la columna del medio de pago (opcional)
+        
+        Returns:
+            Diccionario con resultado de la importación
+        """
+        print(f"📥 Iniciando importación CSV para usuario {usuario_id}")
+        print(f"Columnas recibidas: paciente={col_paciente}, tratamiento={col_tratamiento}, monto={col_monto}")
+        
         # Detect encoding
         encodings = ['utf-8', 'latin1', 'cp1252', 'iso-8859-1']
         df = None
         for enc in encodings:
             try:
                 df = pd.read_csv(io.BytesIO(csv_content), encoding=enc)
+                print(f"✅ CSV leído con encoding: {enc}")
                 break
             except UnicodeDecodeError:
                 continue
 
         if df is None:
-            raise ValueError("No se pudo leer el archivo CSV")
+            print("❌ No se pudo leer el archivo CSV con ningún encoding")
+            return {
+                "migrados": 0,
+                "errores": 1,
+                "total_ars": 0,
+                "error": "No se pudo leer el archivo CSV. Verifica el formato."
+            }
+        
+        print(f"📊 CSV tiene {len(df)} filas y columnas: {list(df.columns)}")
 
         consultas_creadas = []
         errores = 0
@@ -117,11 +145,15 @@ class ImportCsvService:
                 total_ars += monto_ars
 
             except Exception as e:
+                print(f"❌ Error procesando fila {idx}: {str(e)}")
                 errores += 1
                 continue
 
-        return {
+        result = {
             "migrados": len(consultas_creadas),
             "errores": errores,
             "total_ars": round(total_ars, 0),
         }
+        
+        print(f"✅ Importación completada: {result}")
+        return result

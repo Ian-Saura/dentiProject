@@ -3,6 +3,7 @@ import { useQuery } from 'react-query';
 import { TrendingUp, DollarSign, Calendar, PieChart, BarChart3, Download } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { consultasService, configService } from '@/services';
+import { gastosService } from '@/services/gastos';
 
 interface MonthlyPL {
   month: string;
@@ -39,15 +40,24 @@ const FinancialReportsPage: React.FC = () => {
     configService.getCostAnalysis
   );
 
-  const isLoading = loadingConsultas || loadingCosts;
+  // Fetch gastos fijos for real monthly costs
+  const { data: gastosData, isLoading: loadingGastos } = useQuery(
+    'gastos-fijos',
+    gastosService.getGastos
+  );
+
+  const isLoading = loadingConsultas || loadingCosts || loadingGastos;
 
   // Calculate monthly P&L
   const calculateMonthlyPL = (): MonthlyPL[] => {
-    if (!consultasData?.data || !costAnalysis) return [];
+    if (!consultasData?.data || !costAnalysis || !gastosData) return [];
 
     const monthlyData: { [key: string]: MonthlyPL } = {};
-    const monthlyFixedCost = 500000; // Example fixed costs per month
-    const hourlyEquipmentCost = costAnalysis.costo_hora_ars || 28500;
+    // Calculate real monthly fixed costs from gastos fijos
+    const monthlyFixedCost = gastosData
+      .filter(g => g.activo)
+      .reduce((sum, g) => sum + g.monto_mensual_ars, 0);
+    const hourlyEquipmentCost = costAnalysis.costo_hora_ars || 0;
 
     consultasData.data.forEach(consulta => {
       const date = new Date(consulta.fecha_consulta);

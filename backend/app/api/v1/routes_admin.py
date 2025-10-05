@@ -316,3 +316,76 @@ async def get_admin_stats(
         "users_by_plan": users_by_plan,
     }
 
+
+
+# ============================================================================
+# PLAN MANAGEMENT
+# ============================================================================
+
+@router.post("/users/{user_id}/assign-plan")
+def assign_user_plan(
+    user_id: int,
+    plan_request: "AssignPlanRequest",
+    db: Session = Depends(get_db)
+):
+    """
+    Asignar plan a un usuario (solo admin/moderator)
+    """
+    from app.schemas.auth import AssignPlanRequest
+    from app.services.plan_service import PlanService
+    
+    # Get user
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Assign plan
+    updated_user = PlanService.assign_plan(
+        db=db,
+        user=user,
+        plan=plan_request.plan,
+        dias_trial=plan_request.dias_trial or 7
+    )
+    
+    # Log action
+    AuditoriaService.log_action(
+        db=db,
+        usuario_id=user_id,
+        accion="asignar_plan",
+        entidad_tipo="usuario",
+        entidad_id=user_id,
+        descripcion=f"Plan asignado: {plan_request.plan}",
+        metadata={"plan": plan_request.plan, "dias_trial": plan_request.dias_trial},
+        exitoso=True
+    )
+    
+    plan_status = PlanService.get_plan_status(updated_user)
+    
+    return {
+        "success": True,
+        "message": f"Plan {plan_request.plan} asignado correctamente",
+        "user": {
+            "id": updated_user.id,
+            "username": updated_user.username,
+            "email": updated_user.email,
+            "plan": updated_user.plan,
+        },
+        "plan_status": plan_status
+    }
+
+
+@router.get("/users/{user_id}/plan-status")
+def get_user_plan_status(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener estado del plan de un usuario (solo admin/moderator)
+    """
+    from app.services.plan_service import PlanService
+    
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return PlanService.get_plan_status(user)

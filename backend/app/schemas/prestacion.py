@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import enum
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -37,7 +37,7 @@ class PrestacionOut(BaseModel):
     requiere_radiografia: bool
     es_multisesion: bool
     activo: bool
-    fecha_creacion: date
+    fecha_creacion: datetime
 
     class Config:
         from_attributes = True

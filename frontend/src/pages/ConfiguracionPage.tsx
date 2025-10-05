@@ -17,11 +17,12 @@ interface Gasto {
   id: number;
   concepto: string;
   monto_mensual_ars: number;
+  observaciones?: string;
   activo: boolean;
 }
 
 interface EquipoForm {
-  nombre: string;
+  nombre_equipo: string;
   monto_compra_usd: number;
   anios_vida_util: number;
   fecha_compra: string;
@@ -31,6 +32,7 @@ interface EquipoForm {
 interface GastoForm {
   concepto: string;
   monto_mensual_ars: number;
+  observaciones?: string;
 }
 
 const ConfiguracionPage: React.FC = () => {
@@ -41,7 +43,7 @@ const ConfiguracionPage: React.FC = () => {
   const [editingGasto, setEditingGasto] = useState<Gasto | null>(null);
 
   const [equipoForm, setEquipoForm] = useState<EquipoForm>({
-    nombre: '',
+    nombre_equipo: '',
     monto_compra_usd: 0,
     anios_vida_util: 5,
     fecha_compra: '',
@@ -111,7 +113,7 @@ const ConfiguracionPage: React.FC = () => {
 
   const resetEquipoForm = () => {
     setEquipoForm({
-      nombre: '',
+      nombre_equipo: '',
       monto_compra_usd: 0,
       anios_vida_util: 5,
       fecha_compra: '',
@@ -147,7 +149,7 @@ const ConfiguracionPage: React.FC = () => {
   const handleEditEquipo = (equipo: Equipo) => {
     setEditingEquipo(equipo);
     setEquipoForm({
-      nombre: equipo.nombre,
+      nombre_equipo: equipo.nombre,
       monto_compra_usd: equipo.monto_compra_usd,
       anios_vida_util: equipo.anios_vida_util,
       fecha_compra: equipo.fecha_compra,
@@ -251,8 +253,8 @@ const ConfiguracionPage: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      value={equipoForm.nombre}
-                      onChange={(e) => setEquipoForm({ ...equipoForm, nombre: e.target.value })}
+                      value={equipoForm.nombre_equipo}
+                      onChange={(e) => setEquipoForm({ ...equipoForm, nombre_equipo: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Ej: Sillón Dental"
                       required

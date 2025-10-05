@@ -175,8 +175,8 @@ async def google_auth(
     db: Session = Depends(get_db),
 ):
     """Autenticación con Google (token exchange)"""
-    # Verificar token de Google
-    token = auth_request.token or auth_request.credential
+    # Verificar token de Google (prioritize credential field)
+    token = auth_request.credential or auth_request.token
     if not token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -318,3 +318,14 @@ async def complete_onboarding(
     )
     
     return UserResponse.model_validate(user)
+
+
+@router.get("/me/plan-status")
+def get_my_plan_status(
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Obtener el estado del plan del usuario actual
+    """
+    from app.services.plan_service import PlanService
+    return PlanService.get_plan_status(current_user)

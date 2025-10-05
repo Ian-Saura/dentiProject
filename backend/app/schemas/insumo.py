@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import enum
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -35,7 +35,7 @@ class InsumoOut(BaseModel):
     unidad_medida: UnidadMedida
     marca_referencia: Optional[str]
     activo: bool
-    fecha_creacion: date
+    fecha_creacion: datetime
 
     class Config:
         from_attributes = True

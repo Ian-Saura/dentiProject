@@ -77,8 +77,8 @@ class UserUpdate(BaseModel):
 
 class GoogleAuthRequest(BaseModel):
     """Request con token de Google"""
-    token: str = Field(..., description="Google ID token")
-    credential: Optional[str] = Field(None, description="Google credential (alternative)")
+    credential: str = Field(..., description="Google ID token or credential")
+    token: Optional[str] = Field(None, description="Alternative field name")
 
 
 class GoogleUserInfo(BaseModel):
@@ -141,3 +141,34 @@ class ChangePassword(BaseModel):
         if not any(c.isdigit() for c in v):
             raise ValueError('Password must contain at least one number')
         return v
+
+
+# ============================================================================
+# PLAN MANAGEMENT
+# ============================================================================
+
+class AssignPlanRequest(BaseModel):
+    """Asignar plan a un usuario"""
+    plan: str = Field(..., description="trial, premium, o enterprise")
+    dias_trial: Optional[int] = Field(7, description="Días de trial (solo para plan trial)")
+    
+    @validator('plan')
+    def validate_plan(cls, v):
+        allowed = ['trial', 'premium', 'enterprise']
+        if v not in allowed:
+            raise ValueError(f'Plan must be one of: {", ".join(allowed)}')
+        return v
+
+
+class PlanStatusResponse(BaseModel):
+    """Respuesta con estado del plan"""
+    plan: str
+    fecha_inicio_plan: Optional[str]
+    fecha_vencimiento: Optional[str]
+    dias_restantes: Optional[int]
+    trial_expirado: bool
+    puede_usar_app: bool
+    mensaje: Optional[str]
+    
+    class Config:
+        from_attributes = True

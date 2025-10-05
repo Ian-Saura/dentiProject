@@ -14,20 +14,6 @@ import {
   Activity,
   AlertCircle,
 } from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-} from 'recharts';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -61,24 +47,6 @@ const DashboardPage: React.FC = () => {
     };
     return emojis[especialidad as keyof typeof emojis] || '🏥';
   };
-
-  // Mock data for charts (in real app, this would come from API)
-  const monthlyData = [
-    { month: 'Ene', ingresos: 450000, consultas: 15 },
-    { month: 'Feb', ingresos: 520000, consultas: 18 },
-    { month: 'Mar', ingresos: 480000, consultas: 16 },
-    { month: 'Abr', ingresos: 600000, consultas: 20 },
-    { month: 'May', ingresos: 550000, consultas: 19 },
-    { month: 'Jun', ingresos: 650000, consultas: 22 },
-  ];
-
-  const treatmentData = [
-    { name: 'Consultas', value: 35, color: '#3b82f6' },
-    { name: 'Operatorias', value: 25, color: '#10b981' },
-    { name: 'Endodoncias', value: 20, color: '#f59e0b' },
-    { name: 'Limpiezas', value: 15, color: '#ef4444' },
-    { name: 'Otros', value: 5, color: '#8b5cf6' },
-  ];
 
   if (isLoading) {
     return (
@@ -177,88 +145,21 @@ const DashboardPage: React.FC = () => {
         </div>
       )}
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Revenue Chart */}
-        <div className="dental-card">
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-gray-900">📈 Evolución de Ingresos</h3>
+      {/* Info Message */}
+      <div className="dental-card bg-blue-50 border border-blue-200">
+        <div className="flex items-center gap-3 p-4">
+          <Activity className="w-6 h-6 text-blue-600" />
+          <div>
+            <h3 className="font-semibold text-blue-900">Dashboard en Tiempo Real</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              Los datos se actualizan automáticamente desde la base de datos. 
+              {resumen?.total_consultas === 0 && (
+                <span className="block mt-1 font-medium">
+                  Comienza agregando consultas para ver analytics detallados.
+                </span>
+              )}
+            </p>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value: number) => [`$${value.toLocaleString()}`, 'Ingresos']}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="ingresos" 
-                  stroke="#3b82f6" 
-                  strokeWidth={3}
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Treatment Distribution */}
-        <div className="dental-card">
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-gray-900">🦷 Distribución de Tratamientos</h3>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={treatmentData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {treatmentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => [`${value}%`, 'Porcentaje']} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {treatmentData.map((item, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-sm text-gray-600">{item.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Consultations Chart */}
-      <div className="dental-card">
-        <div className="card-header">
-          <h3 className="text-lg font-semibold text-gray-900">📊 Consultas por Mes</h3>
-        </div>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="consultas" fill="#10b981" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
         </div>
       </div>
 

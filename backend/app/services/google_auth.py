@@ -5,7 +5,9 @@ from typing import Optional
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
-from app.core.config import settings
+from app.core.config import get_settings
+
+settings = get_settings()
 from app.schemas.auth import GoogleUserInfo
 
 

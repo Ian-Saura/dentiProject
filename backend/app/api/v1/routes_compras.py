@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -10,13 +10,14 @@ from app.deps import get_current_user, TenantContext, require_roles
 from app.models import Usuario
 from app.schemas import CompraCreate, CompraOut, CompraUpdate
 from app.services import ComprasService
-from app.utils import validate_pagination_params, add_total_count_header
+from app.utils import validate_pagination_params
 
 router = APIRouter(prefix="/compras", tags=["compras"])
 
 
 @router.get("/", response_model=List[CompraOut])
 def list_compras(
+    response: Response,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
     _ = Depends(require_roles()),
@@ -41,8 +42,8 @@ def list_compras(
         db, tenant.user_id, **pagination, order_by=order_by, filtros=filtros
     )
 
-    response = compras
-    return add_total_count_header(response, total)
+    response.headers["X-Total-Count"] = str(total)
+    return compras
 
 
 @router.post("/", response_model=CompraOut)

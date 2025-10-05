@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -10,13 +10,14 @@ from app.deps import get_current_user, TenantContext, require_roles
 from app.models import Usuario
 from app.schemas import EquipoCreate, EquipoOut, EquipoUpdate
 from app.services import CostosEquiposService
-from app.utils import validate_pagination_params, add_total_count_header
+from app.utils import validate_pagination_params
 
 router = APIRouter(prefix="/equipos", tags=["equipos"])
 
 
 @router.get("/", response_model=List[EquipoOut])
 def list_equipos(
+    response: Response,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
     _ = Depends(require_roles()),
@@ -35,8 +36,8 @@ def list_equipos(
         db, tenant.user_id, **pagination, order_by=order_by, filtros=filtros
     )
 
-    response = equipos
-    return add_total_count_header(response, total)
+    response.headers["X-Total-Count"] = str(total)
+    return equipos
 
 
 @router.post("/", response_model=EquipoOut)

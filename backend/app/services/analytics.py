@@ -132,9 +132,10 @@ class AnalyticsService:
 
         costo_equipos_anual_usd = 0
         for equipo in equipos:
-            if equipo.activo:
+            if equipo.activo and equipo.monto_compra_usd and equipo.anios_vida_util and equipo.anios_vida_util > 0:
                 # Amortización con inflación - exact app.py calculation
-                costo_reposicion = equipo.monto_compra_usd * (1.04 ** equipo.anios_vida_util)
+                monto_usd = float(equipo.monto_compra_usd)
+                costo_reposicion = monto_usd * (1.04 ** equipo.anios_vida_util)
                 amortizacion_anual = costo_reposicion / equipo.anios_vida_util
                 costo_equipos_anual_usd += amortizacion_anual
 
@@ -148,7 +149,7 @@ class AnalyticsService:
         ).all()
 
         costo_gastos_anual_ars = sum(
-            g.monto_mensual_ars * 12 
+            float(g.monto_mensual_ars) * 12 
             for g in gastos 
             if g.activo
         )

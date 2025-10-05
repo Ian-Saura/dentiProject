@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Users, Shield, Activity, Trash2, Ban, Check, X } from 'lucide-react';
+import { Users, Shield, Activity, Trash2, Ban, Check, X, Info, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService, UserWithRole, Role, AdminStats } from '../services/admin';
+import { plansService } from '../services/plans';
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -16,6 +17,9 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState('');
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [trialDays, setTrialDays] = useState(7);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -90,6 +94,25 @@ export default function AdminPage() {
       loadData();
     } catch (error: any) {
       toast.error('Error al eliminar usuario: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleAssignPlan = async () => {
+    if (!selectedUser || !selectedPlan) return;
+    
+    try {
+      await plansService.assignPlan(selectedUser.id, {
+        plan: selectedPlan as 'trial' | 'premium' | 'enterprise',
+        dias_trial: selectedPlan === 'trial' ? trialDays : undefined,
+      });
+      toast.success(`Plan ${selectedPlan} asignado exitosamente a ${selectedUser.username}`);
+      setShowPlanModal(false);
+      setSelectedUser(null);
+      setSelectedPlan('');
+      setTrialDays(7);
+      loadData();
+    } catch (error: any) {
+      toast.error('Error al asignar plan: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -282,6 +305,17 @@ export default function AdminPage() {
                         <Shield className="w-4 h-4" />
                       </button>
                       <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setSelectedPlan(user.plan || '');
+                          setShowPlanModal(true);
+                        }}
+                        className="text-purple-600 hover:text-purple-900"
+                        title="Asignar plan"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => handleToggleStatus(user)}
                         className={`${
                           user.activo ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
@@ -349,6 +383,81 @@ export default function AdminPage() {
                 className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Plan Assignment Modal */}
+      {showPlanModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Asignar Plan a {selectedUser.username}
+            </h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar Plan
+              </label>
+              <select
+                value={selectedPlan}
+                onChange={(e) => setSelectedPlan(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">Selecciona un plan</option>
+                <option value="trial">Trial (Prueba gratuita)</option>
+                <option value="premium">Premium</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+            
+            {selectedPlan === 'trial' && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Días de Trial
+                </label>
+                <input
+                  type="number"
+                  value={trialDays}
+                  onChange={(e) => setTrialDays(parseInt(e.target.value) || 7)}
+                  min="1"
+                  max="90"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  El trial expirará después de {trialDays} días
+                </p>
+              </div>
+            )}
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                {selectedPlan === 'trial' && '⏱️ Trial: Acceso limitado por tiempo'}
+                {selectedPlan === 'premium' && '✨ Premium: Acceso completo sin límites'}
+                {selectedPlan === 'enterprise' && '🏢 Enterprise: Acceso completo + funciones empresariales'}
+                {!selectedPlan && 'ℹ️ Selecciona un plan para ver detalles'}
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowPlanModal(false);
+                  setSelectedUser(null);
+                  setSelectedPlan('');
+                  setTrialDays(7);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAssignPlan}
+                disabled={!selectedPlan}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Asignar Plan
               </button>
             </div>
           </div>

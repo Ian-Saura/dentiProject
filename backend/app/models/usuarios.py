@@ -4,7 +4,7 @@ import enum
 from datetime import datetime, date
 from typing import List, Optional
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, Integer, String
+from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -34,7 +34,8 @@ class Usuario(Base):
     telefono: Mapped[Optional[str]] = mapped_column(String(20))
     especialidad: Mapped[Especialidad] = mapped_column(Enum(Especialidad), nullable=False)
     plan: Mapped[Plan] = mapped_column(Enum(Plan), default=Plan.trial)
-    fecha_vencimiento: Mapped[Optional[date]] = mapped_column(Date)
+    fecha_inicio_plan: Mapped[Optional[date]] = mapped_column(Date)  # Fecha de inicio del plan actual
+    fecha_vencimiento: Mapped[Optional[date]] = mapped_column(Date)  # Fecha de vencimiento (para trial)
     fecha_registro: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     ultimo_acceso: Mapped[Optional[datetime]] = mapped_column(DateTime)
     activo: Mapped[bool] = mapped_column(Boolean, default=True)

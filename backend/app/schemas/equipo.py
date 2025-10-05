@@ -15,9 +15,6 @@ class EquipoCreate(BaseModel):
     modelo: Optional[str] = Field(None, max_length=100)
     observaciones: Optional[str] = Field(None, max_length=1000)
 
-    class Config:
-        model_config = {"extra": "forbid"}
-
 
 class EquipoUpdate(BaseModel):
     nombre_equipo: Optional[str] = Field(None, max_length=150)

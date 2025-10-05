@@ -2,20 +2,21 @@ from __future__ import annotations
 
 from typing import List
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.deps import get_current_user, TenantContext, require_roles
 from app.models import Usuario
 from app.services import PreciosService
-from app.utils import validate_pagination_params, add_total_count_header
+from app.utils import validate_pagination_params
 
 router = APIRouter(prefix="/precios", tags=["precios"])
 
 
 @router.get("/")
 def list_precios(
+    response: Response,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
     _ = Depends(require_roles()),
@@ -37,5 +38,5 @@ def list_precios(
         db, tenant.user_id, **pagination, order_by=order_by, filtros=filtros
     )
 
-    response = precios
-    return add_total_count_header(response, total)
+    response.headers["X-Total-Count"] = str(total)
+    return precios

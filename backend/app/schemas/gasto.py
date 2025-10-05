@@ -11,9 +11,6 @@ class GastoCreate(BaseModel):
     monto_mensual_ars: float = Field(..., ge=0)
     observaciones: Optional[str] = Field(None, max_length=1000)
 
-    class Config:
-        model_config = {"extra": "forbid"}
-
 
 class GastoUpdate(BaseModel):
     concepto: Optional[str] = Field(None, max_length=100)

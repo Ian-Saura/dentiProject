@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/contexts/AuthContext';
 import { Activity, Eye, EyeOff } from 'lucide-react';
@@ -12,6 +12,7 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
   const { login, googleLogin, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +20,8 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(username, password);
+      // Force full page reload to ensure auth state is updated
+      window.location.href = '/';
     } catch (error) {
       // Error is handled in the auth context
     }
@@ -27,6 +30,8 @@ const LoginPage: React.FC = () => {
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       await googleLogin(credentialResponse.credential);
+      // Force full page reload to ensure auth state is updated
+      window.location.href = '/';
     } catch (error: any) {
       toast.error('Error al autenticar con Google');
     }

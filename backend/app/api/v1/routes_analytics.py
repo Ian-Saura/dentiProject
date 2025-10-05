@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.deps.auth import get_current_user
+from app.deps.tenant import TenantContext
+from app.deps.roles import require_roles
 from app.models import Usuario
 from app.schemas.auditoria import (
     AuditoriaResponse,
@@ -14,6 +16,7 @@ from app.schemas.auditoria import (
     AnalyticsResponse,
 )
 from app.services.auditoria import AuditoriaService
+from app.services.analytics import AnalyticsService
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -37,6 +40,34 @@ async def get_analytics_summary(
     
     analytics = AuditoriaService.get_analytics(db, dias=dias)
     return AnalyticsResponse(**analytics)
+
+
+@router.get("/resumen")
+def get_resumen(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+    _ = Depends(require_roles()),
+):
+    """
+    Obtener resumen de consultas y analytics financieros.
+    Retorna datos reales de la base de datos.
+    """
+    tenant = TenantContext(current_user)
+    return AnalyticsService.get_resumen(db, tenant.user_id)
+
+
+@router.get("/kpis")
+def get_kpis(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+    _ = Depends(require_roles()),
+):
+    """
+    Obtener KPIs (Key Performance Indicators) del usuario.
+    Retorna datos reales de la base de datos.
+    """
+    tenant = TenantContext(current_user)
+    return AnalyticsService.get_kpis(db, tenant.user_id)
 
 
 @router.get("/my-activity", response_model=List[AuditoriaResponse])
