@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
-import { Upload, FileText, CheckCircle, AlertCircle, X, Download } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, X, Download, Sparkles, Zap } from 'lucide-react';
 import { importService } from '@/services';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AnimatedCard from '@/components/AnimatedCard';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 interface ColumnMapping {
@@ -17,6 +19,7 @@ interface ImportResult {
   migrados: number;
   errores: number;
   total_ars: number;
+  duplicados?: number;
   message?: string;
   error?: string;
 }
@@ -47,10 +50,12 @@ const ImportPage: React.FC = () => {
           toast.error(result.error);
         } else {
           toast.success(`✅ Importación exitosa: ${result.migrados} consultas migradas`);
-          // Invalidate queries to refresh data
+          // Invalidate ALL queries to refresh dashboard data
           queryClient.invalidateQueries('consultas');
           queryClient.invalidateQueries('analytics-resumen');
           queryClient.invalidateQueries('analytics-kpis');
+          queryClient.invalidateQueries('costos-analisis');
+          queryClient.invalidateQueries('punto-equilibrio');
           queryClient.invalidateQueries('pacientes');
         }
       },
@@ -162,27 +167,59 @@ const ImportPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Upload className="h-8 w-8 text-primary-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">📊 Importar Datos desde CSV</h1>
-            <p className="text-gray-600">Migra datos desde archivos CSV con normalización automática</p>
+      {/* Premium Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden bg-gradient-dental rounded-3xl p-8 text-white shadow-glow-dental"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="bg-white/20 rounded-2xl p-4 backdrop-blur-sm">
+              <Upload className="h-8 w-8" />
+            </div>
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl sm:text-4xl font-black flex items-center gap-2"
+              >
+                <Sparkles className="h-8 w-8 animate-pulse" />
+                Importar Datos CSV
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-white/90 mt-1 text-lg"
+              >
+                Migra datos con normalización automática inteligente
+              </motion.p>
+            </div>
           </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={downloadTemplate}
+            className="btn-premium flex items-center space-x-2 text-base"
+          >
+            <Download className="h-5 w-5" />
+            <span>Descargar Plantilla</span>
+          </motion.button>
         </div>
-        <button
-          onClick={downloadTemplate}
-          className="btn-secondary flex items-center space-x-2"
-        >
-          <Download className="h-5 w-5" />
-          <span>Descargar Plantilla</span>
-        </button>
-      </div>
+      </motion.div>
 
-      {/* Instructions */}
-      <div className="dental-card bg-blue-50 border-blue-200">
-        <h3 className="text-lg font-semibold text-blue-900 mb-3">📋 Instrucciones de Importación</h3>
+      {/* Premium Instructions */}
+      <AnimatedCard delay={0.1}>
+        <div className="glass rounded-2xl shadow-soft p-6 bg-gradient-to-r from-blue-50 to-dental-50 border border-blue-200/50">
+          <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
+            <Zap className="h-6 w-6 text-dental-500" />
+            Instrucciones de Importación
+          </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
           <div>
             <h4 className="font-medium mb-2">✅ Formatos Soportados:</h4>
@@ -203,10 +240,12 @@ const ImportPage: React.FC = () => {
             </ul>
           </div>
         </div>
-      </div>
+        </div>
+      </AnimatedCard>
 
-      {/* File Upload */}
-      <div className="dental-card">
+      {/* Premium File Upload */}
+      <AnimatedCard delay={0.2}>
+        <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
         <h3 className="text-lg font-semibold mb-4">1️⃣ Seleccionar Archivo CSV</h3>
         
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -247,11 +286,13 @@ const ImportPage: React.FC = () => {
             </button>
           </div>
         )}
-      </div>
+        </div>
+      </AnimatedCard>
 
       {/* Column Mapping */}
       {csvColumns.length > 0 && (
-        <div className="dental-card">
+        <AnimatedCard delay={0.3}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
           <h3 className="text-lg font-semibold mb-4">2️⃣ Mapear Columnas</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
@@ -340,14 +381,17 @@ const ImportPage: React.FC = () => {
 
           {/* Preview Toggle */}
           <div className="mt-4">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setShowPreview(!showPreview)}
               className="btn-secondary"
             >
               {showPreview ? 'Ocultar' : 'Mostrar'} Vista Previa
-            </button>
+            </motion.button>
           </div>
-        </div>
+          </div>
+        </AnimatedCard>
       )}
 
       {/* CSV Preview */}
@@ -377,10 +421,11 @@ const ImportPage: React.FC = () => {
         </div>
       )}
 
-      {/* Import Button */}
+      {/* Premium Import Button */}
       {csvColumns.length > 0 && (
-        <div className="dental-card">
-          <h3 className="text-lg font-semibold mb-4">3️⃣ Ejecutar Importación</h3>
+        <AnimatedCard delay={0.5}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
+            <h3 className="text-lg font-semibold mb-4">3️⃣ Ejecutar Importación</h3>
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               <p>• Se normalizarán automáticamente nombres, tratamientos y montos</p>
@@ -405,7 +450,8 @@ const ImportPage: React.FC = () => {
               )}
             </button>
           </div>
-        </div>
+          </div>
+        </AnimatedCard>
       )}
 
       {/* Import Results */}
@@ -428,11 +474,17 @@ const ImportPage: React.FC = () => {
           </div>
 
           {!importResult.error && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{importResult.migrados}</div>
                 <div className="text-sm text-green-700">Consultas Migradas</div>
               </div>
+              {importResult.duplicados !== undefined && importResult.duplicados > 0 && (
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">{importResult.duplicados}</div>
+                  <div className="text-sm text-purple-700">Duplicados Omitidos</div>
+                </div>
+              )}
               <div className="text-center">
                 <div className="text-2xl font-bold text-yellow-600">{importResult.errores}</div>
                 <div className="text-sm text-yellow-700">Errores</div>

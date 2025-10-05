@@ -186,6 +186,23 @@ export interface CostosAnalisis {
   cantidad_gastos: number;
 }
 
+export interface PuntoEquilibrio {
+  consultas_necesarias_mes: number;
+  consultas_necesarias_anual: number;
+  ingreso_necesario_mes: number;
+  ingreso_necesario_anual: number;
+  precio_promedio: number;
+  costo_variable_promedio: number;
+  margen_contribucion: number;
+  costos_fijos_mensuales: number;
+  costos_fijos_anuales: number;
+  consultas_ultimo_mes: number;
+  diferencia_consultas: number;
+  porcentaje_equilibrio: number;
+  esta_en_equilibrio: boolean;
+  error?: string;
+}
+
 // Calculator Types
 export interface CalculadoraRecomendacion {
   margen: string;

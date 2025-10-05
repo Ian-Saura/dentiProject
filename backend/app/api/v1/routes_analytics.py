@@ -70,6 +70,25 @@ def get_kpis(
     return AnalyticsService.get_kpis(db, tenant.user_id)
 
 
+@router.get("/punto-equilibrio")
+def get_punto_equilibrio(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+    _ = Depends(require_roles()),
+):
+    """
+    Calcular Punto de Equilibrio (Break-Even Point).
+    
+    Retorna:
+    - Número de consultas necesarias por mes/año para alcanzar equilibrio
+    - Ingreso necesario para equilibrio
+    - Comparación con consultas actuales
+    - Porcentaje de equilibrio alcanzado
+    """
+    tenant = TenantContext(current_user)
+    return AnalyticsService.calcular_punto_equilibrio(db, tenant.user_id)
+
+
 @router.get("/my-activity", response_model=List[AuditoriaResponse])
 async def get_my_activity(
     limit: int = Query(50, ge=1, le=500),

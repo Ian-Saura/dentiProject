@@ -21,7 +21,10 @@ def list_consultas(
     query = (
         select(Consulta)
         .where(Consulta.usuario_id == usuario_id)
-        .options(joinedload(Consulta.paciente), joinedload(Consulta.prestacion_usuario))
+        .options(
+            joinedload(Consulta.paciente),
+            joinedload(Consulta.prestacion_usuario).joinedload(PrestacionUsuario.prestacion)
+        )
     )
 
     if filtros:

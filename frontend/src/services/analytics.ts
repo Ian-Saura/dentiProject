@@ -1,5 +1,5 @@
 import api from './api';
-import { AnalyticsResumen, AnalyticsKPIs, CostosAnalisis } from '@/types';
+import { AnalyticsResumen, AnalyticsKPIs, CostosAnalisis, PuntoEquilibrio } from '@/types';
 
 export const analyticsService = {
   async getResumen(): Promise<AnalyticsResumen> {
@@ -14,6 +14,11 @@ export const analyticsService = {
 
   async getCostosAnalisis(): Promise<CostosAnalisis> {
     const response = await api.get<CostosAnalisis>('/costos/analisis');
+    return response.data;
+  },
+
+  async getPuntoEquilibrio(): Promise<PuntoEquilibrio> {
+    const response = await api.get<PuntoEquilibrio>('/analytics/punto-equilibrio');
     return response.data;
   },
 };

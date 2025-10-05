@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { consultasService } from '@/services';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Calendar, Plus, Search, Filter } from 'lucide-react';
+import AnimatedCard from '@/components/AnimatedCard';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, Plus, Search, Filter, Sparkles, Edit, Trash2, X } from 'lucide-react';
 
 interface ConsultaForm {
   paciente_nombre: string;
@@ -48,6 +50,8 @@ const ConsultasPage: React.FC = () => {
       queryClient.invalidateQueries('consultas');
       queryClient.invalidateQueries('analytics-resumen');
       queryClient.invalidateQueries('analytics-kpis');
+      queryClient.invalidateQueries('costos-analisis');
+      queryClient.invalidateQueries('punto-equilibrio');
       setShowForm(false);
       resetForm();
     }
@@ -62,6 +66,8 @@ const ConsultasPage: React.FC = () => {
         queryClient.invalidateQueries('consultas');
         queryClient.invalidateQueries('analytics-resumen');
         queryClient.invalidateQueries('analytics-kpis');
+        queryClient.invalidateQueries('costos-analisis');
+        queryClient.invalidateQueries('punto-equilibrio');
         setEditingConsulta(null);
         setShowForm(false);
         resetForm();
@@ -75,6 +81,8 @@ const ConsultasPage: React.FC = () => {
       queryClient.invalidateQueries('consultas');
       queryClient.invalidateQueries('analytics-resumen');
       queryClient.invalidateQueries('analytics-kpis');
+      queryClient.invalidateQueries('costos-analisis');
+      queryClient.invalidateQueries('punto-equilibrio');
     }
   });
 
@@ -134,71 +142,125 @@ const ConsultasPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Calendar className="h-8 w-8 text-primary-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestión de Consultas</h1>
-            <p className="text-gray-600">Administra todas las consultas de tu consultorio</p>
-          </div>
-        </div>
-        <button 
-          onClick={() => setShowForm(true)}
-          className="btn-primary flex items-center space-x-2"
-        >
-          <Plus className="h-5 w-5" />
-          <span>Nueva Consulta</span>
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="dental-card">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Buscar por paciente..."
-                className="form-input pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      {/* Premium Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden bg-gradient-dental rounded-3xl p-8 text-white shadow-glow-dental"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="bg-white/20 rounded-2xl p-4 backdrop-blur-sm">
+              <Calendar className="h-8 w-8" />
+            </div>
+            <div>
+              <motion.h1 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl sm:text-4xl font-black flex items-center gap-2"
+              >
+                <Sparkles className="h-8 w-8 animate-pulse" />
+                Gestión de Consultas
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-white/90 mt-1 text-lg"
+              >
+                Administra todas las consultas de tu consultorio
+              </motion.p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <select
-              className="form-input"
-              value={filters.mostrar_desde}
-              onChange={(e) => setFilters({ ...filters, mostrar_desde: e.target.value })}
-            >
-              <option>Más recientes</option>
-              <option>Este mes</option>
-              <option>Último mes</option>
-              <option>Este año</option>
-            </select>
-            <select
-              className="form-input"
-              value={filters.cantidad}
-              onChange={(e) => setFilters({ ...filters, cantidad: e.target.value })}
-            >
-              <option>10</option>
-              <option>25</option>
-              <option>50</option>
-              <option>Todas</option>
-            </select>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowForm(true)}
+            className="btn-premium flex items-center space-x-2 text-base"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Nueva Consulta</span>
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Premium Filters */}
+      <AnimatedCard delay={0.1}>
+        <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-500 h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="🔍 Buscar por paciente..."
+                  className="form-input pl-10 bg-white/50 backdrop-blur-sm border-primary-200 focus:border-primary-500 focus:ring-primary-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <select
+                className="form-input bg-white/50 backdrop-blur-sm border-primary-200"
+                value={filters.mostrar_desde}
+                onChange={(e) => setFilters({ ...filters, mostrar_desde: e.target.value })}
+              >
+                <option>Más recientes</option>
+                <option>Este mes</option>
+                <option>Último mes</option>
+                <option>Este año</option>
+              </select>
+              <select
+                className="form-input bg-white/50 backdrop-blur-sm border-primary-200"
+                value={filters.cantidad}
+                onChange={(e) => setFilters({ ...filters, cantidad: e.target.value })}
+              >
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+                <option>Todas</option>
+              </select>
+            </div>
           </div>
         </div>
-      </div>
+      </AnimatedCard>
 
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">
-              {editingConsulta ? 'Editar Consulta' : 'Nueva Consulta'}
-            </h2>
+      {/* Premium Form Modal */}
+      <AnimatePresence>
+        {showForm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleCancel}
+              className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+            >
+              <div className="glass rounded-3xl p-8 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 pointer-events-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
+                    <Sparkles className="h-6 w-6 text-dental-500" />
+                    {editingConsulta ? 'Editar Consulta' : 'Nueva Consulta'}
+                  </h2>
+                  <button
+                    onClick={handleCancel}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -301,38 +363,49 @@ const ConsultasPage: React.FC = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={createMutation.isLoading || updateMutation.isLoading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+                  className="flex-1 btn-premium disabled:opacity-50"
                 >
                   {createMutation.isLoading || updateMutation.isLoading ? 'Guardando...' : 'Guardar'}
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="button"
                   onClick={handleCancel}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md transition-colors"
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-4 rounded-xl transition-colors font-medium"
                 >
                   Cancelar
-                </button>
+                </motion.button>
               </div>
             </form>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Premium Results */}
+      <AnimatedCard delay={0.2}>
+        <div className="glass rounded-2xl shadow-soft border border-white/20">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200/50">
+            <h3 className="text-xl font-bold gradient-text flex items-center gap-2">
+              <Calendar className="h-6 w-6 text-dental-500" />
+              Consultas ({consultasData?.total || 0})
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Filter className="h-5 w-5 text-primary-500" />
+              <span className="font-medium">Filtrado activo</span>
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* Results */}
-      <div className="dental-card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">
-            Consultas ({consultasData?.total || 0})
-          </h3>
-          <Filter className="h-5 w-5 text-gray-400" />
-        </div>
-
-        {consultasData?.data && consultasData.data.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="table">
+          {consultasData?.data && consultasData.data.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="table">
               <thead>
                 <tr>
                   <th>Fecha</th>
@@ -378,18 +451,24 @@ const ConsultasPage: React.FC = () => {
                     </td>
                     <td>
                       <div className="flex gap-2">
-                        <button 
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => handleEdit(consulta)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="flex items-center gap-1 px-3 py-1 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg text-sm font-medium transition-colors"
                         >
-                          ✏️ Editar
-                        </button>
-                        <button 
+                          <Edit className="h-4 w-4" />
+                          Editar
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => handleDelete(consulta.id)}
-                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                          className="flex items-center gap-1 px-3 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"
                         >
-                          🗑️ Eliminar
-                        </button>
+                          <Trash2 className="h-4 w-4" />
+                          Eliminar
+                        </motion.button>
                       </div>
                     </td>
                   </tr>
@@ -398,21 +477,33 @@ const ConsultasPage: React.FC = () => {
             </table>
           </div>
         ) : (
-          <div className="text-center py-12">
-            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay consultas</h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm ? 'No se encontraron consultas con ese criterio' : 'Aún no hay consultas registradas'}
-            </p>
-            <button 
-              onClick={() => setShowForm(true)}
-              className="btn-primary"
+          <div className="text-center py-12 px-6">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
             >
-              Registrar Primera Consulta
-            </button>
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-dental rounded-full flex items-center justify-center shadow-glow-dental">
+                <Calendar className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No hay consultas</h3>
+              <p className="text-gray-600 mb-6 max-w-sm mx-auto">
+                {searchTerm ? 'No se encontraron consultas con ese criterio' : 'Aún no hay consultas registradas'}
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowForm(true)}
+                className="btn-premium inline-flex items-center gap-2"
+              >
+                <Plus className="h-5 w-5" />
+                Registrar Primera Consulta
+              </motion.button>
+            </motion.div>
           </div>
         )}
-      </div>
+        </div>
+      </AnimatedCard>
     </div>
   );
 };

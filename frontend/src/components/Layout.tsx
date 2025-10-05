@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
   Calendar,
@@ -12,9 +13,9 @@ import {
   X,
   LogOut,
   User,
-  Activity,
   TrendingUp,
   Shield,
+  Sparkles,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -47,100 +48,146 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile sidebar */}
-      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white shadow-xl">
-          <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200">
-            <div className="flex items-center space-x-2">
-              <img src="/logo-manny.png" alt="Manny" className="h-10 w-10 object-contain" />
-              <span className="text-xl font-bold text-gray-900">Manny</span>
-            </div>
-            <button onClick={() => setSidebarOpen(false)} className="text-gray-400 hover:text-gray-600">
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-          <nav className="flex-1 px-4 py-4 space-y-2">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/20 to-dental-50/20">
+      {/* Mobile sidebar backdrop and menu */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" />
+            </motion.div>
+
+            <motion.div
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col glass-dark shadow-2xl lg:hidden"
+            >
+              <div className="flex h-16 items-center justify-between px-6 border-b border-white/10">
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-dental rounded-lg blur opacity-50"></div>
+                    <div className="relative bg-white rounded-lg p-1.5">
+                      <Sparkles className="h-6 w-6 text-dental-500" />
+                    </div>
+                  </div>
+                  <span className="text-xl font-bold text-white">Manny</span>
+                </div>
+                <button onClick={() => setSidebarOpen(false)} className="text-white/70 hover:text-white transition-colors">
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+                {navigation.map((item, index) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <motion.div
+                      key={item.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <Link
+                        to={item.href}
+                        onClick={() => setSidebarOpen(false)}
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                          isActive
+                            ? 'bg-gradient-dental text-white shadow-lg shadow-primary-500/30'
+                            : 'text-white/80 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        <span>{item.name}</span>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
-          <div className="flex h-16 items-center px-4 border-b border-gray-200">
+        <div className="flex flex-col flex-grow bg-white/80 backdrop-blur-xl border-r border-gray-200/50 shadow-soft">
+          <div className="flex h-16 items-center px-6 border-b border-gray-200/50">
             <div className="flex items-center space-x-2">
-              <img src="/logo-manny.png" alt="Manny" className="h-10 w-10 object-contain" />
-              <span className="text-xl font-bold text-gray-900">Manny</span>
-            </div>
-          </div>
-          
-          {/* User info */}
-          <div className="px-4 py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary-600" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-dental rounded-lg blur opacity-50 animate-pulse-slow"></div>
+                <div className="relative bg-white rounded-lg p-1.5 shadow-lg">
+                  <Sparkles className="h-6 w-6 text-dental-500" />
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.nombre} {getEspecialidadEmoji(user?.especialidad || 'odontologia')}
-                </p>
-                <p className="text-xs text-gray-500 capitalize">
-                  {user?.especialidad} • {user?.plan}
-                </p>
-              </div>
+              <span className="text-xl font-bold gradient-text">Manny</span>
             </div>
           </div>
 
-          <nav className="flex-1 px-4 py-4 space-y-2">
+          {/* User info */}
+          <div className="px-4 py-4 border-b border-gray-200/50">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="flex items-center space-x-3 p-3 rounded-xl bg-gradient-to-r from-primary-50 to-dental-50 border border-primary-100/50"
+            >
+              <div className="flex-shrink-0">
+                <div className="h-10 w-10 bg-gradient-dental rounded-full flex items-center justify-center shadow-md">
+                  <User className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {user?.nombre} {getEspecialidadEmoji(user?.especialidad || 'odontologia')}
+                </p>
+                <p className="text-xs text-gray-600 capitalize font-medium">
+                  {user?.especialidad} • <span className="text-primary-600">{user?.plan}</span>
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
+          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href;
               return (
-                <Link
+                <motion.div
                   key={item.name}
-                  to={item.href}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  whileHover={{ x: 4 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
                 >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.name}</span>
-                </Link>
+                  <Link
+                    to={item.href}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-gradient-dental text-white shadow-lg shadow-primary-500/20'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-primary-600'
+                    }`}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                  </Link>
+                </motion.div>
               );
             })}
           </nav>
 
-          <div className="px-4 py-4 border-t border-gray-200">
-            <button
+          <div className="px-4 py-4 border-t border-gray-200/50">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={logout}
-              className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 w-full transition-colors"
+              className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 w-full transition-all"
             >
               <LogOut className="h-5 w-5" />
               <span>Cerrar Sesión</span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
@@ -148,10 +195,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-30 flex h-16 items-center gap-x-4 border-b border-gray-200/50 bg-white/80 backdrop-blur-xl px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+            className="-m-2.5 p-2.5 text-gray-700 lg:hidden hover:bg-gray-100 rounded-lg transition-colors"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-6 w-6" />
@@ -159,18 +206,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1 items-center">
-              <h1 className="text-lg font-semibold text-gray-900">
+              <h1 className="text-lg font-bold text-gray-900">
                 {navigation.find(item => item.href === location.pathname)?.name || 'Dashboard'}
               </h1>
             </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" />
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-700">
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="hidden sm:inline font-medium">
                   {new Date().toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
+                    weekday: 'short',
+                    month: 'short',
                     day: 'numeric',
                   })}
                 </span>
@@ -179,12 +226,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
 
-        {/* Page content */}
-        <main className="py-6">
+        {/* Page content with animation */}
+        <motion.main
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="py-6"
+        >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {children}
           </div>
-        </main>
+        </motion.main>
       </div>
     </div>
   );

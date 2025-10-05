@@ -1,28 +1,39 @@
 from __future__ import annotations
 
+import hashlib
 import io
+import traceback
+from datetime import datetime, date
 from typing import Dict, Any, List
 
 import pandas as pd
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 
-from app.services.consultas import ConsultasService
+from app.models import Consulta, Paciente, PrestacionUsuario, Prestacion
+from app.schemas import PacienteCreate
 from app.utils.normalizers import (
     extraer_monto_numerico,
     normalizar_fecha_flexible,
     normalizar_medio_pago,
 )
-from app.schemas import ConsultaCreate
 
 
 class ImportCsvService:
+    @staticmethod
+    def _generate_import_hash(usuario_id: int, paciente_id: int, prestacion_id: int, fecha: date, monto: float) -> str:
+        """Generar hash único para detectar duplicados"""
+        unique_string = f"{usuario_id}_{paciente_id}_{prestacion_id}_{fecha}_{monto}"
+        return hashlib.sha256(unique_string.encode()).hexdigest()
+    
     @staticmethod
     def importar_csv(
         db: Session, usuario_id: int, csv_content: bytes, col_paciente: str, col_tratamiento: str, col_monto: str,
         col_fecha: str = None, col_medio_pago: str = None
     ) -> Dict[str, Any]:
         """
-        Importar consultas desde CSV
+        Importar consultas desde CSV con detección de duplicados
         
         Args:
             db: Sesión de base de datos
@@ -37,123 +48,336 @@ class ImportCsvService:
         Returns:
             Diccionario con resultado de la importación
         """
-        print(f"📥 Iniciando importación CSV para usuario {usuario_id}")
-        print(f"Columnas recibidas: paciente={col_paciente}, tratamiento={col_tratamiento}, monto={col_monto}")
+        print(f"\n{'='*80}")
+        print(f"📥 INICIANDO IMPORTACIÓN CSV para usuario {usuario_id}")
+        print(f"{'='*80}")
+        print(f"Columnas mapeadas:")
+        print(f"  - Paciente: {col_paciente}")
+        print(f"  - Tratamiento: {col_tratamiento}")
+        print(f"  - Monto: {col_monto}")
+        print(f"  - Fecha: {col_fecha or 'No especificada (usar hoy)'}")
+        print(f"  - Medio de pago: {col_medio_pago or 'No especificado (usar efectivo)'}")
         
-        # Detect encoding
+        # Leer CSV
         encodings = ['utf-8', 'latin1', 'cp1252', 'iso-8859-1']
         df = None
         for enc in encodings:
             try:
                 df = pd.read_csv(io.BytesIO(csv_content), encoding=enc)
-                print(f"✅ CSV leído con encoding: {enc}")
+                print(f"\n✅ CSV leído exitosamente con encoding: {enc}")
                 break
-            except UnicodeDecodeError:
+            except (UnicodeDecodeError, pd.errors.ParserError) as e:
+                print(f"❌ Falló encoding {enc}: {str(e)}")
                 continue
 
         if df is None:
-            print("❌ No se pudo leer el archivo CSV con ningún encoding")
+            error_msg = "No se pudo leer el archivo CSV. Verifica el formato y encoding."
+            print(f"\n❌ {error_msg}")
             return {
                 "migrados": 0,
                 "errores": 1,
                 "total_ars": 0,
-                "error": "No se pudo leer el archivo CSV. Verifica el formato."
+                "duplicados": 0,
+                "error": error_msg
             }
         
-        print(f"📊 CSV tiene {len(df)} filas y columnas: {list(df.columns)}")
+        # Limpiar DataFrame
+        df = df.dropna(how='all')  # Eliminar filas completamente vacías
+        df = df[df[col_monto].notna()]  # Eliminar filas sin monto
+        
+        print(f"\n📊 Archivo CSV:")
+        print(f"  - Total filas (incluyendo encabezado): {len(df) + 1}")
+        print(f"  - Filas con datos válidos: {len(df)}")
+        print(f"  - Columnas detectadas: {list(df.columns)}")
+        
+        # Obtener hashes existentes para detectar duplicados
+        existing_hashes = set()
+        existing_consultas = db.query(Consulta.import_hash).filter(
+            Consulta.usuario_id == usuario_id,
+            Consulta.import_hash.isnot(None)
+        ).all()
+        existing_hashes = {c.import_hash for c in existing_consultas}
+        print(f"\n📌 Consultas existentes con hash: {len(existing_hashes)}")
 
-        consultas_creadas = []
-        errores = 0
-        total_ars = 0
-
-        # Map prestaciones_usuario for tratamientos (simplified, assume by name)
-        prestaciones_map = {}
-        from app.models import PrestacionUsuario
-        prestaciones = db.query(PrestacionUsuario).filter(PrestacionUsuario.usuario_id == usuario_id).all()
-        for p in prestaciones:
-            name = p.nombre_personalizado or (p.prestacion.nombre if p.prestacion else "")
-            prestaciones_map[name.lower()] = p.id
-
-        # Map pacientes (simplified, assume by name+apellido)
+        # Cargar mapas de pacientes y prestaciones
+        print(f"\n🔍 Cargando datos existentes...")
         pacientes_map = {}
-        from app.models import Paciente
-        from app.schemas import PacienteCreate
         pacientes = db.query(Paciente).filter(Paciente.usuario_id == usuario_id).all()
         for p in pacientes:
-            name = f"{p.nombre} {p.apellido}".lower()
-            pacientes_map[name] = p.id
+            key = f"{p.nombre} {p.apellido}".lower().strip()
+            pacientes_map[key] = p.id
+        print(f"  - Pacientes existentes: {len(pacientes_map)}")
+
+        prestaciones_map = {}
+        prestaciones = db.query(PrestacionUsuario).filter(PrestacionUsuario.usuario_id == usuario_id).all()
+        for p in prestaciones:
+            name = (p.nombre_personalizado or (p.prestacion.nombre if p.prestacion else "")).lower().strip()
+            if name:
+                prestaciones_map[name] = p.id
+        print(f"  - Prestaciones de usuario existentes: {len(prestaciones_map)}")
+
+        # Procesar filas
+        consultas_creadas = []
+        errores_detalle = []
+        duplicados = 0
+        total_ars = 0
+
+        print(f"\n{'='*80}")
+        print(f"🔄 PROCESANDO {len(df)} FILAS")
+        print(f"{'='*80}\n")
 
         for idx, row in df.iterrows():
+            fila_num = idx + 2  # +2 porque pandas usa 0-index y hay encabezado
             try:
+                # 1. Validar y obtener paciente
+                if pd.isna(row[col_paciente]) or str(row[col_paciente]).strip() == '':
+                    print(f"⚠️  Fila {fila_num}: Paciente vacío - SALTANDO")
+                    errores_detalle.append(f"Fila {fila_num}: Paciente vacío")
+                    continue
+                    
                 paciente_name = str(row[col_paciente]).strip()
-                paciente_id = pacientes_map.get(paciente_name.lower())
+                paciente_key = paciente_name.lower().strip()
+                paciente_id = pacientes_map.get(paciente_key)
+                
                 if not paciente_id:
-                    # Create paciente if not exists - match app.py pattern
+                    # Buscar paciente en BD por nombre (case insensitive)
                     from app.services.pacientes import PacientesService
-                    name_parts = paciente_name.split()
-                    nombre = name_parts[0] if name_parts else "Sin nombre"
-                    apellido = " ".join(name_parts[1:]) if len(name_parts) > 1 else "Sin apellido"
-                    paciente_dto = PacienteCreate(nombre=nombre, apellido=apellido)
-                    paciente = PacientesService.create_paciente(db, paciente_dto, usuario_id)
-                    paciente_id = paciente.id
-                    pacientes_map[paciente_name.lower()] = paciente_id
+                    name_parts = paciente_name.split(maxsplit=1)
+                    nombre = name_parts[0] if name_parts else "Desconocido"
+                    apellido = name_parts[1] if len(name_parts) > 1 else ""
+                    
+                    # Buscar paciente existente en BD con múltiples estrategias
+                    existing_paciente = None
+                    
+                    # Estrategia 1: Nombre completo exacto (case insensitive)
+                    full_name_search = db.query(Paciente).filter(
+                        Paciente.usuario_id == usuario_id,
+                        func.lower(func.concat(Paciente.nombre, ' ', Paciente.apellido)) == paciente_key
+                    ).first()
+                    
+                    if full_name_search:
+                        existing_paciente = full_name_search
+                        print(f"  🔍 Fila {fila_num}: Paciente encontrado (nombre completo): '{paciente_name}' (ID: {existing_paciente.id})")
+                    
+                    # Estrategia 2: Nombre y apellido por separado
+                    if not existing_paciente and apellido:
+                        existing_paciente = db.query(Paciente).filter(
+                            Paciente.usuario_id == usuario_id,
+                            Paciente.nombre.ilike(nombre),
+                            Paciente.apellido.ilike(apellido)
+                        ).first()
+                        
+                        if existing_paciente:
+                            print(f"  🔍 Fila {fila_num}: Paciente encontrado (nombre+apellido): '{paciente_name}' (ID: {existing_paciente.id})")
+                    
+                    # Estrategia 3: Solo nombre (si no hay apellido o no se encontró)
+                    if not existing_paciente:
+                        existing_paciente = db.query(Paciente).filter(
+                            Paciente.usuario_id == usuario_id,
+                            Paciente.nombre.ilike(nombre)
+                        ).first()
+                        
+                        if existing_paciente:
+                            print(f"  🔍 Fila {fila_num}: Paciente encontrado (solo nombre): '{paciente_name}' (ID: {existing_paciente.id})")
+                    
+                    if existing_paciente:
+                        paciente_id = existing_paciente.id
+                        pacientes_map[paciente_key] = paciente_id
+                    else:
+                        # Crear paciente nuevo solo si realmente no existe
+                        import random
+                        paciente_dto = PacienteCreate(
+                            nombre=nombre,
+                            apellido=apellido if apellido else "",
+                            dni=f"CSV{usuario_id}{random.randint(100000, 999999)}"  # DNI temporal único
+                        )
+                        paciente = PacientesService.create_paciente(db, paciente_dto, usuario_id)
+                        paciente_id = paciente.id
+                        pacientes_map[paciente_key] = paciente_id
+                        print(f"  ➕ Fila {fila_num}: Paciente nuevo creado: '{paciente_name}' (ID: {paciente_id})")
 
+                # 2. Validar y obtener tratamiento
+                if pd.isna(row[col_tratamiento]) or str(row[col_tratamiento]).strip() == '':
+                    print(f"⚠️  Fila {fila_num}: Tratamiento vacío - SALTANDO")
+                    errores_detalle.append(f"Fila {fila_num}: Tratamiento vacío")
+                    continue
+                    
                 tratamiento_name = str(row[col_tratamiento]).strip()
-                prestacion_usuario_id = prestaciones_map.get(tratamiento_name.lower())
+                tratamiento_key = tratamiento_name.lower().strip()
+                prestacion_usuario_id = prestaciones_map.get(tratamiento_key)
+                
                 if not prestacion_usuario_id:
-                    # Create prestacion_usuario if not exists
-                    from app.services.prestaciones_usuario import PrestacionesUsuarioService
-                    from app.models import Prestacion
-                    prestacion_base = db.query(Prestacion).filter(Prestacion.nombre.ilike(f"%{tratamiento_name}%")).first()
-                    if prestacion_base:
-                        prestacion_dto = {"prestacion_id": prestacion_base.id}
+                    # Buscar prestación de usuario existente en BD
+                    existing_prestacion = db.query(PrestacionUsuario).filter(
+                        PrestacionUsuario.usuario_id == usuario_id,
+                        PrestacionUsuario.nombre_personalizado.ilike(tratamiento_name)
+                    ).first()
+                    
+                    if existing_prestacion:
+                        prestacion_usuario_id = existing_prestacion.id
+                        prestaciones_map[tratamiento_key] = prestacion_usuario_id
+                        print(f"  🔍 Fila {fila_num}: Tratamiento encontrado: '{tratamiento_name}' (ID: {prestacion_usuario_id})")
+                    else:
+                        # Buscar o crear prestación base
+                        from app.services.prestaciones_usuario import PrestacionesUsuarioService
+                        
+                        # Buscar prestación base por nombre similar
+                        prestacion_base = db.query(Prestacion).filter(
+                            Prestacion.nombre.ilike(f"%{tratamiento_name}%")
+                        ).first()
+                        
+                        if not prestacion_base:
+                            # Buscar por palabras clave comunes
+                            keywords = {
+                                'consulta': 'Consulta',
+                                'limpieza': 'Limpieza',
+                                'operatoria': 'Operatoria',
+                                'endodoncia': 'Endodoncia',
+                                'blanqueamiento': 'Blanqueamiento',
+                                'placa': 'Placa Oclusal',
+                                'corona': 'Corona',
+                                'prótesis': 'Prótesis',
+                                'obra': 'Consulta'  # obra social
+                            }
+                            
+                            for keyword, prestacion_nombre in keywords.items():
+                                if keyword in tratamiento_name.lower():
+                                    prestacion_base = db.query(Prestacion).filter(
+                                        Prestacion.nombre.ilike(f"%{prestacion_nombre}%")
+                                    ).first()
+                                    if prestacion_base:
+                                        break
+                        
+                        # Si aún no hay prestación base, usar la primera disponible o crear genérica
+                        if not prestacion_base:
+                            prestacion_base = db.query(Prestacion).first()
+                            
+                        if not prestacion_base:
+                            print(f"❌ Fila {fila_num}: No hay prestaciones base en el sistema - SALTANDO")
+                            errores_detalle.append(f"Fila {fila_num}: No hay prestaciones base")
+                            continue
+                        
+                        # Crear prestación de usuario
+                        from app.schemas.prestacion_usuario import PrestacionUsuarioCreate
+                        prestacion_dto = PrestacionUsuarioCreate(
+                            prestacion_id=prestacion_base.id,
+                            nombre_personalizado=tratamiento_name
+                        )
                         prestacion = PrestacionesUsuarioService.create_prestacion_usuario(db, prestacion_dto, usuario_id)
                         prestacion_usuario_id = prestacion.id
-                        prestaciones_map[tratamiento_name.lower()] = prestacion_usuario_id
-                    else:
-                        errores += 1
-                        continue
+                        prestaciones_map[tratamiento_key] = prestacion_usuario_id
+                        print(f"  ➕ Fila {fila_num}: Tratamiento nuevo: '{tratamiento_name}' (ID: {prestacion_usuario_id}, Base: {prestacion_base.nombre})")
 
+                # 3. Validar y extraer monto
+                if pd.isna(row[col_monto]) or str(row[col_monto]).strip() == '':
+                    print(f"⚠️  Fila {fila_num}: Monto vacío - SALTANDO")
+                    errores_detalle.append(f"Fila {fila_num}: Monto vacío")
+                    continue
+                    
                 monto_str = str(row[col_monto])
                 monto_ars = extraer_monto_numerico(monto_str)
+                
                 if monto_ars <= 0:
-                    errores += 1
+                    print(f"⚠️  Fila {fila_num}: Monto inválido '{monto_str}' -> {monto_ars} - SALTANDO")
+                    errores_detalle.append(f"Fila {fila_num}: Monto inválido '{monto_str}'")
                     continue
 
-                fecha_consulta = None
-                if col_fecha:
-                    fecha_str = str(row[col_fecha])
-                    fecha_iso = normalizar_fecha_flexible(fecha_str)
-                    from datetime import datetime
-                    fecha_consulta = datetime.fromisoformat(fecha_iso).date()
+                # 4. Extraer fecha
+                if col_fecha and not pd.isna(row.get(col_fecha)):
+                    try:
+                        fecha_str = str(row[col_fecha]).strip()
+                        fecha_iso = normalizar_fecha_flexible(fecha_str)
+                        fecha_consulta = datetime.fromisoformat(fecha_iso).date()
+                    except Exception as e:
+                        print(f"⚠️  Fila {fila_num}: Error en fecha '{row.get(col_fecha)}', usando hoy: {e}")
+                        fecha_consulta = date.today()
+                else:
+                    fecha_consulta = date.today()
 
-                medio_pago = "efectivo"
-                if col_medio_pago:
-                    medio_str = str(row[col_medio_pago])
-                    medio_pago = normalizar_medio_pago(medio_str)
+                # 5. Extraer medio de pago
+                if col_medio_pago and not pd.isna(row.get(col_medio_pago)):
+                    try:
+                        medio_str = str(row[col_medio_pago]).strip()
+                        medio_pago = normalizar_medio_pago(medio_str)
+                    except Exception as e:
+                        print(f"⚠️  Fila {fila_num}: Error en medio de pago '{row.get(col_medio_pago)}', usando efectivo: {e}")
+                        medio_pago = "efectivo"
+                else:
+                    medio_pago = "efectivo"
 
-                consulta_dto = ConsultaCreate(
+                # 6. Generar hash y verificar duplicado
+                import_hash = ImportCsvService._generate_import_hash(
+                    usuario_id, paciente_id, prestacion_usuario_id, fecha_consulta, monto_ars
+                )
+                
+                if import_hash in existing_hashes:
+                    print(f"  ⏭️  Fila {fila_num}: Duplicado detectado - SALTANDO")
+                    duplicados += 1
+                    continue
+
+                # 7. Crear consulta
+                from app.models.consultas import MedioPago, EstadoConsulta
+                consulta = Consulta(
                     paciente_id=paciente_id,
                     prestacion_usuario_id=prestacion_usuario_id,
+                    usuario_id=usuario_id,
                     fecha_consulta=fecha_consulta,
                     monto_ars=monto_ars,
-                    medio_pago=medio_pago,
+                    medio_pago=MedioPago(medio_pago),
+                    estado=EstadoConsulta.completada,
+                    import_hash=import_hash
                 )
-
-                consulta = ConsultasService.create_consulta(db, consulta_dto, usuario_id)
+                
+                db.add(consulta)
+                db.flush()  # Obtener ID sin hacer commit
+                
                 consultas_creadas.append(consulta)
+                existing_hashes.add(import_hash)
                 total_ars += monto_ars
+                
+                print(f"  ✅ Fila {fila_num}: Consulta creada - {paciente_name} | {tratamiento_name} | ${monto_ars:,.0f}")
 
             except Exception as e:
-                print(f"❌ Error procesando fila {idx}: {str(e)}")
-                errores += 1
+                error_msg = f"Fila {fila_num}: {str(e)}"
+                errores_detalle.append(error_msg)
+                print(f"  ❌ {error_msg}")
+                print(f"     Traceback: {traceback.format_exc()}")
+                db.rollback()
                 continue
+
+        # Commit final
+        try:
+            if consultas_creadas:
+                db.commit()
+                print(f"\n✅ Commit exitoso: {len(consultas_creadas)} consultas guardadas")
+            else:
+                print(f"\n⚠️  No hay consultas nuevas para guardar")
+        except Exception as e:
+            db.rollback()
+            error_msg = f"Error al guardar consultas: {str(e)}"
+            print(f"\n❌ {error_msg}")
+            return {
+                "migrados": 0,
+                "errores": len(df),
+                "total_ars": 0,
+                "duplicados": duplicados,
+                "error": error_msg
+            }
 
         result = {
             "migrados": len(consultas_creadas),
-            "errores": errores,
+            "errores": len(errores_detalle),
+            "duplicados": duplicados,
             "total_ars": round(total_ars, 0),
         }
         
-        print(f"✅ Importación completada: {result}")
+        print(f"\n{'='*80}")
+        print(f"📊 RESULTADO FINAL")
+        print(f"{'='*80}")
+        print(f"✅ Consultas importadas: {result['migrados']}")
+        print(f"⏭️  Duplicados omitidos: {result['duplicados']}")
+        print(f"❌ Errores: {result['errores']}")
+        print(f"💰 Total ARS: ${result['total_ars']:,.0f}")
+        print(f"{'='*80}\n")
+        
         return result

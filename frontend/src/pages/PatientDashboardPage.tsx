@@ -3,7 +3,9 @@ import { useQuery } from 'react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { pacientesService, consultasService } from '@/services';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus } from 'lucide-react';
+import AnimatedCard from '@/components/AnimatedCard';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus, Sparkles, User } from 'lucide-react';
 import ClinicalNotesModal from '@/components/ClinicalNotesModal';
 
 const PatientDashboardPage: React.FC = () => {
@@ -109,81 +111,124 @@ const PatientDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate('/pacientes')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">👤 {patientName}</h1>
-            <p className="text-gray-600 mt-1">Dashboard del Paciente</p>
+      {/* Premium Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden bg-gradient-dental rounded-3xl p-8 text-white shadow-glow-dental"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
+        <div className="relative">
+          <div className="flex items-center space-x-4 mb-6">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/pacientes')}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors backdrop-blur-sm"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </motion.button>
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl sm:text-4xl font-black flex items-center gap-2"
+              >
+                <User className="h-8 w-8" />
+                {patientName}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-white/90 mt-1 text-lg"
+              >
+                Dashboard del Paciente
+              </motion.p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="form-input bg-white/20 border-white/30 text-white backdrop-blur-sm"
+            >
+              <option value="all" className="text-gray-900">Todos los períodos</option>
+              <option value="month" className="text-gray-900">Este mes</option>
+              <option value="quarter" className="text-gray-900">Este trimestre</option>
+              <option value="year" className="text-gray-900">Este año</option>
+            </select>
           </div>
         </div>
-        
-        <div className="flex items-center space-x-3">
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="form-input"
-          >
-            <option value="all">Todos los períodos</option>
-            <option value="month">Este mes</option>
-            <option value="quarter">Este trimestre</option>
-            <option value="year">Este año</option>
-          </select>
-        </div>
-      </div>
+      </motion.div>
 
-      {/* Statistics Cards */}
+      {/* Premium Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="dental-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Consultas</p>
-              <p className="text-2xl font-bold text-gray-900">{totalConsultas}</p>
+        <AnimatedCard delay={0.1}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Consultas</p>
+                <p className="text-3xl font-bold gradient-text">{totalConsultas}</p>
+              </div>
+              <div className="bg-blue-100 rounded-xl p-3">
+                <Calendar className="h-8 w-8 text-blue-600" />
+              </div>
             </div>
-            <Calendar className="h-8 w-8 text-blue-600" />
           </div>
-        </div>
+        </AnimatedCard>
 
-        <div className="dental-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Gastado</p>
-              <p className="text-2xl font-bold text-gray-900">${totalGastado.toLocaleString()} ARS</p>
+        <AnimatedCard delay={0.15}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Gastado</p>
+                <p className="text-3xl font-bold gradient-text">${totalGastado.toLocaleString()}</p>
+              </div>
+              <div className="bg-green-100 rounded-xl p-3">
+                <DollarSign className="h-8 w-8 text-green-600" />
+              </div>
             </div>
-            <DollarSign className="h-8 w-8 text-green-600" />
           </div>
-        </div>
+        </AnimatedCard>
 
-        <div className="dental-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Promedio por Consulta</p>
-              <p className="text-2xl font-bold text-gray-900">${promedioConsulta.toLocaleString()} ARS</p>
+        <AnimatedCard delay={0.2}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Promedio</p>
+                <p className="text-3xl font-bold gradient-text">${promedioConsulta.toLocaleString()}</p>
+              </div>
+              <div className="bg-purple-100 rounded-xl p-3">
+                <TrendingUp className="h-8 w-8 text-purple-600" />
+              </div>
             </div>
-            <TrendingUp className="h-8 w-8 text-purple-600" />
           </div>
-        </div>
+        </AnimatedCard>
 
-        <div className="dental-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Tratamiento Frecuente</p>
-              <p className="text-sm font-bold text-gray-900 truncate">{tratamientoMasFrecuente}</p>
+        <AnimatedCard delay={0.25}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Tratamiento Frecuente</p>
+                <p className="text-sm font-bold gradient-text truncate">{tratamientoMasFrecuente}</p>
+              </div>
+              <div className="bg-orange-100 rounded-xl p-3">
+                <Activity className="h-8 w-8 text-orange-600" />
+              </div>
             </div>
-            <Activity className="h-8 w-8 text-orange-600" />
           </div>
-        </div>
+        </AnimatedCard>
       </div>
 
       {/* Patient Timeline */}
       {primeraConsulta && ultimaConsulta && (
-        <div className="dental-card">
+        <AnimatedCard delay={0.3}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
           <h3 className="text-lg font-semibold mb-4 flex items-center">
             <Clock className="h-5 w-5 mr-2 text-blue-600" />
             Línea de Tiempo del Paciente
@@ -208,12 +253,14 @@ const PatientDashboardPage: React.FC = () => {
               </p>
             </div>
           </div>
-        </div>
+          </div>
+        </AnimatedCard>
       )}
 
       {/* Treatment Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="dental-card">
+        <AnimatedCard delay={0.35}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
           <h3 className="text-lg font-semibold mb-4">📊 Tratamientos Realizados</h3>
           <div className="space-y-3">
             {Object.entries(tratamientos)
@@ -259,11 +306,13 @@ const PatientDashboardPage: React.FC = () => {
                 </div>
               ))}
           </div>
-        </div>
+          </div>
+        </AnimatedCard>
       </div>
 
       {/* Consultation History */}
-      <div className="dental-card">
+      <AnimatedCard delay={0.45}>
+        <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
         <h3 className="text-lg font-semibold mb-4">📋 Historial de Consultas</h3>
         
         {filteredConsultas.length > 0 ? (
@@ -331,7 +380,8 @@ const PatientDashboardPage: React.FC = () => {
             </p>
           </div>
         )}
-      </div>
+        </div>
+      </AnimatedCard>
 
       {/* Clinical Notes Modal */}
       {showClinicalModal && selectedConsultationId && (

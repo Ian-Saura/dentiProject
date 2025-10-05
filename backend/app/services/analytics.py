@@ -172,3 +172,100 @@ class AnalyticsService:
             'cantidad_equipos': len([e for e in equipos if e.activo]),
             'cantidad_gastos': len([g for g in gastos if g.activo])
         }
+
+    @staticmethod
+    def calcular_punto_equilibrio(db: Session, usuario_id: int) -> Dict[str, Any]:
+        """
+        Calcula el Punto de Equilibrio (Break-Even Point)
+        
+        Punto de Equilibrio = Costos Fijos Totales / (Precio Promedio por Consulta - Costo Variable Promedio)
+        
+        Returns:
+            - consultas_necesarias_mes: Número de consultas mensuales para alcanzar equilibrio
+            - consultas_necesarias_anual: Número de consultas anuales para alcanzar equilibrio
+            - ingreso_necesario_mes: Ingreso mensual necesario para equilibrio
+            - ingreso_necesario_anual: Ingreso anual necesario para equilibrio
+            - precio_promedio: Precio promedio por consulta
+            - margen_contribucion: Margen de contribución por consulta
+            - costos_fijos_mensuales: Total de costos fijos mensuales
+        """
+        from app.models import Consulta
+        
+        # 1. Obtener costos fijos anuales
+        costo_analysis = AnalyticsService.calcular_costo_hora_real(db, usuario_id)
+        costos_fijos_anuales = costo_analysis['costo_total_anual']
+        costos_fijos_mensuales = costos_fijos_anuales / 12
+        
+        # 2. Calcular precio promedio por consulta y costo variable
+        consultas = db.query(Consulta).filter(
+            Consulta.usuario_id == usuario_id
+        ).all()
+        
+        if not consultas or len(consultas) == 0:
+            # Si no hay consultas, usar valores estimados
+            precio_promedio = 50000  # Precio promedio estimado
+            costo_variable = 5000    # 10% del precio como costo variable estimado
+        else:
+            # Calcular precio promedio real
+            precio_promedio = sum(float(c.monto_ars) for c in consultas) / len(consultas)
+            
+            # Costo variable estimado: 10-15% del precio (materiales, insumos por consulta)
+            # En odontología, típicamente los costos variables son bajos
+            costo_variable = precio_promedio * 0.10
+        
+        # 3. Calcular margen de contribución
+        margen_contribucion = precio_promedio - costo_variable
+        
+        # 4. Calcular punto de equilibrio
+        if margen_contribucion <= 0:
+            # Si no hay margen positivo, no es posible alcanzar equilibrio
+            return {
+                'consultas_necesarias_mes': None,
+                'consultas_necesarias_anual': None,
+                'ingreso_necesario_mes': None,
+                'ingreso_necesario_anual': None,
+                'precio_promedio': round(precio_promedio, 0),
+                'costo_variable_promedio': round(costo_variable, 0),
+                'margen_contribucion': round(margen_contribucion, 0),
+                'costos_fijos_mensuales': round(costos_fijos_mensuales, 0),
+                'costos_fijos_anuales': round(costos_fijos_anuales, 0),
+                'error': 'Margen de contribución negativo. Revisar precios y costos.'
+            }
+        
+        # Punto de Equilibrio mensual y anual
+        consultas_equilibrio_mes = costos_fijos_mensuales / margen_contribucion
+        consultas_equilibrio_anual = costos_fijos_anuales / margen_contribucion
+        
+        # Ingreso necesario
+        ingreso_necesario_mes = consultas_equilibrio_mes * precio_promedio
+        ingreso_necesario_anual = consultas_equilibrio_anual * precio_promedio
+        
+        # 5. Calcular consultas actuales para comparar
+        from datetime import datetime, timedelta
+        hoy = datetime.now().date()
+        mes_pasado = hoy - timedelta(days=30)
+        
+        consultas_ultimo_mes = db.query(Consulta).filter(
+            Consulta.usuario_id == usuario_id,
+            Consulta.fecha_consulta >= mes_pasado
+        ).count()
+        
+        # Calcular si está por encima o debajo del punto de equilibrio
+        diferencia_consultas = consultas_ultimo_mes - consultas_equilibrio_mes
+        porcentaje_equilibrio = (consultas_ultimo_mes / consultas_equilibrio_mes * 100) if consultas_equilibrio_mes > 0 else 0
+        
+        return {
+            'consultas_necesarias_mes': round(consultas_equilibrio_mes, 1),
+            'consultas_necesarias_anual': round(consultas_equilibrio_anual, 0),
+            'ingreso_necesario_mes': round(ingreso_necesario_mes, 0),
+            'ingreso_necesario_anual': round(ingreso_necesario_anual, 0),
+            'precio_promedio': round(precio_promedio, 0),
+            'costo_variable_promedio': round(costo_variable, 0),
+            'margen_contribucion': round(margen_contribucion, 0),
+            'costos_fijos_mensuales': round(costos_fijos_mensuales, 0),
+            'costos_fijos_anuales': round(costos_fijos_anuales, 0),
+            'consultas_ultimo_mes': consultas_ultimo_mes,
+            'diferencia_consultas': round(diferencia_consultas, 1),
+            'porcentaje_equilibrio': round(porcentaje_equilibrio, 1),
+            'esta_en_equilibrio': consultas_ultimo_mes >= consultas_equilibrio_mes
+        }

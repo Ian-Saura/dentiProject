@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/contexts/AuthContext';
-import { Activity, Eye, EyeOff } from 'lucide-react';
+import { Activity, Eye, EyeOff, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { motion } from 'framer-motion';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -38,24 +39,69 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-dental-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="flex justify-center">
-            <div className="flex items-center space-x-2">
-              <Activity className="h-12 w-12 text-primary-600" />
-              <span className="text-3xl font-bold text-gray-900">Manny App</span>
-            </div>
-          </div>
-          <h2 className="mt-6 text-2xl font-bold text-gray-900">
-            Sistema de Gestión de Consultorios
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Inicia sesión para acceder a tu consultorio
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-dental-50 to-trust-50">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary-200/30 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse-slow"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-dental-200/30 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse-slow animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-trust-200/30 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse-slow animation-delay-4000"></div>
+      </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-8">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md w-full space-y-8 relative z-10"
+      >
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="text-center"
+        >
+          <div className="flex justify-center mb-4">
+            <motion.div 
+              className="relative"
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <div className="absolute inset-0 bg-gradient-dental rounded-full blur-xl opacity-50 animate-pulse-slow"></div>
+              <div className="relative flex items-center justify-center space-x-3 bg-white rounded-2xl px-6 py-4 shadow-glow-dental">
+                <Activity className="h-10 w-10 text-transparent bg-gradient-dental bg-clip-text" style={{ 
+                  background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #8b5cf6 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }} />
+                <span className="text-3xl font-black gradient-text">Manny App</span>
+                <Sparkles className="h-6 w-6 text-yellow-400 animate-pulse" />
+              </div>
+            </motion.div>
+          </div>
+          <motion.h2 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mt-6 text-3xl font-extrabold text-gray-900"
+          >
+            Sistema de Gestión <span className="gradient-text">Dental Premium</span>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-3 text-base text-gray-600 font-medium"
+          >
+            Transforma tu práctica con tecnología de vanguardia
+          </motion.p>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="glass rounded-3xl shadow-2xl p-8 backdrop-blur-xl border border-white/20"
+        >
           {/* Google Sign In */}
           <div className="mb-6">
             <GoogleLogin
@@ -71,14 +117,14 @@ const LoginPage: React.FC = () => {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-gray-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">O continúa con email</span>
+              <span className="px-4 glass-dark text-white text-xs font-medium rounded-full">O continúa con email</span>
             </div>
           </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="username" className="form-label">
                 Usuario
@@ -149,11 +195,14 @@ const LoginPage: React.FC = () => {
               </div>
             )}
 
-            <div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
               <button
                 type="submit"
                 disabled={isLoading || !username || !password}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full btn-premium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold"
               >
                 {isLoading ? (
                   <>
@@ -161,28 +210,34 @@ const LoginPage: React.FC = () => {
                     Iniciando sesión...
                   </>
                 ) : (
-                  '🚀 Ingresar'
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Ingresar al Dashboard
+                  </>
                 )}
               </button>
-            </div>
+            </motion.div>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-700">
               ¿No tienes cuenta?{' '}
-              <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
-                Regístrate aquí
+              <Link to="/register" className="gradient-text font-bold hover:underline">
+                Regístrate gratis
               </Link>
             </p>
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
-              Sistema de gestión dental v6.0 - Conectado a API Backend
-            </p>
+          <div className="mt-6 flex items-center justify-center space-x-4 text-xs text-gray-500">
+            <span className="flex items-center">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+              Sistema Activo
+            </span>
+            <span>•</span>
+            <span>v7.0 Premium</span>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

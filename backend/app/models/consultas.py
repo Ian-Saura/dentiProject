@@ -4,7 +4,7 @@ import enum
 from datetime import date, datetime
 from typing import Optional
 
-from sqlalchemy import DECIMAL, Boolean, Date, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import DECIMAL, Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -28,6 +28,11 @@ class EstadoConsulta(str, enum.Enum):
 
 class Consulta(Base):
     __tablename__ = "consultas"
+    
+    # Índice único compuesto para evitar duplicados en importación CSV
+    __table_args__ = (
+        Index('idx_consulta_unica', 'usuario_id', 'paciente_id', 'prestacion_usuario_id', 'fecha_consulta', 'monto_ars', unique=False),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     paciente_id: Mapped[int] = mapped_column(Integer, ForeignKey("pacientes.id", ondelete="RESTRICT"), nullable=False)
@@ -44,6 +49,9 @@ class Consulta(Base):
     notas_privadas: Mapped[Optional[str]] = mapped_column(String(1000))
     descuento_aplicado: Mapped[float] = mapped_column(DECIMAL(5, 2), default=0.00)
     fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    
+    # Hash único para detectar duplicados en importación CSV
+    import_hash: Mapped[Optional[str]] = mapped_column(String(64), index=True)
 
     paciente: Mapped["Paciente"] = relationship(back_populates="consultas")
     prestacion_usuario: Mapped["PrestacionUsuario"] = relationship(back_populates="consultas")
