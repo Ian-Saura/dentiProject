@@ -79,11 +79,11 @@ ssh -p${SERVER_PORT} ${SERVER_USER}@${SERVER_IP} << 'ENDSSH'
 cd /opt/dentiproject
 if ! grep -q "GOOGLE_CLIENT_ID" .env 2>/dev/null; then
     echo "" >> .env
-    echo "# Google OAuth" >> .env
+    echo "# Google OAuth - SET YOUR OWN VALUES" >> .env
     echo "GOOGLE_CLIENT_ID=your-google-client-id-here" >> .env
     echo "GOOGLE_CLIENT_SECRET=your-google-client-secret-here" >> .env
     echo "GOOGLE_REDIRECT_URI=http://192.168.2.108:8000/v1/auth/google/callback" >> .env
-    echo "✓ Google OAuth credentials agregadas"
+    echo "⚠️  Google OAuth placeholders added - UPDATE WITH YOUR CREDENTIALS"
 else
     echo "✓ Google OAuth credentials ya existen"
 fi
