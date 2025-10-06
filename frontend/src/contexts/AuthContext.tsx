@@ -142,8 +142,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     toast.success('Sesión cerrada');
   };
 
-  // Check if user is admin (you can adjust this logic based on your role structure)
-  const isAdmin = user?.username === 'admin' || user?.plan === 'admin';
+  // Check if user is admin based on username or role
+  const isAdmin = user?.username === 'admin' || user?.role_name === 'admin';
 
   const value: AuthContextType = {
     user,

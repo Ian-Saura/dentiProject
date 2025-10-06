@@ -10,6 +10,7 @@ export interface User {
   plan: 'trial' | 'premium' | 'enterprise';
   fecha_registro: string;
   activo: boolean;
+  role_name?: string;
 }
 
 export interface AuthResponse {

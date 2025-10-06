@@ -25,7 +25,7 @@ export const importService = {
       formData.append('col_medio_pago', mapping.col_medio_pago);
     }
 
-    const response = await api.post<ImportResult>('/import', formData, {
+    const response = await api.post<ImportResult>('/import/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

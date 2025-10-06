@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { equiposService, gastosService } from '../services';
 import LoadingSpinner from '../components/LoadingSpinner';
+import AnimatedCard from '../components/AnimatedCard';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Settings, Wrench, Building2, Sliders, Sparkles, Plus, Edit, Trash2, X } from 'lucide-react';
 
 interface Equipo {
   id: number;
@@ -183,68 +186,138 @@ const ConfiguracionPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">⚙️ Configuración de Costos</h1>
-        <p className="text-gray-600 mt-2">Gestiona equipos y gastos fijos para el análisis de costos</p>
-      </div>
+      {/* Premium Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden bg-gradient-dental rounded-3xl p-8 text-white shadow-glow-dental"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
+        <div className="relative flex items-center space-x-4">
+          <div className="bg-white/20 rounded-2xl p-4 backdrop-blur-sm">
+            <Settings className="h-8 w-8" />
+          </div>
+          <div>
+            <motion.h1
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-3xl sm:text-4xl font-black flex items-center gap-2"
+            >
+              <Sparkles className="h-8 w-8 animate-pulse" />
+              Configuración de Costos
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-white/90 mt-1 text-lg"
+            >
+              Gestiona equipos y gastos fijos para el análisis de costos
+            </motion.p>
+          </div>
+        </div>
+      </motion.div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('equipos')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'equipos'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            🔧 Equipos
-          </button>
-          <button
-            onClick={() => setActiveTab('gastos')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'gastos'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            🏢 Gastos Fijos
-          </button>
-          <button
-            onClick={() => setActiveTab('parametros')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'parametros'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            ⚙️ Parámetros
-          </button>
-        </nav>
-      </div>
+      {/* Premium Tabs */}
+      <AnimatedCard delay={0.1}>
+        <div className="glass rounded-2xl p-2 shadow-soft border border-white/20">
+          <nav className="flex space-x-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveTab('equipos')}
+              className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                activeTab === 'equipos'
+                  ? 'bg-gradient-dental text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Wrench className="h-5 w-5" />
+              Equipos
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveTab('gastos')}
+              className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                activeTab === 'gastos'
+                  ? 'bg-gradient-dental text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Building2 className="h-5 w-5" />
+              Gastos Fijos
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveTab('parametros')}
+              className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                activeTab === 'parametros'
+                  ? 'bg-gradient-dental text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Sliders className="h-5 w-5" />
+              Parámetros
+            </motion.button>
+          </nav>
+        </div>
+      </AnimatedCard>
 
       {/* Equipment Tab */}
       {activeTab === 'equipos' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Equipamiento del Consultorio</h2>
-            <button
+            <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
+              <Wrench className="h-6 w-6 text-dental-500" />
+              Equipamiento del Consultorio
+            </h2>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowEquipoForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              className="btn-premium flex items-center gap-2"
             >
-              ➕ Nuevo Equipo
-            </button>
+              <Plus className="h-5 w-5" />
+              Nuevo Equipo
+            </motion.button>
           </div>
 
           {/* Equipment Form Modal */}
+          <AnimatePresence>
           {showEquipoForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                <h3 className="text-lg font-bold mb-4">
-                  {editingEquipo ? 'Editar Equipo' : 'Nuevo Equipo'}
-                </h3>
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => { setShowEquipoForm(false); setEditingEquipo(null); resetEquipoForm(); }}
+                className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', damping: 25 }}
+                className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+              >
+              <div className="glass rounded-3xl p-8 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 pointer-events-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold gradient-text flex items-center gap-2">
+                    <Sparkles className="h-6 w-6 text-dental-500" />
+                    {editingEquipo ? 'Editar Equipo' : 'Nuevo Equipo'}
+                  </h3>
+                  <button
+                    onClick={() => { setShowEquipoForm(false); setEditingEquipo(null); resetEquipoForm(); }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
                 
                 <form onSubmit={handleEquipoSubmit} className="space-y-4">
                   <div>
@@ -318,29 +391,35 @@ const ConfiguracionPage: React.FC = () => {
                   </div>
 
                   <div className="flex gap-3 pt-4">
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       type="submit"
                       disabled={createEquipoMutation.isLoading || updateEquipoMutation.isLoading}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+                      className="flex-1 btn-premium disabled:opacity-50"
                     >
                       {createEquipoMutation.isLoading || updateEquipoMutation.isLoading ? 'Guardando...' : 'Guardar'}
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={() => {
                         setShowEquipoForm(false);
                         setEditingEquipo(null);
                         resetEquipoForm();
                       }}
-                      className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md transition-colors"
+                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-4 rounded-xl transition-colors font-medium"
                     >
                       Cancelar
-                    </button>
+                    </motion.button>
                   </div>
                 </form>
               </div>
-            </div>
+              </motion.div>
+            </>
           )}
+          </AnimatePresence>
 
           {/* Equipment List */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -386,13 +465,31 @@ const ConfiguracionPage: React.FC = () => {
             </div>
 
             {equipos?.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-gray-500 text-lg">🔧</div>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No hay equipos registrados</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Agrega equipos para calcular los costos de amortización.
-                </p>
-              </div>
+              <AnimatedCard delay={0.3}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center py-16 px-6"
+                >
+                  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-dental-400 to-dental-600 rounded-3xl flex items-center justify-center shadow-glow-dental">
+                    <Wrench className="h-12 w-12 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold gradient-text mb-3">No hay equipos registrados</h3>
+                  <p className="text-gray-600 text-lg mb-6 max-w-md mx-auto">
+                    Agrega equipos de tu consultorio para calcular los costos de amortización y tener un análisis financiero preciso.
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowEquipoForm(true)}
+                    className="btn-premium inline-flex items-center gap-2"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Agregar Primer Equipo
+                  </motion.button>
+                </motion.div>
+              </AnimatedCard>
             )}
           </div>
         </div>
@@ -529,13 +626,31 @@ const ConfiguracionPage: React.FC = () => {
             )}
 
             {gastos?.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-gray-500 text-lg">🏢</div>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No hay gastos fijos registrados</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Agrega gastos fijos para calcular los costos operativos.
-                </p>
-              </div>
+              <AnimatedCard delay={0.3}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center py-16 px-6"
+                >
+                  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-400 to-purple-600 rounded-3xl flex items-center justify-center shadow-lg">
+                    <Building2 className="h-12 w-12 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold gradient-text mb-3">No hay gastos fijos registrados</h3>
+                  <p className="text-gray-600 text-lg mb-6 max-w-md mx-auto">
+                    Registra tus gastos fijos mensuales (alquiler, servicios, etc.) para calcular los costos operativos reales de tu consultorio.
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowGastoForm(true)}
+                    className="btn-premium inline-flex items-center gap-2"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Agregar Primer Gasto
+                  </motion.button>
+                </motion.div>
+              </AnimatedCard>
             )}
           </div>
         </div>

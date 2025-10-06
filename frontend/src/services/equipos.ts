@@ -3,7 +3,7 @@ import { CostoEquipo, CostoEquipoCreate } from '@/types';
 
 export const equiposService = {
   async getEquipos(): Promise<CostoEquipo[]> {
-    const response = await api.get<CostoEquipo[]>('/equipos');
+    const response = await api.get<CostoEquipo[]>('/equipos/');
     return response.data;
   },
 
@@ -13,7 +13,7 @@ export const equiposService = {
   },
 
   async createEquipo(equipo: CostoEquipoCreate): Promise<CostoEquipo> {
-    const response = await api.post<CostoEquipo>('/equipos', equipo);
+    const response = await api.post<CostoEquipo>('/equipos/', equipo);
     return response.data;
   },
 

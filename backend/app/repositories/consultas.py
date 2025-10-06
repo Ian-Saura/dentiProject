@@ -18,6 +18,8 @@ def list_consultas(
     order_by: Optional[str] = None,
     filtros: Optional[Dict[str, any]] = None,
 ) -> List[Consulta]:
+    from app.models import Paciente
+    
     query = (
         select(Consulta)
         .where(Consulta.usuario_id == usuario_id)
@@ -36,10 +38,10 @@ def list_consultas(
             query = query.where(Consulta.medio_pago == filtros["medio_pago"])
         if "paciente_q" in filtros and filtros["paciente_q"]:
             q = filtros["paciente_q"]
-            query = query.where(
+            query = query.join(Paciente, Consulta.paciente_id == Paciente.id).where(
                 or_(
-                    Consulta.paciente.nombre.ilike(f"%{q}%"),
-                    Consulta.paciente.apellido.ilike(f"%{q}%"),
+                    Paciente.nombre.ilike(f"%{q}%"),
+                    Paciente.apellido.ilike(f"%{q}%"),
                 )
             )
 
@@ -61,6 +63,8 @@ def list_consultas(
 def count_consultas(
     db: Session, usuario_id: int, filtros: Optional[Dict[str, any]] = None
 ) -> int:
+    from app.models import Paciente
+    
     query = select(Consulta).where(Consulta.usuario_id == usuario_id)
 
     if filtros:
@@ -72,10 +76,10 @@ def count_consultas(
             query = query.where(Consulta.medio_pago == filtros["medio_pago"])
         if "paciente_q" in filtros and filtros["paciente_q"]:
             q = filtros["paciente_q"]
-            query = query.where(
+            query = query.join(Paciente, Consulta.paciente_id == Paciente.id).where(
                 or_(
-                    Consulta.paciente.nombre.ilike(f"%{q}%"),
-                    Consulta.paciente.apellido.ilike(f"%{q}%"),
+                    Paciente.nombre.ilike(f"%{q}%"),
+                    Paciente.apellido.ilike(f"%{q}%"),
                 )
             )
 
@@ -84,8 +88,13 @@ def count_consultas(
 
 
 def get_consulta(db: Session, consulta_id: int, usuario_id: int) -> Optional[Consulta]:
-    query = select(Consulta).where(
-        Consulta.id == consulta_id, Consulta.usuario_id == usuario_id
+    query = (
+        select(Consulta)
+        .where(Consulta.id == consulta_id, Consulta.usuario_id == usuario_id)
+        .options(
+            joinedload(Consulta.paciente),
+            joinedload(Consulta.prestacion_usuario).joinedload(PrestacionUsuario.prestacion)
+        )
     )
     return db.execute(query).scalar_one_or_none()
 
@@ -111,7 +120,8 @@ def create_consulta(db: Session, dto: ConsultaCreate, usuario_id: int) -> Consul
     db.add(consulta)
     db.commit()
     db.refresh(consulta)
-    return consulta
+    # Reload with relationships
+    return get_consulta(db, consulta.id, usuario_id)
 
 
 def update_consulta(
@@ -145,7 +155,8 @@ def update_consulta(
 
     db.commit()
     db.refresh(consulta)
-    return consulta
+    # Reload with relationships
+    return get_consulta(db, consulta.id, usuario_id)
 
 
 def delete_consulta(db: Session, consulta_id: int, usuario_id: int) -> bool:

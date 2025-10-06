@@ -7,7 +7,7 @@ export const pacientesService = {
     offset?: number;
     search?: string;
   }): Promise<Paciente[]> {
-    const response = await api.get<Paciente[]>('/pacientes', { params });
+    const response = await api.get<Paciente[]>('/pacientes/', { params });
     return response.data;
   },
 
@@ -17,7 +17,7 @@ export const pacientesService = {
   },
 
   async createPaciente(paciente: PacienteCreate): Promise<Paciente> {
-    const response = await api.post<Paciente>('/pacientes', paciente);
+    const response = await api.post<Paciente>('/pacientes/', paciente);
     return response.data;
   },
 

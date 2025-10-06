@@ -3,7 +3,7 @@ import { GastoFijo, GastoFijoCreate } from '@/types';
 
 export const gastosService = {
   async getGastos(): Promise<GastoFijo[]> {
-    const response = await api.get<GastoFijo[]>('/gastos');
+    const response = await api.get<GastoFijo[]>('/gastos/');
     return response.data;
   },
 
@@ -13,7 +13,7 @@ export const gastosService = {
   },
 
   async createGasto(gasto: GastoFijoCreate): Promise<GastoFijo> {
-    const response = await api.post<GastoFijo>('/gastos', gasto);
+    const response = await api.post<GastoFijo>('/gastos/', gasto);
     return response.data;
   },
 

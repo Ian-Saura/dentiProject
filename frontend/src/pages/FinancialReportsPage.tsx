@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
-import { TrendingUp, DollarSign, Calendar, PieChart, BarChart3, Download } from 'lucide-react';
+import { TrendingUp, DollarSign, Calendar, PieChart, BarChart3, Download, Sparkles } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AnimatedCard from '@/components/AnimatedCard';
+import { motion } from 'framer-motion';
 import { consultasService, configService } from '@/services';
 import { gastosService } from '@/services/gastos';
 
@@ -190,81 +192,131 @@ const FinancialReportsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <TrendingUp className="h-8 w-8 text-primary-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">📊 Reportes Financieros</h1>
-            <p className="text-gray-600">Análisis detallado de ingresos, gastos y rentabilidad</p>
-          </div>
-        </div>
-        <button
-          onClick={downloadReport}
-          className="btn-secondary flex items-center space-x-2"
-        >
-          <Download className="h-5 w-5" />
-          <span>Descargar Reporte</span>
-        </button>
-      </div>
-
-      {/* Controls */}
-      <div className="dental-card">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Reporte</label>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setReportType('pl')}
-                className={`px-4 py-2 rounded-md text-sm font-medium ${
-                  reportType === 'pl' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+      {/* Premium Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden bg-gradient-dental rounded-3xl p-8 text-white shadow-glow-dental"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="bg-white/20 rounded-2xl p-4 backdrop-blur-sm">
+              <TrendingUp className="h-8 w-8" />
+            </div>
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl sm:text-4xl font-black flex items-center gap-2"
               >
-                P&L Mensual
-              </button>
-              <button
-                onClick={() => setReportType('cashflow')}
-                className={`px-4 py-2 rounded-md text-sm font-medium ${
-                  reportType === 'cashflow' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+                <Sparkles className="h-8 w-8 animate-pulse" />
+                Reportes Financieros
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-white/90 mt-1 text-lg"
               >
-                Flujo de Caja
-              </button>
-              <button
-                onClick={() => setReportType('profitability')}
-                className={`px-4 py-2 rounded-md text-sm font-medium ${
-                  reportType === 'profitability' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Rentabilidad
-              </button>
+                Análisis detallado de ingresos, gastos y rentabilidad
+              </motion.p>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Período</label>
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="form-input"
-            >
-              <option value="3months">Últimos 3 meses</option>
-              <option value="6months">Últimos 6 meses</option>
-              <option value="12months">Último año</option>
-              <option value="all">Todo el período</option>
-            </select>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={downloadReport}
+            className="btn-premium flex items-center space-x-2"
+          >
+            <Download className="h-5 w-5" />
+            <span>Descargar Reporte</span>
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Controls */}
+      <AnimatedCard delay={0.1}>
+        <div className="glass rounded-2xl p-6 shadow-soft border border-white/20">
+        <div className="flex flex-col sm:flex-row gap-6">
+          <div className="flex-1">
+            <label className="block text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-dental-500" />
+              Tipo de Reporte
+            </label>
+            <div className="flex flex-wrap gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setReportType('pl')}
+                className={`px-5 py-3 rounded-xl text-sm font-semibold transition-all shadow-md ${
+                  reportType === 'pl' 
+                    ? 'bg-gradient-dental text-white shadow-lg shadow-dental-500/30' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-200'
+                }`}
+              >
+                📈 P&L Mensual
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setReportType('cashflow')}
+                className={`px-5 py-3 rounded-xl text-sm font-semibold transition-all shadow-md ${
+                  reportType === 'cashflow' 
+                    ? 'bg-gradient-dental text-white shadow-lg shadow-dental-500/30' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-200'
+                }`}
+              >
+                💵 Flujo de Caja
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setReportType('profitability')}
+                className={`px-5 py-3 rounded-xl text-sm font-semibold transition-all shadow-md ${
+                  reportType === 'profitability' 
+                    ? 'bg-gradient-dental text-white shadow-lg shadow-dental-500/30' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-200'
+                }`}
+              >
+                🎯 Rentabilidad
+              </motion.button>
+            </div>
+          </div>
+          <div className="sm:w-64">
+            <label className="block text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-dental-500" />
+              Período
+            </label>
+            <div className="relative">
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="form-input w-full pl-4 pr-10 py-3 text-base font-medium bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 focus:border-dental-500 focus:ring-2 focus:ring-dental-500/20 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+              >
+                <option value="3months">📅 Últimos 3 meses</option>
+                <option value="6months">📅 Últimos 6 meses</option>
+                <option value="12months">📅 Último año</option>
+                <option value="all">📅 Todo el período</option>
+              </select>
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg className="w-5 h-5 text-dental-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+        </div>
+      </AnimatedCard>
 
       {/* P&L Report */}
       {reportType === 'pl' && (
-        <div className="dental-card">
+        <AnimatedCard delay={0.2}>
+          <div className="glass rounded-2xl p-6 shadow-soft border border-white/20">
           <div className="flex items-center space-x-2 mb-4">
             <BarChart3 className="h-6 w-6 text-blue-600" />
             <h3 className="text-lg font-semibold">Estado de Resultados Mensual</h3>
@@ -338,12 +390,14 @@ const FinancialReportsPage: React.FC = () => {
               <div className="text-sm text-purple-700">Margen Promedio</div>
             </div>
           </div>
-        </div>
+          </div>
+        </AnimatedCard>
       )}
 
       {/* Cash Flow Report */}
       {reportType === 'cashflow' && (
-        <div className="dental-card">
+        <AnimatedCard delay={0.2}>
+          <div className="glass rounded-2xl p-6 shadow-soft border border-white/20">
           <div className="flex items-center space-x-2 mb-4">
             <DollarSign className="h-6 w-6 text-green-600" />
             <h3 className="text-lg font-semibold">Flujo de Caja Mensual</h3>
@@ -381,12 +435,14 @@ const FinancialReportsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
+          </div>
+        </AnimatedCard>
       )}
 
       {/* Treatment Profitability Report */}
       {reportType === 'profitability' && (
-        <div className="dental-card">
+        <AnimatedCard delay={0.2}>
+          <div className="glass rounded-2xl p-6 shadow-soft border border-white/20">
           <div className="flex items-center space-x-2 mb-4">
             <PieChart className="h-6 w-6 text-purple-600" />
             <h3 className="text-lg font-semibold">Rentabilidad por Tratamiento</h3>
@@ -442,7 +498,8 @@ const FinancialReportsPage: React.FC = () => {
               ))}
             </div>
           </div>
-        </div>
+          </div>
+        </AnimatedCard>
       )}
     </div>
   );

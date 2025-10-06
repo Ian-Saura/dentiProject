@@ -215,31 +215,99 @@ const ImportPage: React.FC = () => {
 
       {/* Premium Instructions */}
       <AnimatedCard delay={0.1}>
-        <div className="glass rounded-2xl shadow-soft p-6 bg-gradient-to-r from-blue-50 to-dental-50 border border-blue-200/50">
-          <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
-            <Zap className="h-6 w-6 text-dental-500" />
-            Instrucciones de Importación
-          </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
-          <div>
-            <h4 className="font-medium mb-2">✅ Formatos Soportados:</h4>
-            <ul className="space-y-1">
-              <li>• Archivos CSV (UTF-8, Latin1, CP1252)</li>
-              <li>• Montos: $30,000 | 30000 | 30.000</li>
-              <li>• Fechas: DD-MM-YYYY | DD/MM/YYYY</li>
-              <li>• Medios de pago: Efectivo, Transferencia, etc.</li>
-            </ul>
+        <div className="glass rounded-2xl shadow-soft p-8 bg-gradient-to-br from-blue-50 via-dental-50 to-purple-50 border-2 border-blue-200/50">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="bg-gradient-dental rounded-2xl p-4 shadow-lg">
+              <Zap className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-black gradient-text mb-2">
+                🚀 ¡Importa tus consultas fácilmente!
+              </h3>
+              <p className="text-gray-600 text-lg">
+                Subimos tu archivo CSV y lo procesamos automáticamente. Sin complicaciones.
+              </p>
+            </div>
           </div>
-          <div>
-            <h4 className="font-medium mb-2">🔧 Normalización Automática:</h4>
-            <ul className="space-y-1">
-              <li>• Nombres de pacientes (mayúsculas/minúsculas)</li>
-              <li>• Tratamientos (consulta → Consulta)</li>
-              <li>• Montos (extracción numérica automática)</li>
-              <li>• Fechas (múltiples formatos)</li>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-blue-200/50 shadow-sm"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">✅</span>
+              <h4 className="font-bold text-gray-900 text-lg">Formatos Aceptados</h4>
+            </div>
+            <ul className="space-y-3 text-gray-700">
+              <li className="flex items-start gap-2">
+                <span className="text-dental-500 font-bold mt-0.5">•</span>
+                <span><strong className="text-gray-900">Archivos:</strong> CSV (cualquier encoding)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-dental-500 font-bold mt-0.5">•</span>
+                <span><strong className="text-gray-900">Montos:</strong> $30,000 · 30000 · 30.000</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-dental-500 font-bold mt-0.5">•</span>
+                <span><strong className="text-gray-900">Fechas:</strong> DD-MM-YYYY o DD/MM/YYYY</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-dental-500 font-bold mt-0.5">•</span>
+                <span><strong className="text-gray-900">Pagos:</strong> Efectivo, Transferencia, etc.</span>
+              </li>
             </ul>
-          </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-purple-200/50 shadow-sm"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">✨</span>
+              <h4 className="font-bold text-gray-900 text-lg">Procesamiento Inteligente</h4>
+            </div>
+            <ul className="space-y-3 text-gray-700">
+              <li className="flex items-start gap-2">
+                <span className="text-purple-500 font-bold mt-0.5">•</span>
+                <span><strong className="text-gray-900">Nombres:</strong> Normalización automática</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-purple-500 font-bold mt-0.5">•</span>
+                <span><strong className="text-gray-900">Tratamientos:</strong> Capitalización inteligente</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-purple-500 font-bold mt-0.5">•</span>
+                <span><strong className="text-gray-900">Montos:</strong> Extracción numérica</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-purple-500 font-bold mt-0.5">•</span>
+                <span><strong className="text-gray-900">Fechas:</strong> Detección automática</span>
+              </li>
+            </ul>
+          </motion.div>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200/50 rounded-xl p-4"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">👍</span>
+            <div>
+              <p className="text-green-900 font-semibold text-base mb-1">
+                ¡No te preocupes por el formato!
+              </p>
+              <p className="text-green-700">
+                Nuestro sistema detecta y corrige automáticamente los datos. Solo sube tu archivo y listo.
+              </p>
+            </div>
+          </div>
+        </motion.div>
         </div>
       </AnimatedCard>
 

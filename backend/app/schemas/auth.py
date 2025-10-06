@@ -58,6 +58,7 @@ class UserResponse(BaseModel):
     provider: Optional[str]
     onboarding_completado: bool
     email_verificado: bool
+    role_name: Optional[str] = None
     
     class Config:
         from_attributes = True

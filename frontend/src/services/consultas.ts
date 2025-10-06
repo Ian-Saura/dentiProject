@@ -11,7 +11,7 @@ export const consultasService = {
     medio_pago?: string;
     paciente_q?: string;
   }): Promise<{ data: Consulta[]; total: number }> {
-    const response = await api.get<Consulta[]>('/consultas', { params });
+    const response = await api.get<Consulta[]>('/consultas/', { params });
     const total = parseInt(response.headers['x-total-count'] || '0');
     return { data: response.data, total };
   },
@@ -22,7 +22,7 @@ export const consultasService = {
   },
 
   async createConsulta(consulta: ConsultaCreate): Promise<Consulta> {
-    const response = await api.post<Consulta>('/consultas', consulta);
+    const response = await api.post<Consulta>('/consultas/', consulta);
     return response.data;
   },
 
@@ -62,7 +62,7 @@ export const consultasService = {
   },
 
   async getConsultasByPaciente(pacienteNombre: string): Promise<Consulta[]> {
-    const response = await api.get<{ data: Consulta[]; total: number }>('/consultas', {
+    const response = await api.get<{ data: Consulta[]; total: number }>('/consultas/', {
       params: { paciente_q: pacienteNombre, limit: 1000 }
     });
     return response.data.data || response.data;

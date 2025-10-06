@@ -59,6 +59,30 @@ class ConsultaUpdate(BaseModel):
         model_config = {"extra": "forbid"}
 
 
+class PacienteSimple(BaseModel):
+    id: int
+    nombre: str
+    apellido: Optional[str] = ""
+    
+    model_config = {"from_attributes": True}
+
+
+class PrestacionBase(BaseModel):
+    id: int
+    nombre: str
+    
+    model_config = {"from_attributes": True}
+
+
+class PrestacionSimple(BaseModel):
+    id: int
+    nombre_personalizado: Optional[str] = None
+    prestacion_id: Optional[int] = None
+    prestacion: Optional[PrestacionBase] = None
+    
+    model_config = {"from_attributes": True}
+
+
 class ConsultaOut(BaseModel):
     id: int
     paciente_id: int
@@ -66,15 +90,17 @@ class ConsultaOut(BaseModel):
     fecha_consulta: date
     monto_ars: float
     medio_pago: MedioPago
-    pieza_dental: Optional[str]
-    tiempo_real_minutos: Optional[int]
+    pieza_dental: Optional[str] = None
+    tiempo_real_minutos: Optional[int] = None
     estado: EstadoConsulta
-    proxima_cita: Optional[date]
-    observaciones: Optional[str]
-    notas_privadas: Optional[str]
+    proxima_cita: Optional[date] = None
+    observaciones: Optional[str] = None
+    notas_privadas: Optional[str] = None
     descuento_aplicado: float
     fecha_creacion: datetime  # Changed from date to datetime to match model
+    
+    # Related objects - these will be populated from the ORM relationships
+    paciente: Optional[PacienteSimple] = None
+    prestacion_usuario: Optional[PrestacionSimple] = None
 
-    class Config:
-        from_attributes = True
-        model_config = {"exclude_none": True}
+    model_config = {"from_attributes": True}

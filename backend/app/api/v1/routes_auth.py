@@ -94,10 +94,14 @@ async def login(
 
     access_token = create_access_token(subject=user.username)
     
+    # Create user response with role_name
+    user_dict = UserResponse.model_validate(user).model_dump()
+    user_dict['role_name'] = user.role.name.value if user.role else None
+    
     return LoginResponse(
         access_token=access_token,
         token_type="bearer",
-        user=UserResponse.model_validate(user),
+        user=UserResponse(**user_dict),
         requires_onboarding=not user.onboarding_completado
     )
 
