@@ -22,13 +22,13 @@ class Settings(BaseSettings):
     jwt_algorithm: str = Field(default="HS256")
     access_token_expire_minutes: int = Field(default=60)
 
-    # Google OAuth
+    # Google OAuth - MUST be set via environment variables
     google_client_id: str = Field(
-        default="your-google-client-id-here",
+        default="",  # Set via GOOGLE_CLIENT_ID env var
         alias="GOOGLE_CLIENT_ID"
     )
     google_client_secret: str = Field(
-        default="your-google-client-secret-here",
+        default="",  # Set via GOOGLE_CLIENT_SECRET env var
         alias="GOOGLE_CLIENT_SECRET"
     )
     google_redirect_uri: str = Field(
