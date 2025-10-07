@@ -27,7 +27,7 @@ export const consultasService = {
   },
 
   async updateConsulta(id: number, consulta: Partial<ConsultaCreate>): Promise<Consulta> {
-    const response = await api.put<Consulta>(`/consultas/${id}`, consulta);
+    const response = await api.patch<Consulta>(`/consultas/${id}`, consulta);
     return response.data;
   },
 

@@ -9,7 +9,7 @@ from pydantic import BaseModel, EmailStr, Field, validator
 class PacienteCreate(BaseModel):
     nombre: str = Field(..., max_length=100)
     apellido: str = Field(..., max_length=100)
-    dni: Optional[str] = Field(None, max_length=20)
+    dni: str = Field(..., min_length=7, max_length=20, description="DNI obligatorio como identificador único")
     fecha_nacimiento: Optional[date] = None
     telefono: Optional[str] = Field(None, max_length=20)
     email: Optional[EmailStr] = None
@@ -49,7 +49,7 @@ class PacienteOut(BaseModel):
     id: int
     nombre: str
     apellido: str
-    dni: Optional[str]
+    dni: str
     fecha_nacimiento: Optional[date]
     telefono: Optional[str]
     email: Optional[EmailStr]

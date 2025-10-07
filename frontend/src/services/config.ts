@@ -1,14 +1,15 @@
 import api from './api';
 
 export interface ConfiguracionUsuario {
-  id?: number;
-  usuario_id?: number;
-  costo_hora_calculado_ars?: number;
-  costo_hora_manual_ars?: number;
+  id: number;
+  costo_hora_calculado_ars?: number | null;
+  costo_hora_manual_ars?: number | null;
   usar_costo_manual: boolean;
   horas_anuales_trabajadas: number;
-  tipo_cambio_usd_ars?: number;
-  margen_ganancia_porcentaje?: number;
+  tipo_cambio_usd_ars?: number | null;
+  margen_ganancia_porcentaje?: number | null;
+  fecha_creacion?: string;
+  fecha_actualizacion?: string;
 }
 
 export interface CostAnalysis {
@@ -21,12 +22,12 @@ export interface CostAnalysis {
 
 export const configService = {
   async getConfig(): Promise<ConfiguracionUsuario> {
-    const response = await api.get<ConfiguracionUsuario>('/configuracion');
+    const response = await api.get<ConfiguracionUsuario>('/configuracion/');
     return response.data;
   },
 
   async updateConfig(config: Partial<ConfiguracionUsuario>): Promise<ConfiguracionUsuario> {
-    const response = await api.put<ConfiguracionUsuario>('/configuracion', config);
+    const response = await api.put<ConfiguracionUsuario>('/configuracion/', config);
     return response.data;
   },
 

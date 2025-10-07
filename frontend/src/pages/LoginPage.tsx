@@ -102,17 +102,19 @@ const LoginPage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="glass rounded-3xl shadow-2xl p-8 backdrop-blur-xl border border-white/20"
         >
-          {/* Google Sign In */}
-          <div className="mb-6">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => toast.error('Error al autenticar con Google')}
-              useOneTap
-              shape="rectangular"
-              size="large"
-              width="100%"
-              text="signin_with"
-            />
+          {/* Google Sign In - Full Width */}
+          <div className="mb-6 w-full">
+            <div style={{ width: '100%' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => toast.error('Error al autenticar con Google')}
+                shape="rectangular"
+                size="large"
+                text="signin_with"
+                theme="filled_blue"
+                width="350"
+              />
+            </div>
           </div>
 
           <div className="relative my-6">
@@ -212,7 +214,7 @@ const LoginPage: React.FC = () => {
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 mr-2" />
-                    Ingresar al Dashboard
+                    Ingresar
                   </>
                 )}
               </button>

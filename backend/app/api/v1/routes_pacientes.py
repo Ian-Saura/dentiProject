@@ -93,3 +93,24 @@ def delete_paciente(
     tenant = TenantContext(current_user)
     if not PacientesService.delete_paciente(db, paciente_id, tenant.user_id):
         raise HTTPException(status_code=404, detail="Paciente not found")
+
+
+@router.post("/{paciente_principal_id}/merge/{paciente_duplicado_id}", response_model=PacienteOut)
+def merge_pacientes(
+    paciente_principal_id: int,
+    paciente_duplicado_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+    _ = Depends(require_roles()),
+):
+    """
+    Merge duplicate patient into principal patient.
+    Moves all consultas and merges data, then deletes duplicate.
+    """
+    tenant = TenantContext(current_user)
+    result = PacientesService.merge_pacientes(
+        db, paciente_principal_id, paciente_duplicado_id, tenant.user_id
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="One or both patients not found")
+    return result

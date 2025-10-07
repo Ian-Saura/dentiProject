@@ -114,3 +114,4 @@ class PlanService:
         status = PlanService.get_plan_status(user)
         return status["puede_usar_app"]
 
+

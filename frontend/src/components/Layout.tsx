@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Consultas', href: '/consultas', icon: Calendar },
+    { name: 'Prestaciones', href: '/consultas', icon: Calendar },
     { name: 'Pacientes', href: '/pacientes', icon: Users },
     { name: 'Reportes', href: '/reportes', icon: TrendingUp },
     { name: 'Calculadora', href: '/calculadora', icon: Calculator },
@@ -111,6 +111,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   );
                 })}
               </nav>
+              
+              {/* Mobile logout button */}
+              <div className="px-4 py-4 border-t border-white/10">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    logout();
+                    setSidebarOpen(false);
+                  }}
+                  className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:bg-red-500/20 hover:text-white w-full transition-all"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span>Cerrar Sesión</span>
+                </motion.button>
+              </div>
             </motion.div>
           </>
         )}

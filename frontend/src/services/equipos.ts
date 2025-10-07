@@ -18,7 +18,7 @@ export const equiposService = {
   },
 
   async updateEquipo(id: number, equipo: Partial<CostoEquipoCreate>): Promise<CostoEquipo> {
-    const response = await api.put<CostoEquipo>(`/equipos/${id}`, equipo);
+    const response = await api.patch<CostoEquipo>(`/equipos/${id}`, equipo);
     return response.data;
   },
 

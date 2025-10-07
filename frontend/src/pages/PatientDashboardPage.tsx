@@ -7,14 +7,17 @@ import AnimatedCard from '@/components/AnimatedCard';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus, Sparkles, User } from 'lucide-react';
 import ClinicalNotesModal from '@/components/ClinicalNotesModal';
+import AddConsultaModal from '@/components/AddConsultaModal';
 
 const PatientDashboardPage: React.FC = () => {
   const { patientName: encodedPatientName } = useParams<{ patientName: string }>();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [showClinicalModal, setShowClinicalModal] = useState(false);
+  const [showAddConsultaModal, setShowAddConsultaModal] = useState(false);
   const [selectedConsultationId, setSelectedConsultationId] = useState<number | null>(null);
   const [clinicalNotes, setClinicalNotes] = useState<any[]>([]);
+  const [patientId, setPatientId] = useState<number | null>(null);
 
   // Decode the patient name from URL
   const patientName = encodedPatientName ? decodeURIComponent(encodedPatientName) : null;
@@ -23,7 +26,32 @@ const PatientDashboardPage: React.FC = () => {
   const { data: consultas, isLoading: loadingConsultas } = useQuery(
     ['patient-consultas', patientName],
     () => patientName ? consultasService.getConsultasByPaciente(patientName) : Promise.resolve([]),
-    { enabled: !!patientName }
+    { 
+      enabled: !!patientName,
+      onSuccess: (data) => {
+        // Get patient ID from first consultation
+        if (data && data.length > 0 && data[0].paciente) {
+          setPatientId(data[0].paciente.id);
+        }
+      }
+    }
+  );
+
+  // Fetch patient details to get ID even if no consultations
+  const { data: pacientesData } = useQuery(
+    'pacientes',
+    () => pacientesService.getPacientes(),
+    {
+      enabled: !!patientName && !patientId,
+      onSuccess: (data) => {
+        if (data && patientName) {
+          const patient = data.find(p => `${p.nombre} ${p.apellido}` === patientName);
+          if (patient) {
+            setPatientId(patient.id);
+          }
+        }
+      }
+    }
   );
 
   if (loadingConsultas) {
@@ -172,7 +200,7 @@ const PatientDashboardPage: React.FC = () => {
           <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Consultas</p>
+                <p className="text-sm font-medium text-gray-600">Total Prestaciones</p>
                 <p className="text-3xl font-bold gradient-text">{totalConsultas}</p>
               </div>
               <div className="bg-blue-100 rounded-xl p-3">
@@ -228,31 +256,57 @@ const PatientDashboardPage: React.FC = () => {
       {/* Patient Timeline */}
       {primeraConsulta && ultimaConsulta && (
         <AnimatedCard delay={0.3}>
-          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <Clock className="h-5 w-5 mr-2 text-blue-600" />
-            Línea de Tiempo del Paciente
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Primera Consulta</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {new Date(primeraConsulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-              </p>
-              <p className="text-sm text-gray-500">
-                {primeraConsulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
-              </p>
+          <div className="glass rounded-2xl shadow-soft p-8 border border-white/20">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-3 rounded-xl">
+                <Clock className="h-6 w-6 text-white" />
+              </div>
+              <span className="gradient-text">Línea de Tiempo del Paciente</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <motion.div
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200 shadow-sm"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="bg-green-500 p-3 rounded-xl shadow-md">
+                    <Calendar className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-green-700 mb-1">Primera Prestación</p>
+                    <p className="text-2xl font-black text-green-900">
+                      {new Date(primeraConsulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </p>
+                    <div className="mt-2 bg-white/60 px-3 py-1 rounded-lg inline-block">
+                      <p className="text-sm font-medium text-green-800">
+                        {primeraConsulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border-2 border-blue-200 shadow-sm"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="bg-blue-500 p-3 rounded-xl shadow-md">
+                    <Calendar className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-blue-700 mb-1">Última Prestación</p>
+                    <p className="text-2xl font-black text-blue-900">
+                      {new Date(ultimaConsulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </p>
+                    <div className="mt-2 bg-white/60 px-3 py-1 rounded-lg inline-block">
+                      <p className="text-sm font-medium text-blue-800">
+                        {ultimaConsulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Última Consulta</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {new Date(ultimaConsulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-              </p>
-              <p className="text-sm text-gray-500">
-                {ultimaConsulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
-              </p>
-            </div>
-          </div>
           </div>
         </AnimatedCard>
       )}
@@ -261,51 +315,80 @@ const PatientDashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AnimatedCard delay={0.35}>
           <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
-          <h3 className="text-lg font-semibold mb-4">📊 Tratamientos Realizados</h3>
-          <div className="space-y-3">
-            {Object.entries(tratamientos)
-              .sort(([,a], [,b]) => b - a)
-              .slice(0, 5)
-              .map(([tratamiento, cantidad]) => (
-                <div key={tratamiento} className="flex justify-between items-center">
-                  <span className="text-sm text-gray-700 truncate flex-1 mr-3">{tratamiento}</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-900">{cantidad}</span>
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(cantidad / Math.max(...Object.values(tratamientos))) * 100}%` }}
-                      ></div>
+            <h3 className="text-xl font-bold mb-5 flex items-center gap-2">
+              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-xl">
+                <Activity className="h-5 w-5 text-white" />
+              </div>
+              <span className="gradient-text">Tratamientos Realizados</span>
+            </h3>
+            <div className="space-y-4">
+              {Object.entries(tratamientos)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5)
+                .map(([tratamiento, cantidad], index) => (
+                  <motion.div
+                    key={tratamiento}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-white/50 p-4 rounded-xl border border-gray-100 hover:shadow-md transition-all"
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-semibold text-gray-800 truncate flex-1 mr-3">{tratamiento}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">{cantidad}</span>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(cantidad / Math.max(...Object.values(tratamientos))) * 100}%` }}
+                        transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
+                        className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2.5 rounded-full"
+                      ></motion.div>
+                    </div>
+                  </motion.div>
+                ))}
+            </div>
           </div>
-        </div>
+        </AnimatedCard>
 
-        <div className="dental-card">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <CreditCard className="h-5 w-5 mr-2 text-green-600" />
-            Medios de Pago Utilizados
-          </h3>
-          <div className="space-y-3">
-            {Object.entries(mediosPago)
-              .sort(([,a], [,b]) => b - a)
-              .map(([medio, cantidad]) => (
-                <div key={medio} className="flex justify-between items-center">
-                  <span className="text-sm text-gray-700">{medio}</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-900">{cantidad}</span>
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-600 h-2 rounded-full"
-                        style={{ width: `${(cantidad / totalConsultas) * 100}%` }}
-                      ></div>
+        <AnimatedCard delay={0.4}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
+            <h3 className="text-xl font-bold mb-5 flex items-center gap-2">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-xl">
+                <CreditCard className="h-5 w-5 text-white" />
+              </div>
+              <span className="gradient-text">Medios de Pago Utilizados</span>
+            </h3>
+            <div className="space-y-4">
+              {Object.entries(mediosPago)
+                .sort(([,a], [,b]) => b - a)
+                .map(([medio, cantidad], index) => (
+                  <motion.div
+                    key={medio}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-white/50 p-4 rounded-xl border border-gray-100 hover:shadow-md transition-all"
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-semibold text-gray-800 capitalize">{medio}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">{cantidad}</span>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-          </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(cantidad / totalConsultas) * 100}%` }}
+                        transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 h-2.5 rounded-full"
+                      ></motion.div>
+                    </div>
+                  </motion.div>
+                ))}
+            </div>
           </div>
         </AnimatedCard>
       </div>
@@ -313,7 +396,23 @@ const PatientDashboardPage: React.FC = () => {
       {/* Consultation History */}
       <AnimatedCard delay={0.45}>
         <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
-        <h3 className="text-lg font-semibold mb-4">📋 Historial de Consultas</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold flex items-center gap-3">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-xl">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <span className="gradient-text">Historial de Prestaciones</span>
+            </h3>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowAddConsultaModal(true)}
+              className="btn-premium flex items-center gap-2 shadow-lg"
+            >
+              <Plus className="h-5 w-5" />
+              <span className="hidden sm:inline">Nueva Prestación</span>
+            </motion.button>
+          </div>
         
         {filteredConsultas.length > 0 ? (
           <div className="overflow-x-auto">
@@ -355,13 +454,15 @@ const PatientDashboardPage: React.FC = () => {
                         </span>
                       </td>
                       <td>
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => handleAddClinicalNote(consulta.id)}
-                          className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm"
+                          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-sm transition-all"
                         >
                           <FileText className="h-4 w-4" />
                           <span>Ver/Agregar</span>
-                        </button>
+                        </motion.button>
                       </td>
                     </tr>
                   ))}
@@ -371,11 +472,11 @@ const PatientDashboardPage: React.FC = () => {
         ) : (
           <div className="text-center py-8">
             <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay consultas</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay prestaciones</h3>
             <p className="text-gray-600">
               {selectedPeriod === 'all' 
-                ? 'Este paciente no tiene consultas registradas'
-                : 'No hay consultas en el período seleccionado'
+                ? 'Este paciente no tiene prestaciones registradas'
+                : 'No hay prestaciones en el período seleccionado'
               }
             </p>
           </div>
@@ -396,6 +497,14 @@ const PatientDashboardPage: React.FC = () => {
           onSave={handleSaveClinicalNote}
         />
       )}
+
+      {/* Add Consulta Modal */}
+      <AddConsultaModal
+        isOpen={showAddConsultaModal}
+        onClose={() => setShowAddConsultaModal(false)}
+        preselectedPatientId={patientId || undefined}
+        preselectedPatientName={patientName || undefined}
+      />
     </div>
   );
 };

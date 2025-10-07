@@ -20,3 +20,4 @@ COMMENT ON COLUMN pacientes.alergias IS 'Alergias del paciente';
 COMMENT ON COLUMN pacientes.medicamentos_actuales IS 'Medicamentos actuales del paciente';
 COMMENT ON COLUMN pacientes.observaciones_medicas IS 'Observaciones médicas del paciente';
 
+

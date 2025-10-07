@@ -5,36 +5,44 @@ import { pacientesService } from '../services';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AnimatedCard from '../components/AnimatedCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Sparkles, Edit, Trash2, X, BarChart3, Mail, Phone, Calendar as CalendarIcon } from 'lucide-react';
+import { Users, Plus, Sparkles, Edit, Trash2, X, BarChart3, ArrowUpDown } from 'lucide-react';
 
 interface Paciente {
   id: number;
   nombre: string;
   apellido: string;
+  dni?: string;
   email: string;
   telefono: string;
   fecha_nacimiento: string;
+  obra_social?: string;
   activo: boolean;
 }
 
 interface PacienteForm {
   nombre: string;
   apellido: string;
+  dni: string;
   email: string;
   telefono: string;
   fecha_nacimiento: string;
+  obra_social: string;
 }
 
 const PacientesPage: React.FC = () => {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [editingPaciente, setEditingPaciente] = useState<Paciente | null>(null);
+  const [sortBy, setSortBy] = useState<'nombre' | 'apellido' | 'fecha_registro'>('apellido');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [formData, setFormData] = useState<PacienteForm>({
     nombre: '',
     apellido: '',
+    dni: '',
     email: '',
     telefono: '',
-    fecha_nacimiento: ''
+    fecha_nacimiento: '',
+    obra_social: ''
   });
 
   const queryClient = useQueryClient();
@@ -44,6 +52,31 @@ const PacientesPage: React.FC = () => {
     'pacientes',
     () => pacientesService.getPacientes()
   );
+
+  // Sort patients
+  const sortedPacientes = React.useMemo(() => {
+    if (!pacientes) return [];
+    
+    return [...pacientes].sort((a, b) => {
+      let compareA, compareB;
+      
+      if (sortBy === 'nombre') {
+        compareA = a.nombre.toLowerCase();
+        compareB = b.nombre.toLowerCase();
+      } else if (sortBy === 'apellido') {
+        compareA = a.apellido.toLowerCase();
+        compareB = b.apellido.toLowerCase();
+      } else {
+        // fecha_registro - assuming it exists or using id as proxy
+        compareA = a.id;
+        compareB = b.id;
+      }
+      
+      if (compareA < compareB) return sortOrder === 'asc' ? -1 : 1;
+      if (compareA > compareB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [pacientes, sortBy, sortOrder]);
 
   // Create patient mutation
   const createMutation = useMutation(pacientesService.createPaciente, {
@@ -79,9 +112,11 @@ const PacientesPage: React.FC = () => {
     setFormData({
       nombre: '',
       apellido: '',
+      dni: '',
       email: '',
       telefono: '',
-      fecha_nacimiento: ''
+      fecha_nacimiento: '',
+      obra_social: ''
     });
   };
 
@@ -100,9 +135,11 @@ const PacientesPage: React.FC = () => {
     setFormData({
       nombre: paciente.nombre,
       apellido: paciente.apellido,
+      dni: paciente.dni || '',
       email: paciente.email,
       telefono: paciente.telefono,
-      fecha_nacimiento: paciente.fecha_nacimiento
+      fecha_nacimiento: paciente.fecha_nacimiento,
+      obra_social: paciente.obra_social || ''
     });
     setShowForm(true);
   };
@@ -231,6 +268,32 @@ const PacientesPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  DNI
+                </label>
+                <input
+                  type="text"
+                  value={formData.dni}
+                  onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="12345678"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Obra Social
+                </label>
+                <input
+                  type="text"
+                  value={formData.obra_social}
+                  onChange={(e) => setFormData({ ...formData, obra_social: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="OSDE, Swiss Medical, etc."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email
                 </label>
                 <input
@@ -295,11 +358,30 @@ const PacientesPage: React.FC = () => {
       {/* Premium Patients Table */}
       <AnimatedCard delay={0.2}>
         <div className="glass rounded-2xl shadow-soft border border-white/20">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200/50">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-b border-gray-200/50 gap-4">
             <h3 className="text-xl font-bold gradient-text flex items-center gap-2">
               <Users className="h-6 w-6 text-dental-500" />
-              Lista de Pacientes ({pacientes?.length || 0})
+              Lista de Pacientes ({sortedPacientes?.length || 0})
             </h3>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Ordenar por:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'nombre' | 'apellido' | 'fecha_registro')}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-dental-500"
+              >
+                <option value="apellido">Apellido</option>
+                <option value="nombre">Nombre</option>
+                <option value="fecha_registro">Fecha de Registro</option>
+              </select>
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                title={sortOrder === 'asc' ? 'Ascendente' : 'Descendente'}
+              >
+                <ArrowUpDown className={`h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''} transition-transform`} />
+              </button>
+            </div>
           </div>
         
         <div className="overflow-x-auto">
@@ -324,7 +406,7 @@ const PacientesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {pacientes?.map((paciente) => (
+              {sortedPacientes?.map((paciente: Paciente) => (
                 <tr key={paciente.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -391,7 +473,7 @@ const PacientesPage: React.FC = () => {
           </table>
         </div>
 
-        {pacientes?.length === 0 && (
+        {sortedPacientes?.length === 0 && (
           <div className="text-center py-12 px-6">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}

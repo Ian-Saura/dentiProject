@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Users, Shield, Activity, Trash2, Ban, Check, X, Info, CreditCard } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Users, Shield, Activity, Trash2, Ban, Check, X, Info, CreditCard, Crown, Clock, AlertTriangle, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService, UserWithRole, Role, AdminStats } from '../services/admin';
 import { plansService } from '../services/plans';
@@ -130,59 +131,127 @@ export default function AdminPage() {
     );
   }
 
+  // Helper function to get plan badge styling
+  const getPlanBadge = (plan: string, diasRestantes?: number | null) => {
+    if (plan === 'premium' || plan === 'enterprise') {
+      return {
+        bg: 'bg-gradient-to-r from-purple-600 to-pink-600',
+        text: 'text-white',
+        icon: <Crown className="w-4 h-4" />,
+        label: plan === 'premium' ? 'Premium' : 'Enterprise',
+      };
+    }
+    if (plan === 'trial') {
+      const isExpired = diasRestantes !== undefined && diasRestantes !== null && diasRestantes < 0;
+      const isExpiringSoon = diasRestantes !== undefined && diasRestantes !== null && diasRestantes >= 0 && diasRestantes <= 3;
+      
+      return {
+        bg: isExpired ? 'bg-red-100' : isExpiringSoon ? 'bg-yellow-100' : 'bg-blue-100',
+        text: isExpired ? 'text-red-800' : isExpiringSoon ? 'text-yellow-800' : 'text-blue-800',
+        icon: isExpired ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />,
+        label: isExpired ? 'Expirado' : `Trial ${diasRestantes}d`,
+      };
+    }
+    return {
+      bg: 'bg-gray-100',
+      text: 'text-gray-800',
+      icon: <Info className="w-4 h-4" />,
+      label: 'Sin plan',
+    };
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <Shield className="w-8 h-8 text-blue-600" />
-          Panel de Administración
-        </h1>
-        <p className="mt-2 text-gray-600">Gestiona usuarios, roles y permisos del sistema</p>
-      </div>
+      {/* Header with gradient */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8 relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl p-8 shadow-2xl"
+      >
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-2">
+            <Shield className="w-10 h-10 text-white" />
+            <Sparkles className="w-6 h-6 text-white animate-pulse" />
+          </div>
+          <h1 className="text-4xl font-black text-white">
+            Panel de Administración
+          </h1>
+          <p className="mt-2 text-blue-100 text-lg">Gestiona usuarios, planes y permisos del sistema</p>
+        </div>
+      </motion.div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards with animations */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total_users}</p>
+                <p className="text-sm font-medium text-blue-100">Total Usuarios</p>
+                <p className="text-3xl font-black mt-1">{stats.total_users}</p>
               </div>
-              <Users className="w-8 h-8 text-blue-600" />
+              <div className="bg-white/20 p-3 rounded-xl">
+                <Users className="w-8 h-8" />
+              </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg p-6 text-white"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Activos</p>
-                <p className="text-2xl font-bold text-green-600">{stats.active_users}</p>
+                <p className="text-sm font-medium text-green-100">Activos</p>
+                <p className="text-3xl font-black mt-1">{stats.active_users}</p>
               </div>
-              <Check className="w-8 h-8 text-green-600" />
+              <div className="bg-white/20 p-3 rounded-xl">
+                <Check className="w-8 h-8" />
+              </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl shadow-lg p-6 text-white"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Inactivos</p>
-                <p className="text-2xl font-bold text-red-600">{stats.inactive_users}</p>
+                <p className="text-sm font-medium text-red-100">Inactivos</p>
+                <p className="text-3xl font-black mt-1">{stats.inactive_users}</p>
               </div>
-              <Ban className="w-8 h-8 text-red-600" />
+              <div className="bg-white/20 p-3 rounded-xl">
+                <Ban className="w-8 h-8" />
+              </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Sin Rol</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.users_without_role}</p>
+                <p className="text-sm font-medium text-yellow-100">Sin Rol</p>
+                <p className="text-3xl font-black mt-1">{stats.users_without_role}</p>
               </div>
-              <Activity className="w-8 h-8 text-yellow-600" />
+              <div className="bg-white/20 p-3 rounded-xl">
+                <Activity className="w-8 h-8" />
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -278,7 +347,15 @@ export default function AdminPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900 capitalize">{user.plan}</span>
+                    {(() => {
+                      const badge = getPlanBadge(user.plan || '', user.dias_restantes);
+                      return (
+                        <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-bold rounded-full ${badge.bg} ${badge.text}`}>
+                          {badge.icon}
+                          {badge.label}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {user.activo ? (
@@ -343,12 +420,31 @@ export default function AdminPage() {
       </div>
 
       {/* Role Assignment Modal */}
-      {showRoleModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Asignar Rol a {selectedUser.username}
-            </h3>
+      <AnimatePresence>
+        {showRoleModal && selectedUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-blue-100 p-3 rounded-xl">
+                  <Shield className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Asignar Rol
+                  </h3>
+                  <p className="text-sm text-gray-500">{selectedUser.username}</p>
+                </div>
+              </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Seleccionar Rol
@@ -368,34 +464,54 @@ export default function AdminPage() {
             </div>
             <div className="flex gap-3">
               <button
-                onClick={handleAssignRole}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                disabled={!selectedRole}
-              >
-                Asignar
-              </button>
-              <button
                 onClick={() => {
                   setShowRoleModal(false);
                   setSelectedUser(null);
                   setSelectedRole('');
                 }}
-                className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
+              <button
+                onClick={handleAssignRole}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!selectedRole}
+              >
+                Asignar Rol
+              </button>
             </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Plan Assignment Modal */}
-      {showPlanModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Asignar Plan a {selectedUser.username}
-            </h3>
+      <AnimatePresence>
+        {showPlanModal && selectedUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-purple-100 p-3 rounded-xl">
+                  <Crown className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Asignar Plan
+                  </h3>
+                  <p className="text-sm text-gray-500">{selectedUser.username}</p>
+                </div>
+              </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Seleccionar Plan
@@ -431,12 +547,32 @@ export default function AdminPage() {
               </div>
             )}
             
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-blue-800">
-                {selectedPlan === 'trial' && '⏱️ Trial: Acceso limitado por tiempo'}
-                {selectedPlan === 'premium' && '✨ Premium: Acceso completo sin límites'}
-                {selectedPlan === 'enterprise' && '🏢 Enterprise: Acceso completo + funciones empresariales'}
-                {!selectedPlan && 'ℹ️ Selecciona un plan para ver detalles'}
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 mb-4">
+              <p className="text-sm font-medium text-gray-800">
+                {selectedPlan === 'trial' && (
+                  <span className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Trial: Acceso limitado por tiempo
+                  </span>
+                )}
+                {selectedPlan === 'premium' && (
+                  <span className="flex items-center gap-2">
+                    <Crown className="w-4 h-4" />
+                    Premium: Acceso completo sin límites
+                  </span>
+                )}
+                {selectedPlan === 'enterprise' && (
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Enterprise: Acceso completo + funciones empresariales
+                  </span>
+                )}
+                {!selectedPlan && (
+                  <span className="flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    Selecciona un plan para ver detalles
+                  </span>
+                )}
               </p>
             </div>
             
@@ -448,21 +584,22 @@ export default function AdminPage() {
                   setSelectedPlan('');
                   setTrialDays(7);
                 }}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAssignPlan}
                 disabled={!selectedPlan}
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Asignar Plan
               </button>
             </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

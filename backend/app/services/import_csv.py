@@ -148,61 +148,23 @@ class ImportCsvService:
                 paciente_id = pacientes_map.get(paciente_key)
                 
                 if not paciente_id:
-                    # Buscar paciente en BD por nombre (case insensitive)
+                    # Use improved find_or_create method to prevent duplicates
                     from app.services.pacientes import PacientesService
                     name_parts = paciente_name.split(maxsplit=1)
                     nombre = name_parts[0] if name_parts else "Desconocido"
                     apellido = name_parts[1] if len(name_parts) > 1 else ""
                     
-                    # Buscar paciente existente en BD con múltiples estrategias
-                    existing_paciente = None
+                    # Find or create patient (prevents duplicates)
+                    paciente = PacientesService.find_or_create_paciente(
+                        db, nombre, apellido, None, usuario_id
+                    )
+                    paciente_id = paciente.id
+                    pacientes_map[paciente_key] = paciente_id
                     
-                    # Estrategia 1: Nombre completo exacto (case insensitive)
-                    full_name_search = db.query(Paciente).filter(
-                        Paciente.usuario_id == usuario_id,
-                        func.lower(func.concat(Paciente.nombre, ' ', Paciente.apellido)) == paciente_key
-                    ).first()
-                    
-                    if full_name_search:
-                        existing_paciente = full_name_search
-                        print(f"  🔍 Fila {fila_num}: Paciente encontrado (nombre completo): '{paciente_name}' (ID: {existing_paciente.id})")
-                    
-                    # Estrategia 2: Nombre y apellido por separado
-                    if not existing_paciente and apellido:
-                        existing_paciente = db.query(Paciente).filter(
-                            Paciente.usuario_id == usuario_id,
-                            Paciente.nombre.ilike(nombre),
-                            Paciente.apellido.ilike(apellido)
-                        ).first()
-                        
-                        if existing_paciente:
-                            print(f"  🔍 Fila {fila_num}: Paciente encontrado (nombre+apellido): '{paciente_name}' (ID: {existing_paciente.id})")
-                    
-                    # Estrategia 3: Solo nombre (si no hay apellido o no se encontró)
-                    if not existing_paciente:
-                        existing_paciente = db.query(Paciente).filter(
-                            Paciente.usuario_id == usuario_id,
-                            Paciente.nombre.ilike(nombre)
-                        ).first()
-                        
-                        if existing_paciente:
-                            print(f"  🔍 Fila {fila_num}: Paciente encontrado (solo nombre): '{paciente_name}' (ID: {existing_paciente.id})")
-                    
-                    if existing_paciente:
-                        paciente_id = existing_paciente.id
-                        pacientes_map[paciente_key] = paciente_id
-                    else:
-                        # Crear paciente nuevo solo si realmente no existe
-                        import random
-                        paciente_dto = PacienteCreate(
-                            nombre=nombre,
-                            apellido=apellido if apellido else "",
-                            dni=f"CSV{usuario_id}{random.randint(100000, 999999)}"  # DNI temporal único
-                        )
-                        paciente = PacientesService.create_paciente(db, paciente_dto, usuario_id)
-                        paciente_id = paciente.id
-                        pacientes_map[paciente_key] = paciente_id
+                    if paciente.fecha_registro.date() == date.today():
                         print(f"  ➕ Fila {fila_num}: Paciente nuevo creado: '{paciente_name}' (ID: {paciente_id})")
+                    else:
+                        print(f"  🔍 Fila {fila_num}: Paciente existente encontrado: '{paciente_name}' (ID: {paciente_id})")
 
                 # 2. Validar y obtener tratamiento
                 if pd.isna(row[col_tratamiento]) or str(row[col_tratamiento]).strip() == '':

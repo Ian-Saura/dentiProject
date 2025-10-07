@@ -6,6 +6,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { formatCurrency } from '@/utils/formatNumber';
 
 const CalculadoraPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -97,7 +98,7 @@ const CalculadoraPage: React.FC = () => {
                   ✅ Usando su costo real calculado
                 </p>
                 <p className="text-green-700 text-2xl font-bold">
-                  ${costos.costo_hora_ars.toLocaleString('es-AR')} ARS/hora
+                  ${formatCurrency(costos.costo_hora_ars, 2)} ARS/hora
                 </p>
               </div>
             </div>

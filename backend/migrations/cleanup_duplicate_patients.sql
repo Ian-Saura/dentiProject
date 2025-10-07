@@ -32,3 +32,4 @@ BEGIN
     RAISE NOTICE 'Limpieza completada. Pacientes duplicados sin consultas eliminados.';
 END $$;
 
+

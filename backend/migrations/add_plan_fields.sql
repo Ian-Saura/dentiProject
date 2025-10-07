@@ -24,3 +24,4 @@ WHERE plan = 'trial' AND fecha_vencimiento IS NULL;
 CREATE INDEX IF NOT EXISTS idx_usuarios_plan ON usuarios(plan);
 CREATE INDEX IF NOT EXISTS idx_usuarios_fecha_vencimiento ON usuarios(fecha_vencimiento);
 
+

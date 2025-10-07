@@ -17,6 +17,7 @@ import CalculadoraPage from '@/pages/CalculadoraPage';
 import ConfiguracionPage from '@/pages/ConfiguracionPage';
 import ImportPage from '@/pages/ImportPage';
 import FinancialReportsPage from '@/pages/FinancialReportsPage';
+import TrialExpiredPage from '@/pages/TrialExpiredPage';
 
 // Google OAuth Client ID
 const GOOGLE_CLIENT_ID = '814453800673-39hb3apvtc1d5bdo68k9cq83isn75n2j.apps.googleusercontent.com';
@@ -63,6 +64,14 @@ const AppRoutes: React.FC = () => {
       <Route 
         path="/register" 
         element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} 
+      />
+      <Route 
+        path="/trial-expired" 
+        element={
+          <ProtectedRoute>
+            <TrialExpiredPage />
+          </ProtectedRoute>
+        } 
       />
       <Route
         path="/"

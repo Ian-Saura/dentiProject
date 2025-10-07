@@ -6,6 +6,7 @@ import MetricCard from '@/components/MetricCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
 import { motion } from 'framer-motion';
+import { formatCurrency } from '@/utils/formatNumber';
 import {
   DollarSign,
   Calendar,
@@ -74,7 +75,7 @@ const DashboardPage: React.FC = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden bg-gradient-dental rounded-3xl p-8 text-white shadow-glow-dental"
+        className="relative overflow-hidden bg-gradient-dental rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white shadow-glow-dental"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
@@ -84,28 +85,28 @@ const DashboardPage: React.FC = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center gap-3 mb-2"
+              className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap"
             >
-              <Sparkles className="h-8 w-8 animate-pulse" />
-              <h1 className="text-3xl sm:text-4xl font-black">
+              <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 animate-pulse" />
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black">
                 Bienvenido, {user?.nombre}
               </h1>
-              <span className="text-4xl">{getEspecialidadEmoji(user?.especialidad || 'odontologia')}</span>
+              <span className="text-3xl sm:text-4xl">{getEspecialidadEmoji(user?.especialidad || 'odontologia')}</span>
             </motion.div>
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-white/90 mt-2 text-lg font-medium"
+              className="text-white/90 mt-2 text-sm sm:text-base md:text-lg font-medium"
             >
-              Dashboard Premium · {user?.especialidad?.charAt(0).toUpperCase() + user?.especialidad?.slice(1)}
+              Dashboard Premium{user?.especialidad ? ` · ${user.especialidad.charAt(0).toUpperCase() + user.especialidad.slice(1)}` : ''}
             </motion.p>
           </div>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
-            className="glass-dark rounded-2xl p-4 text-right"
+            className="glass-dark rounded-xl sm:rounded-2xl p-3 sm:p-4 text-right w-full sm:w-auto"
           >
             <p className="text-white/70 text-sm flex items-center gap-2">
               <Zap className="h-4 w-4" />
@@ -121,7 +122,7 @@ const DashboardPage: React.FC = () => {
         <AnimatedCard delay={0.1} className="h-full">
           <MetricCard
             title="Ingresos Totales"
-            value={`$${resumen?.ingreso_total?.toLocaleString('es-AR') || 0} ARS`}
+            value={`$${formatCurrency(resumen?.ingreso_total || 0, 0)} ARS`}
             icon={DollarSign}
             color="green"
             change={{ value: kpis?.crecimiento_mensual || 0, type: 'increase' }}
@@ -129,7 +130,7 @@ const DashboardPage: React.FC = () => {
         </AnimatedCard>
         <AnimatedCard delay={0.15} className="h-full">
           <MetricCard
-            title="Total Consultas"
+            title="Total Prestaciones"
             value={resumen?.total_consultas || 0}
             icon={Calendar}
             color="blue"
@@ -137,8 +138,8 @@ const DashboardPage: React.FC = () => {
         </AnimatedCard>
         <AnimatedCard delay={0.2} className="h-full">
           <MetricCard
-            title="Promedio/Consulta"
-            value={`$${resumen?.promedio_consulta?.toLocaleString('es-AR') || 0} ARS`}
+            title="Promedio/Prestación"
+            value={`$${formatCurrency(resumen?.promedio_consulta || 0, 0)} ARS`}
             icon={TrendingUp}
             color="purple"
           />
@@ -174,7 +175,7 @@ const DashboardPage: React.FC = () => {
         <AnimatedCard delay={0.4} className="h-full">
           <MetricCard
             title="Promedio Diario"
-            value={`$${kpis?.ingreso_promedio_diario?.toLocaleString('es-AR') || 0} ARS`}
+            value={`$${formatCurrency(kpis?.ingreso_promedio_diario || 0, 0)} ARS`}
             icon={Activity}
             color="green"
           />
@@ -184,22 +185,22 @@ const DashboardPage: React.FC = () => {
       {/* Cost Analysis Alert */}
       {costos && costos.costo_total_anual > 0 && (
         <AnimatedCard delay={0.45} className="h-full">
-          <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-dental-600 rounded-2xl p-6 sm:p-8 text-white shadow-glow">
+          <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-dental-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 text-white shadow-glow">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-            <div className="relative flex items-start space-x-4">
+            <div className="relative flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
               <div className="flex-shrink-0 bg-white/20 rounded-xl p-3 backdrop-blur-sm">
-                <AlertCircle className="h-6 w-6" />
+                <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Sparkles className="h-5 w-5" />
+                <h3 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
                   Análisis de Costos Automático
                 </h3>
-                <p className="mt-3 opacity-90 text-lg">
-                  Su costo real por hora: <strong>${costos.costo_hora_ars.toLocaleString('es-AR')} ARS</strong>
+                <p className="mt-2 sm:mt-3 opacity-90 text-sm sm:text-base md:text-lg">
+                  Su costo real por hora: <strong>${formatCurrency(costos.costo_hora_ars, 2)} ARS</strong>
                 </p>
-                <p className="opacity-90 text-lg">
-                  Precio mínimo recomendado (50% margen): <strong>${(costos.costo_hora_ars * 1.5).toLocaleString('es-AR')} ARS</strong>
+                <p className="opacity-90 text-sm sm:text-base md:text-lg">
+                  Precio mínimo recomendado (50% margen): <strong>${formatCurrency(costos.costo_hora_ars * 1.5, 2)} ARS</strong>
                 </p>
               </div>
             </div>
@@ -210,68 +211,73 @@ const DashboardPage: React.FC = () => {
       {/* Break-Even Point (Punto de Equilibrio) */}
       {puntoEquilibrio && !puntoEquilibrio.error && (
         <AnimatedCard delay={0.5} className="h-full">
-          <div className={`relative overflow-hidden rounded-2xl p-6 sm:p-8 text-white shadow-glow ${
+          <div className={`relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 text-white shadow-glow ${
             puntoEquilibrio.esta_en_equilibrio 
               ? 'bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600' 
               : 'bg-gradient-to-r from-orange-600 via-red-600 to-pink-600'
           }`}>
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
-            <div className="relative flex items-start space-x-4">
+            <div className="relative flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
               <div className="flex-shrink-0 bg-white/20 rounded-xl p-3 backdrop-blur-sm">
-                <Target className="h-8 w-8" />
+                <Target className="h-6 w-6 sm:h-8 sm:w-8" />
               </div>
-              <div className="flex-1">
-                <h3 className="text-2xl font-black flex items-center gap-2">
-                  <Sparkles className="h-6 w-6 animate-pulse" />
+              <div className="flex-1 w-full">
+                <h3 className="text-xl sm:text-2xl font-black flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" />
                   Punto de Equilibrio
                 </h3>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white/10 rounded-lg p-4">
-                  <p className="text-sm opacity-90">Consultas Necesarias/Mes</p>
-                  <p className="text-2xl font-bold">{puntoEquilibrio.consultas_necesarias_mes}</p>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                <div className="bg-white/10 rounded-lg p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm opacity-90">Horas Necesarias/Mes</p>
+                  <p className="text-xl sm:text-2xl font-bold">
+                    {costos && puntoEquilibrio.precio_promedio > 0 
+                      ? Math.ceil((puntoEquilibrio.costos_fijos_mensuales / puntoEquilibrio.precio_promedio))
+                      : Math.ceil(puntoEquilibrio.consultas_necesarias_mes)
+                    }
+                  </p>
                   <p className="text-xs opacity-75 mt-1">para cubrir costos fijos</p>
                 </div>
                 <div className="bg-white/10 rounded-lg p-4">
-                  <p className="text-sm opacity-90">Consultas del Último Mes</p>
+                  <p className="text-sm opacity-90">Prestaciones del Último Mes</p>
                   <p className="text-2xl font-bold">{puntoEquilibrio.consultas_ultimo_mes}</p>
                   <p className={`text-xs font-semibold mt-1 ${
-                    puntoEquilibrio.diferencia_consultas >= 0 ? 'text-green-300' : 'text-red-300'
+                    (puntoEquilibrio.consultas_ultimo_mes - Math.ceil(puntoEquilibrio.consultas_necesarias_mes)) >= 0 ? 'text-green-300' : 'text-red-300'
                   }`}>
-                    {puntoEquilibrio.diferencia_consultas >= 0 ? '+' : ''}{puntoEquilibrio.diferencia_consultas.toFixed(1)} vs equilibrio
+                    {(puntoEquilibrio.consultas_ultimo_mes - Math.ceil(puntoEquilibrio.consultas_necesarias_mes)) >= 0 ? '+' : ''}{(puntoEquilibrio.consultas_ultimo_mes - Math.ceil(puntoEquilibrio.consultas_necesarias_mes))} vs equilibrio
                   </p>
                 </div>
                 <div className="bg-white/10 rounded-lg p-4">
                   <p className="text-sm opacity-90">% Equilibrio Alcanzado</p>
-                  <p className="text-2xl font-bold">{puntoEquilibrio.porcentaje_equilibrio.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold">{((puntoEquilibrio.consultas_ultimo_mes / Math.ceil(puntoEquilibrio.consultas_necesarias_mes)) * 100).toFixed(1)}%</p>
                   <p className="text-xs opacity-75 mt-1">
-                    {puntoEquilibrio.esta_en_equilibrio ? '✅ En equilibrio' : '⚠️ Por debajo'}
+                    {puntoEquilibrio.consultas_ultimo_mes >= Math.ceil(puntoEquilibrio.consultas_necesarias_mes) ? '✅ En equilibrio' : '⚠️ Por debajo'}
                   </p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="opacity-75">Ingreso necesario/mes:</p>
-                  <p className="font-semibold">${puntoEquilibrio.ingreso_necesario_mes.toLocaleString('es-AR')} ARS</p>
+                  <p className="font-semibold">${formatCurrency(puntoEquilibrio.ingreso_necesario_mes, 0)} ARS</p>
                 </div>
                 <div>
                   <p className="opacity-75">Precio promedio/consulta:</p>
-                  <p className="font-semibold">${puntoEquilibrio.precio_promedio.toLocaleString('es-AR')} ARS</p>
+                  <p className="font-semibold">${formatCurrency(puntoEquilibrio.precio_promedio, 0)} ARS</p>
                 </div>
                 <div>
                   <p className="opacity-75">Costos fijos mensuales:</p>
-                  <p className="font-semibold">${puntoEquilibrio.costos_fijos_mensuales.toLocaleString('es-AR')} ARS</p>
+                  <p className="font-semibold">${formatCurrency(puntoEquilibrio.costos_fijos_mensuales, 0)} ARS</p>
                 </div>
                 <div>
                   <p className="opacity-75">Margen de contribución:</p>
-                  <p className="font-semibold">${puntoEquilibrio.margen_contribucion.toLocaleString('es-AR')} ARS</p>
+                  <p className="font-semibold">${formatCurrency(puntoEquilibrio.margen_contribucion, 0)} ARS</p>
                 </div>
               </div>
-                {!puntoEquilibrio.esta_en_equilibrio && (
+                {puntoEquilibrio.consultas_ultimo_mes < Math.ceil(puntoEquilibrio.consultas_necesarias_mes) && (
                   <div className="mt-4 bg-white/20 rounded-lg p-3">
                     <p className="text-sm font-semibold">💡 Recomendación:</p>
                     <p className="text-sm mt-1">
-                      Necesitas {(puntoEquilibrio.consultas_necesarias_mes - puntoEquilibrio.consultas_ultimo_mes).toFixed(0)} consultas más 
+                      Necesitas {Math.ceil(puntoEquilibrio.consultas_necesarias_mes) - puntoEquilibrio.consultas_ultimo_mes} prestaciones más 
                       este mes para alcanzar el punto de equilibrio.
                     </p>
                   </div>

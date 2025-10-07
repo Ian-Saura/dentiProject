@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from 'react-query';
-import { TrendingUp, DollarSign, Calendar, PieChart, BarChart3, Download, Sparkles } from 'lucide-react';
+import { TrendingUp, DollarSign, Calendar, PieChart, BarChart3, Download, Sparkles, ArrowUpDown } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
 import { motion } from 'framer-motion';
@@ -9,6 +9,7 @@ import { gastosService } from '@/services/gastos';
 
 interface MonthlyPL {
   month: string;
+  monthKey?: string; // For proper chronological sorting
   ingresos: number;
   gastos_fijos: number;
   gastos_equipos: number;
@@ -28,6 +29,8 @@ interface CashFlowData {
 const FinancialReportsPage: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('6months');
   const [reportType, setReportType] = useState<'pl' | 'cashflow' | 'profitability'>('pl');
+  const [sortBy, setSortBy] = useState<'month' | 'ingresos' | 'utilidad' | 'margen'>('month');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Fetch consultations for financial analysis
   const { data: consultasData, isLoading: loadingConsultas } = useQuery(
@@ -54,6 +57,19 @@ const FinancialReportsPage: React.FC = () => {
   const calculateMonthlyPL = (): MonthlyPL[] => {
     if (!consultasData?.data || !costAnalysis || !gastosData) return [];
 
+    // Calculate date filter based on selected period
+    const now = new Date();
+    let startDate: Date | null = null;
+    
+    if (selectedPeriod === '3months') {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    } else if (selectedPeriod === '6months') {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+    } else if (selectedPeriod === '12months') {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 12, 1);
+    }
+    // 'all' = no filter
+
     const monthlyData: { [key: string]: MonthlyPL } = {};
     // Calculate real monthly fixed costs from gastos fijos
     const monthlyFixedCost = gastosData
@@ -63,12 +79,19 @@ const FinancialReportsPage: React.FC = () => {
 
     consultasData.data.forEach(consulta => {
       const date = new Date(consulta.fecha_consulta);
+      
+      // Apply date filter
+      if (startDate && date < startDate) {
+        return; // Skip consultas outside the selected period
+      }
+      
       const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
       const monthName = date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long' });
 
       if (!monthlyData[monthKey]) {
         monthlyData[monthKey] = {
           month: monthName,
+          monthKey: monthKey, // Add monthKey for proper sorting
           ingresos: 0,
           gastos_fijos: monthlyFixedCost,
           gastos_equipos: 0,
@@ -90,9 +113,9 @@ const FinancialReportsPage: React.FC = () => {
       month.margen_porcentaje = month.ingresos > 0 ? (month.utilidad_bruta / month.ingresos) * 100 : 0;
     });
 
-    // Sort by year-month key (chronological order)
+    // Sort by year-month key (chronological order) - DESCENDING (newest first)
     return Object.entries(monthlyData)
-      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+      .sort(([keyA], [keyB]) => keyB.localeCompare(keyA))
       .map(([_, data]) => data);
   };
 
@@ -152,12 +175,40 @@ const FinancialReportsPage: React.FC = () => {
   const cashFlowData = calculateCashFlow();
   const treatmentProfitability = calculateTreatmentProfitability();
 
+  // Sort monthly P&L data
+  const sortedMonthlyPL = useMemo(() => {
+    if (!monthlyPL.length) return [];
+    
+    return [...monthlyPL].sort((a, b) => {
+      let compareA, compareB;
+      
+      if (sortBy === 'month') {
+        // Use monthKey (YYYY-MM format) for proper chronological sorting
+        compareA = a.monthKey || a.month;
+        compareB = b.monthKey || b.month;
+      } else if (sortBy === 'ingresos') {
+        compareA = a.ingresos;
+        compareB = b.ingresos;
+      } else if (sortBy === 'utilidad') {
+        compareA = a.utilidad_bruta;
+        compareB = b.utilidad_bruta;
+      } else { // margen
+        compareA = a.margen_porcentaje;
+        compareB = b.margen_porcentaje;
+      }
+      
+      if (compareA < compareB) return sortOrder === 'asc' ? -1 : 1;
+      if (compareA > compareB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [monthlyPL, sortBy, sortOrder]);
+
   const downloadReport = () => {
     let csvContent = '';
     let filename = '';
 
     if (reportType === 'pl') {
-      csvContent = 'Mes,Ingresos,Gastos Fijos,Gastos Equipos,Utilidad Bruta,Margen %,Consultas\n';
+      csvContent = 'Mes,Ingresos,Gastos Fijos,Gastos Equipos,Utilidad Bruta,Margen %,Prestaciones\n';
       monthlyPL.forEach(row => {
         csvContent += `${row.month},${row.ingresos},${row.gastos_fijos},${row.gastos_equipos},${row.utilidad_bruta},${row.margen_porcentaje.toFixed(2)},${row.consultas_count}\n`;
       });
@@ -320,9 +371,31 @@ const FinancialReportsPage: React.FC = () => {
       {reportType === 'pl' && (
         <AnimatedCard delay={0.2}>
           <div className="glass rounded-2xl p-6 shadow-soft border border-white/20">
-          <div className="flex items-center space-x-2 mb-4">
-            <BarChart3 className="h-6 w-6 text-blue-600" />
-            <h3 className="text-lg font-semibold">Estado de Resultados Mensual</h3>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+            <div className="flex items-center space-x-2">
+              <BarChart3 className="h-6 w-6 text-blue-600" />
+              <h3 className="text-lg font-semibold">Estado de Resultados Mensual</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Ordenar por:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'month' | 'ingresos' | 'utilidad' | 'margen')}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-dental-500"
+              >
+                <option value="month">Mes</option>
+                <option value="ingresos">Ingresos</option>
+                <option value="utilidad">Utilidad</option>
+                <option value="margen">Margen %</option>
+              </select>
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                title={sortOrder === 'asc' ? 'Ascendente' : 'Descendente'}
+              >
+                <ArrowUpDown className={`h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''} transition-transform`} />
+              </button>
+            </div>
           </div>
           
           <div className="overflow-x-auto">
@@ -335,11 +408,11 @@ const FinancialReportsPage: React.FC = () => {
                   <th>Gastos Equipos</th>
                   <th>Utilidad Bruta</th>
                   <th>Margen %</th>
-                  <th>Consultas</th>
+                  <th>Prestaciones</th>
                 </tr>
               </thead>
               <tbody>
-                {monthlyPL.map((month, index) => (
+                {sortedMonthlyPL.map((month, index) => (
                   <tr key={index}>
                     <td className="font-medium">{month.month}</td>
                     <td className="text-green-600 font-medium">

@@ -18,7 +18,7 @@ export const gastosService = {
   },
 
   async updateGasto(id: number, gasto: Partial<GastoFijoCreate>): Promise<GastoFijo> {
-    const response = await api.put<GastoFijo>(`/gastos/${id}`, gasto);
+    const response = await api.patch<GastoFijo>(`/gastos/${id}`, gasto);
     return response.data;
   },
 

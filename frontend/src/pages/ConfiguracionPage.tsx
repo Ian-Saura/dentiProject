@@ -4,7 +4,7 @@ import { equiposService, gastosService, configService } from '../services';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AnimatedCard from '../components/AnimatedCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Wrench, Building2, Sliders, Sparkles, Plus, Edit, Trash2, X } from 'lucide-react';
+import { Settings, Wrench, Building2, Sliders, Sparkles, Plus, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface Equipo {
@@ -61,10 +61,38 @@ const ConfiguracionPage: React.FC = () => {
 
   const queryClient = useQueryClient();
 
-  // Fetch data
-  const { data: equipos, isLoading: loadingEquipos } = useQuery<Equipo[]>('equipos', equiposService.getEquipos);
-  const { data: gastos, isLoading: loadingGastos } = useQuery<Gasto[]>('gastos', gastosService.getGastos);
-  const { data: config, isLoading: loadingConfig } = useQuery('configuracion', configService.getConfig);
+  // Fetch data (interceptor handles error toasts automatically)
+  const { data: equipos, isLoading: loadingEquipos } = useQuery<Equipo[]>(
+    'equipos', 
+    equiposService.getEquipos,
+    {
+      onError: (error: any) => {
+        console.error('Error loading equipos:', error);
+      }
+    }
+  );
+  
+  const { data: gastos, isLoading: loadingGastos } = useQuery<Gasto[]>(
+    'gastos', 
+    gastosService.getGastos,
+    {
+      onError: (error: any) => {
+        console.error('Error loading gastos:', error);
+      }
+    }
+  );
+  
+  const { data: config, isLoading: loadingConfig } = useQuery(
+    'configuracion', 
+    configService.getConfig,
+    {
+      retry: 1,
+      onError: (error: any) => {
+        console.error('Error loading config:', error);
+        // Config errors are not critical - we have fallback values
+      }
+    }
+  );
 
   // Equipment mutations
   const createEquipoMutation = useMutation(equiposService.createEquipo, {
@@ -83,6 +111,11 @@ const ConfiguracionPage: React.FC = () => {
         setEditingEquipo(null);
         setShowEquipoForm(false);
         resetEquipoForm();
+        toast.success('✅ Equipo actualizado correctamente');
+      },
+      onError: (error: any) => {
+        console.error('Error updating equipo:', error);
+        toast.error(`❌ Error: ${error?.response?.data?.detail || error?.message || 'Error al actualizar equipo'}`);
       }
     }
   );
@@ -195,7 +228,18 @@ const ConfiguracionPage: React.FC = () => {
     }
   };
 
-  if (loadingEquipos || loadingGastos || loadingConfig) return <LoadingSpinner />;
+  // Show loading only if all are loading for the first time
+  if (loadingEquipos && loadingGastos && loadingConfig) return <LoadingSpinner />;
+
+  // Set default values if config is not available
+  const safeConfig = config || {
+    id: 0,
+    horas_anuales_trabajadas: 1100,
+    tipo_cambio_usd_ars: 1335,
+    margen_ganancia_porcentaje: 40,
+    costo_hora_manual_ars: 29000,
+    usar_costo_manual: false
+  };
 
   return (
     <div className="space-y-6">
@@ -284,16 +328,16 @@ const ConfiguracionPage: React.FC = () => {
       {/* Equipment Tab */}
       {activeTab === 'equipos' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
-              <Wrench className="h-6 w-6 text-dental-500" />
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 className="text-xl sm:text-2xl font-bold gradient-text flex items-center gap-2">
+              <Wrench className="h-5 w-5 sm:h-6 sm:w-6 text-dental-500" />
               Equipamiento del Consultorio
             </h2>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowEquipoForm(true)}
-              className="btn-premium flex items-center gap-2"
+              className="btn-premium flex items-center gap-2 w-full sm:w-auto justify-center"
             >
               <Plus className="h-5 w-5" />
               Nuevo Equipo
@@ -357,6 +401,7 @@ const ConfiguracionPage: React.FC = () => {
                       onChange={(e) => setEquipoForm({ ...equipoForm, monto_compra_usd: Number(e.target.value) })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       min="0"
+                      step="0.01"
                       required
                     />
                   </div>
@@ -440,11 +485,11 @@ const ConfiguracionPage: React.FC = () => {
             
             <div className="divide-y divide-gray-200">
               {equipos?.map((equipo) => (
-                <div key={equipo.id} className="p-6 hover:bg-gray-50">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h4 className="text-lg font-medium text-gray-900">{equipo.nombre_equipo}</h4>
-                      <div className="mt-2 grid grid-cols-2 gap-4 text-sm text-gray-600">
+                <div key={equipo.id} className="p-4 sm:p-6 hover:bg-gray-50">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div className="flex-1 w-full">
+                      <h4 className="text-base sm:text-lg font-medium text-gray-900">{equipo.nombre_equipo}</h4>
+                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm text-gray-600">
                         <div>💰 ${equipo.monto_compra_usd.toLocaleString('es-AR')} USD</div>
                         <div>⏱️ {equipo.anios_vida_util} años de vida útil</div>
                         <div>📅 Comprado: {equipo.fecha_compra ? new Date(equipo.fecha_compra).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'No especificada'}</div>
@@ -456,16 +501,16 @@ const ConfiguracionPage: React.FC = () => {
                         <p className="mt-2 text-sm text-gray-500">{equipo.observaciones}</p>
                       )}
                     </div>
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => handleEditEquipo(equipo)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
+                        className="flex-1 sm:flex-none text-blue-600 hover:text-blue-800 text-sm px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors"
                       >
                         ✏️ Editar
                       </button>
                       <button
                         onClick={() => handleDeleteEquipo(equipo.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        className="flex-1 sm:flex-none text-red-600 hover:text-red-800 text-sm px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
                       >
                         🗑️ Eliminar
                       </button>
@@ -509,11 +554,11 @@ const ConfiguracionPage: React.FC = () => {
       {/* Expenses Tab */}
       {activeTab === 'gastos' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Gastos Fijos Mensuales</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 className="text-lg sm:text-xl font-semibold">Gastos Fijos Mensuales</h2>
             <button
               onClick={() => setShowGastoForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center"
             >
               ➕ Nuevo Gasto
             </button>
@@ -679,10 +724,11 @@ const ConfiguracionPage: React.FC = () => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
               updateConfigMutation.mutate({
-                horas_anuales_trabajadas: Number(formData.get('horas_anuales')),
-                tipo_cambio_usd_ars: Number(formData.get('tipo_cambio')),
-                margen_ganancia_porcentaje: Number(formData.get('margen_ganancia')),
-                costo_hora_manual_ars: Number(formData.get('costo_hora_manual')),
+                horas_anuales_trabajadas: Number(formData.get('horas_anuales')) || 1100,
+                tipo_cambio_usd_ars: Number(formData.get('tipo_cambio')) || 1335,
+                margen_ganancia_porcentaje: Number(formData.get('margen_ganancia')) || 40,
+                costo_hora_manual_ars: Number(formData.get('costo_hora_manual')) || 29000,
+                usar_costo_manual: false,
               });
             }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -693,7 +739,7 @@ const ConfiguracionPage: React.FC = () => {
                   <input
                     type="number"
                     name="horas_anuales"
-                    defaultValue={config?.horas_anuales_trabajadas || 1100}
+                    defaultValue={safeConfig.horas_anuales_trabajadas}
                     min={500}
                     max={3000}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -709,7 +755,7 @@ const ConfiguracionPage: React.FC = () => {
                   <input
                     type="number"
                     name="tipo_cambio"
-                    defaultValue={config?.tipo_cambio_usd_ars || 1335}
+                    defaultValue={safeConfig.tipo_cambio_usd_ars || 1335}
                     min={100}
                     max={10000}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -726,7 +772,7 @@ const ConfiguracionPage: React.FC = () => {
                   <input
                     type="range"
                     name="margen_ganancia"
-                    defaultValue={config?.margen_ganancia_porcentaje || 40}
+                    defaultValue={safeConfig.margen_ganancia_porcentaje || 40}
                     min={10}
                     max={200}
                     step={5}
@@ -739,7 +785,7 @@ const ConfiguracionPage: React.FC = () => {
                   />
                   <div className="flex justify-between text-sm text-gray-500 mt-1">
                     <span>10%</span>
-                    <span id="margen-display" className="font-bold text-dental-600 text-lg">{config?.margen_ganancia_porcentaje || 40}% (actual)</span>
+                    <span id="margen-display" className="font-bold text-dental-600 text-lg">{safeConfig.margen_ganancia_porcentaje || 40}% (actual)</span>
                     <span>200%</span>
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
@@ -754,7 +800,7 @@ const ConfiguracionPage: React.FC = () => {
                   <input
                     type="number"
                     name="costo_hora_manual"
-                    defaultValue={config?.costo_hora_manual_ars || 29000}
+                    defaultValue={safeConfig.costo_hora_manual_ars || 29000}
                     min={5000}
                     max={500000}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

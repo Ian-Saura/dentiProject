@@ -25,3 +25,5 @@ class GastoFijo(Base):
 
 
 from app.models.usuarios import Usuario  # noqa: E402
+
+
