@@ -18,6 +18,8 @@ class ConfiguracionUsuario(Base):
     costo_hora_manual_ars: Mapped[Optional[float]] = mapped_column(DECIMAL(12, 2))
     usar_costo_manual: Mapped[bool] = mapped_column(Boolean, default=False)
     horas_anuales_trabajadas: Mapped[int] = mapped_column(Integer, default=1100)
+    tipo_cambio_usd_ars: Mapped[Optional[float]] = mapped_column(DECIMAL(10, 2), default=1335)
+    margen_ganancia_porcentaje: Mapped[Optional[float]] = mapped_column(DECIMAL(5, 2), default=40)
     fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     fecha_actualizacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

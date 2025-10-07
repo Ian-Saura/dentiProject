@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { equiposService, gastosService } from '../services';
+import { equiposService, gastosService, configService } from '../services';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AnimatedCard from '../components/AnimatedCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Wrench, Building2, Sliders, Sparkles, Plus, Edit, Trash2, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface Equipo {
   id: number;
-  nombre: string;
+  nombre_equipo: string;
   monto_compra_usd: number;
   anios_vida_util: number;
   fecha_compra: string;
-  observaciones: string;
+  observaciones?: string;
   activo: boolean;
 }
 
@@ -63,6 +64,7 @@ const ConfiguracionPage: React.FC = () => {
   // Fetch data
   const { data: equipos, isLoading: loadingEquipos } = useQuery<Equipo[]>('equipos', equiposService.getEquipos);
   const { data: gastos, isLoading: loadingGastos } = useQuery<Gasto[]>('gastos', gastosService.getGastos);
+  const { data: config, isLoading: loadingConfig } = useQuery('configuracion', configService.getConfig);
 
   // Equipment mutations
   const createEquipoMutation = useMutation(equiposService.createEquipo, {
@@ -114,6 +116,17 @@ const ConfiguracionPage: React.FC = () => {
     onSuccess: () => queryClient.invalidateQueries('gastos')
   });
 
+  // Config mutation
+  const updateConfigMutation = useMutation(configService.updateConfig, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('configuracion');
+      toast.success('✅ Parámetros actualizados correctamente');
+    },
+    onError: () => {
+      toast.error('❌ Error al actualizar parámetros');
+    }
+  });
+
   const resetEquipoForm = () => {
     setEquipoForm({
       nombre_equipo: '',
@@ -152,11 +165,11 @@ const ConfiguracionPage: React.FC = () => {
   const handleEditEquipo = (equipo: Equipo) => {
     setEditingEquipo(equipo);
     setEquipoForm({
-      nombre_equipo: equipo.nombre,
+      nombre_equipo: equipo.nombre_equipo,
       monto_compra_usd: equipo.monto_compra_usd,
       anios_vida_util: equipo.anios_vida_util,
-      fecha_compra: equipo.fecha_compra,
-      observaciones: equipo.observaciones
+      fecha_compra: equipo.fecha_compra || '',
+      observaciones: equipo.observaciones || ''
     });
     setShowEquipoForm(true);
   };
@@ -182,7 +195,7 @@ const ConfiguracionPage: React.FC = () => {
     }
   };
 
-  if (loadingEquipos || loadingGastos) return <LoadingSpinner />;
+  if (loadingEquipos || loadingGastos || loadingConfig) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
@@ -344,7 +357,6 @@ const ConfiguracionPage: React.FC = () => {
                       onChange={(e) => setEquipoForm({ ...equipoForm, monto_compra_usd: Number(e.target.value) })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       min="0"
-                      step="100"
                       required
                     />
                   </div>
@@ -353,17 +365,16 @@ const ConfiguracionPage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Vida Útil (años) *
                     </label>
-                    <select
+                    <input
+                      type="number"
                       value={equipoForm.anios_vida_util}
                       onChange={(e) => setEquipoForm({ ...equipoForm, anios_vida_util: Number(e.target.value) })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value={3}>3 años</option>
-                      <option value={5}>5 años</option>
-                      <option value={7}>7 años</option>
-                      <option value={8}>8 años</option>
-                      <option value={10}>10 años</option>
-                    </select>
+                      min="1"
+                      max="50"
+                      step="1"
+                      required
+                    />
                   </div>
 
                   <div>
@@ -432,11 +443,11 @@ const ConfiguracionPage: React.FC = () => {
                 <div key={equipo.id} className="p-6 hover:bg-gray-50">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h4 className="text-lg font-medium text-gray-900">{equipo.nombre}</h4>
+                      <h4 className="text-lg font-medium text-gray-900">{equipo.nombre_equipo}</h4>
                       <div className="mt-2 grid grid-cols-2 gap-4 text-sm text-gray-600">
-                        <div>💰 ${equipo.monto_compra_usd.toLocaleString()} USD</div>
+                        <div>💰 ${equipo.monto_compra_usd.toLocaleString('es-AR')} USD</div>
                         <div>⏱️ {equipo.anios_vida_util} años de vida útil</div>
-                        <div>📅 Comprado: {equipo.fecha_compra}</div>
+                        <div>📅 Comprado: {equipo.fecha_compra ? new Date(equipo.fecha_compra).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'No especificada'}</div>
                         <div className={`font-medium ${equipo.activo ? 'text-green-600' : 'text-red-600'}`}>
                           {equipo.activo ? '✅ Activo' : '❌ Inactivo'}
                         </div>
@@ -541,7 +552,6 @@ const ConfiguracionPage: React.FC = () => {
                       onChange={(e) => setGastoForm({ ...gastoForm, monto_mensual_ars: Number(e.target.value) })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       min="0"
-                      step="1000"
                       required
                     />
                   </div>
@@ -584,10 +594,10 @@ const ConfiguracionPage: React.FC = () => {
                     <div className="flex-1">
                       <h4 className="text-lg font-medium text-gray-900">{gasto.concepto}</h4>
                       <div className="mt-1 text-2xl font-bold text-blue-600">
-                        ${gasto.monto_mensual_ars.toLocaleString()} ARS/mes
+                        ${gasto.monto_mensual_ars.toLocaleString('es-AR')} ARS/mes
                       </div>
                       <div className="mt-1 text-sm text-gray-500">
-                        Anual: ${(gasto.monto_mensual_ars * 12).toLocaleString()} ARS
+                        Anual: ${(gasto.monto_mensual_ars * 12).toLocaleString('es-AR')} ARS
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
@@ -615,10 +625,10 @@ const ConfiguracionPage: React.FC = () => {
                   <span className="text-lg font-semibold text-gray-900">Total Gastos Fijos:</span>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-blue-600">
-                      ${gastos.reduce((sum, gasto) => sum + gasto.monto_mensual_ars, 0).toLocaleString()} ARS/mes
+                      ${gastos.reduce((sum, gasto) => sum + gasto.monto_mensual_ars, 0).toLocaleString('es-AR')} ARS/mes
                     </div>
                     <div className="text-sm text-gray-500">
-                      ${(gastos.reduce((sum, gasto) => sum + gasto.monto_mensual_ars, 0) * 12).toLocaleString()} ARS/año
+                      ${(gastos.reduce((sum, gasto) => sum + gasto.monto_mensual_ars, 0) * 12).toLocaleString('es-AR')} ARS/año
                     </div>
                   </div>
                 </div>
@@ -667,8 +677,13 @@ const ConfiguracionPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <form className="space-y-6" onSubmit={(e) => {
               e.preventDefault();
-              // TODO: Implement parameter update
-              alert('Funcionalidad de actualización de parámetros próximamente');
+              const formData = new FormData(e.currentTarget);
+              updateConfigMutation.mutate({
+                horas_anuales_trabajadas: Number(formData.get('horas_anuales')),
+                tipo_cambio_usd_ars: Number(formData.get('tipo_cambio')),
+                margen_ganancia_porcentaje: Number(formData.get('margen_ganancia')),
+                costo_hora_manual_ars: Number(formData.get('costo_hora_manual')),
+              });
             }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -677,27 +692,26 @@ const ConfiguracionPage: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    defaultValue={1100}
+                    name="horas_anuales"
+                    defaultValue={config?.horas_anuales_trabajadas || 1100}
                     min={500}
-                    max={2000}
-                    step={50}
+                    max={3000}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-sm text-gray-500 mt-1">
                     Horas productivas anuales (descontando vacaciones, días no trabajados, etc.)
                   </p>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tipo de cambio USD/ARS
                   </label>
                   <input
                     type="number"
-                    defaultValue={1335}
+                    name="tipo_cambio"
+                    defaultValue={config?.tipo_cambio_usd_ars || 1335}
                     min={100}
-                    max={5000}
-                    step={10}
+                    max={10000}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-sm text-gray-500 mt-1">
@@ -711,15 +725,21 @@ const ConfiguracionPage: React.FC = () => {
                   </label>
                   <input
                     type="range"
-                    defaultValue={40}
+                    name="margen_ganancia"
+                    defaultValue={config?.margen_ganancia_porcentaje || 40}
                     min={10}
                     max={200}
                     step={5}
                     className="w-full"
+                    id="margen-range"
+                    onChange={(e) => {
+                      const display = document.getElementById('margen-display');
+                      if (display) display.textContent = e.target.value + '%';
+                    }}
                   />
                   <div className="flex justify-between text-sm text-gray-500 mt-1">
                     <span>10%</span>
-                    <span>40% (actual)</span>
+                    <span id="margen-display" className="font-bold text-dental-600 text-lg">{config?.margen_ganancia_porcentaje || 40}% (actual)</span>
                     <span>200%</span>
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
@@ -733,10 +753,10 @@ const ConfiguracionPage: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    defaultValue={29000}
+                    name="costo_hora_manual"
+                    defaultValue={config?.costo_hora_manual_ars || 29000}
                     min={5000}
-                    max={100000}
-                    step={1000}
+                    max={500000}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-sm text-gray-500 mt-1">
@@ -744,14 +764,25 @@ const ConfiguracionPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-
               <div className="flex justify-end">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors"
+                  disabled={updateConfigMutation.isLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
-                  💾 Actualizar Parámetros
-                </button>
+                  {updateConfigMutation.isLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      💾 Actualizar Parámetros
+                    </>
+                  )}
+                </motion.button>
               </div>
             </form>
           </div>

@@ -121,7 +121,7 @@ const DashboardPage: React.FC = () => {
         <AnimatedCard delay={0.1} className="h-full">
           <MetricCard
             title="Ingresos Totales"
-            value={`$${resumen?.ingreso_total?.toLocaleString() || 0} ARS`}
+            value={`$${resumen?.ingreso_total?.toLocaleString('es-AR') || 0} ARS`}
             icon={DollarSign}
             color="green"
             change={{ value: kpis?.crecimiento_mensual || 0, type: 'increase' }}
@@ -138,7 +138,7 @@ const DashboardPage: React.FC = () => {
         <AnimatedCard delay={0.2} className="h-full">
           <MetricCard
             title="Promedio/Consulta"
-            value={`$${resumen?.promedio_consulta?.toLocaleString() || 0} ARS`}
+            value={`$${resumen?.promedio_consulta?.toLocaleString('es-AR') || 0} ARS`}
             icon={TrendingUp}
             color="purple"
           />
@@ -174,7 +174,7 @@ const DashboardPage: React.FC = () => {
         <AnimatedCard delay={0.4} className="h-full">
           <MetricCard
             title="Promedio Diario"
-            value={`$${kpis?.ingreso_promedio_diario?.toLocaleString() || 0} ARS`}
+            value={`$${kpis?.ingreso_promedio_diario?.toLocaleString('es-AR') || 0} ARS`}
             icon={Activity}
             color="green"
           />
@@ -196,10 +196,10 @@ const DashboardPage: React.FC = () => {
                   Análisis de Costos Automático
                 </h3>
                 <p className="mt-3 opacity-90 text-lg">
-                  Su costo real por hora: <strong>${costos.costo_hora_ars.toLocaleString()} ARS</strong>
+                  Su costo real por hora: <strong>${costos.costo_hora_ars.toLocaleString('es-AR')} ARS</strong>
                 </p>
                 <p className="opacity-90 text-lg">
-                  Precio mínimo recomendado (50% margen): <strong>${(costos.costo_hora_ars * 1.5).toLocaleString()} ARS</strong>
+                  Precio mínimo recomendado (50% margen): <strong>${(costos.costo_hora_ars * 1.5).toLocaleString('es-AR')} ARS</strong>
                 </p>
               </div>
             </div>
@@ -252,19 +252,19 @@ const DashboardPage: React.FC = () => {
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="opacity-75">Ingreso necesario/mes:</p>
-                  <p className="font-semibold">${puntoEquilibrio.ingreso_necesario_mes.toLocaleString()} ARS</p>
+                  <p className="font-semibold">${puntoEquilibrio.ingreso_necesario_mes.toLocaleString('es-AR')} ARS</p>
                 </div>
                 <div>
                   <p className="opacity-75">Precio promedio/consulta:</p>
-                  <p className="font-semibold">${puntoEquilibrio.precio_promedio.toLocaleString()} ARS</p>
+                  <p className="font-semibold">${puntoEquilibrio.precio_promedio.toLocaleString('es-AR')} ARS</p>
                 </div>
                 <div>
                   <p className="opacity-75">Costos fijos mensuales:</p>
-                  <p className="font-semibold">${puntoEquilibrio.costos_fijos_mensuales.toLocaleString()} ARS</p>
+                  <p className="font-semibold">${puntoEquilibrio.costos_fijos_mensuales.toLocaleString('es-AR')} ARS</p>
                 </div>
                 <div>
                   <p className="opacity-75">Margen de contribución:</p>
-                  <p className="font-semibold">${puntoEquilibrio.margen_contribucion.toLocaleString()} ARS</p>
+                  <p className="font-semibold">${puntoEquilibrio.margen_contribucion.toLocaleString('es-AR')} ARS</p>
                 </div>
               </div>
                 {!puntoEquilibrio.esta_en_equilibrio && (

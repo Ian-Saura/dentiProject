@@ -7,6 +7,8 @@ export interface ConfiguracionUsuario {
   costo_hora_manual_ars?: number;
   usar_costo_manual: boolean;
   horas_anuales_trabajadas: number;
+  tipo_cambio_usd_ars?: number;
+  margen_ganancia_porcentaje?: number;
 }
 
 export interface CostAnalysis {

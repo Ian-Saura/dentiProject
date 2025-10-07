@@ -25,15 +25,33 @@ def extraer_monto_numerico(monto_str):
 
         # Determinar si el último punto/coma son decimales
         if ',' in monto_clean and '.' in monto_clean:
+            # Si hay ambos, el que está más a la derecha es el decimal
             if monto_clean.rfind(',') > monto_clean.rfind('.'):
+                # Coma es decimal: 1.234,56 -> 1234.56
                 monto_clean = monto_clean.replace('.', '').replace(',', '.')
             else:
+                # Punto es decimal: 1,234.56 -> 1234.56
                 monto_clean = monto_clean.replace(',', '')
         elif ',' in monto_clean:
-            if monto_clean.count(',') == 1 and len(monto_clean.split(',')[1]) <= 2:
+            # Solo hay comas
+            partes = monto_clean.split(',')
+            # Si la última parte tiene 2 o menos dígitos y solo hay una coma, es decimal
+            if monto_clean.count(',') == 1 and len(partes[-1]) <= 2:
+                # Es decimal: 40,50 -> 40.50
                 monto_clean = monto_clean.replace(',', '.')
             else:
+                # Son separadores de miles: 40,000 -> 40000
                 monto_clean = monto_clean.replace(',', '')
+        elif '.' in monto_clean:
+            # Solo hay puntos
+            partes = monto_clean.split('.')
+            # Si la última parte tiene 2 o menos dígitos y solo hay un punto, es decimal
+            if monto_clean.count('.') == 1 and len(partes[-1]) <= 2:
+                # Es decimal: 40.50 -> 40.50 (ya está bien)
+                pass
+            else:
+                # Son separadores de miles: 40.000 -> 40000
+                monto_clean = monto_clean.replace('.', '')
 
         resultado = float(monto_clean)
         return -resultado if es_negativo else resultado

@@ -58,12 +58,20 @@ class ImportCsvService:
         print(f"  - Fecha: {col_fecha or 'No especificada (usar hoy)'}")
         print(f"  - Medio de pago: {col_medio_pago or 'No especificado (usar efectivo)'}")
         
-        # Leer CSV
+        # Leer CSV con manejo correcto de comillas para campos con comas
         encodings = ['utf-8', 'latin1', 'cp1252', 'iso-8859-1']
         df = None
         for enc in encodings:
             try:
-                df = pd.read_csv(io.BytesIO(csv_content), encoding=enc)
+                # quotechar='"' maneja campos como "García, Juan" correctamente
+                # skipinitialspace=True elimina espacios después de delimitadores
+                df = pd.read_csv(
+                    io.BytesIO(csv_content), 
+                    encoding=enc,
+                    quotechar='"',
+                    skipinitialspace=True,
+                    on_bad_lines='warn'  # Advertir sobre líneas problemáticas en lugar de fallar
+                )
                 print(f"\n✅ CSV leído exitosamente con encoding: {enc}")
                 break
             except (UnicodeDecodeError, pd.errors.ParserError) as e:

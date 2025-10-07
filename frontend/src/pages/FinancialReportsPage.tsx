@@ -90,7 +90,10 @@ const FinancialReportsPage: React.FC = () => {
       month.margen_porcentaje = month.ingresos > 0 ? (month.utilidad_bruta / month.ingresos) * 100 : 0;
     });
 
-    return Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month));
+    // Sort by year-month key (chronological order)
+    return Object.entries(monthlyData)
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+      .map(([_, data]) => data);
   };
 
   // Calculate cash flow
@@ -340,16 +343,16 @@ const FinancialReportsPage: React.FC = () => {
                   <tr key={index}>
                     <td className="font-medium">{month.month}</td>
                     <td className="text-green-600 font-medium">
-                      ${month.ingresos.toLocaleString()}
+                      ${month.ingresos.toLocaleString('es-AR')}
                     </td>
                     <td className="text-red-600">
-                      ${month.gastos_fijos.toLocaleString()}
+                      ${month.gastos_fijos.toLocaleString('es-AR')}
                     </td>
                     <td className="text-red-600">
-                      ${month.gastos_equipos.toLocaleString()}
+                      ${month.gastos_equipos.toLocaleString('es-AR')}
                     </td>
                     <td className={`font-bold ${month.utilidad_bruta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ${month.utilidad_bruta.toLocaleString()}
+                      ${month.utilidad_bruta.toLocaleString('es-AR')}
                     </td>
                     <td className={`font-medium ${month.margen_porcentaje >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {month.margen_porcentaje.toFixed(1)}%
@@ -365,19 +368,19 @@ const FinancialReportsPage: React.FC = () => {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">
-                ${monthlyPL.reduce((sum, m) => sum + m.ingresos, 0).toLocaleString()}
+                ${monthlyPL.reduce((sum, m) => sum + m.ingresos, 0).toLocaleString('es-AR')}
               </div>
               <div className="text-sm text-green-700">Ingresos Totales</div>
             </div>
             <div className="text-center p-4 bg-red-50 rounded-lg">
               <div className="text-2xl font-bold text-red-600">
-                ${monthlyPL.reduce((sum, m) => sum + m.gastos_fijos + m.gastos_equipos, 0).toLocaleString()}
+                ${monthlyPL.reduce((sum, m) => sum + m.gastos_fijos + m.gastos_equipos, 0).toLocaleString('es-AR')}
               </div>
               <div className="text-sm text-red-700">Gastos Totales</div>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">
-                ${monthlyPL.reduce((sum, m) => sum + m.utilidad_bruta, 0).toLocaleString()}
+                ${monthlyPL.reduce((sum, m) => sum + m.utilidad_bruta, 0).toLocaleString('es-AR')}
               </div>
               <div className="text-sm text-blue-700">Utilidad Total</div>
             </div>
@@ -419,16 +422,16 @@ const FinancialReportsPage: React.FC = () => {
                   <tr key={index}>
                     <td className="font-medium">{month.month}</td>
                     <td className="text-green-600 font-medium">
-                      ${month.ingresos.toLocaleString()}
+                      ${month.ingresos.toLocaleString('es-AR')}
                     </td>
                     <td className="text-red-600">
-                      ${month.gastos.toLocaleString()}
+                      ${month.gastos.toLocaleString('es-AR')}
                     </td>
                     <td className={`font-bold ${month.flujo_neto >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ${month.flujo_neto.toLocaleString()}
+                      ${month.flujo_neto.toLocaleString('es-AR')}
                     </td>
                     <td className={`font-bold ${month.acumulado >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ${month.acumulado.toLocaleString()}
+                      ${month.acumulado.toLocaleString('es-AR')}
                     </td>
                   </tr>
                 ))}
@@ -443,9 +446,14 @@ const FinancialReportsPage: React.FC = () => {
       {reportType === 'profitability' && (
         <AnimatedCard delay={0.2}>
           <div className="glass rounded-2xl p-6 shadow-soft border border-white/20">
-          <div className="flex items-center space-x-2 mb-4">
-            <PieChart className="h-6 w-6 text-purple-600" />
-            <h3 className="text-lg font-semibold">Rentabilidad por Tratamiento</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <PieChart className="h-6 w-6 text-purple-600" />
+              <h3 className="text-lg font-semibold">Rentabilidad por Tratamiento</h3>
+            </div>
+            <div className="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+              💡 <strong>Nota:</strong> Los costos se calculan usando el costo por hora configurado en <strong>Configuración → Parámetros</strong>
+            </div>
           </div>
           
           <div className="overflow-x-auto">
@@ -465,14 +473,14 @@ const FinancialReportsPage: React.FC = () => {
                   <tr key={index}>
                     <td className="font-medium">{treatment.tratamiento}</td>
                     <td className="text-green-600 font-medium">
-                      ${treatment.total_revenue.toLocaleString()}
+                      ${treatment.total_revenue.toLocaleString('es-AR')}
                     </td>
                     <td className="text-red-600">
-                      ${treatment.total_cost.toLocaleString()}
+                      ${treatment.total_cost.toLocaleString('es-AR')}
                     </td>
                     <td>{treatment.sessions_count}</td>
                     <td className="font-medium">
-                      ${treatment.avg_revenue.toLocaleString()}
+                      ${treatment.avg_revenue.toLocaleString('es-AR')}
                     </td>
                     <td className={`font-bold ${treatment.profit_margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {treatment.profit_margin.toFixed(1)}%
@@ -492,7 +500,7 @@ const FinancialReportsPage: React.FC = () => {
                   <div className="text-lg font-bold text-gray-900">{treatment.tratamiento}</div>
                   <div className="text-2xl font-bold text-green-600">{treatment.profit_margin.toFixed(1)}%</div>
                   <div className="text-sm text-gray-600">
-                    ${treatment.avg_revenue.toLocaleString()} promedio
+                    ${treatment.avg_revenue.toLocaleString('es-AR')} promedio
                   </div>
                 </div>
               ))}

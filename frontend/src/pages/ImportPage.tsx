@@ -152,9 +152,10 @@ const ImportPage: React.FC = () => {
 
   const downloadTemplate = () => {
     const template = `Fecha,Paciente,Tratamiento,Monto Total,Medio de Pago
-01-03-2025,Juan Pérez,Consulta,"$30,000",EFECTIVO
-02-03-2025,María García,Limpieza,"$40,000",TRANSFERENCIA
-03-03-2025,Carlos López,Operatoria,"$60,000",TARJETA DE CREDITO`;
+01-03-2025,"Pérez, Juan",Consulta,"$30,000",EFECTIVO
+02-03-2025,"García, María",Limpieza,"$40,000",TRANSFERENCIA
+03-03-2025,"López, Carlos",Operatoria,"$60,000",TARJETA DE CREDITO
+04-03-2025,Ana Martínez,Endodoncia,"$80,000",TRANSFERENCIA`;
     
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -244,6 +245,10 @@ const ImportPage: React.FC = () => {
               <li className="flex items-start gap-2">
                 <span className="text-dental-500 font-bold mt-0.5">•</span>
                 <span><strong className="text-gray-900">Archivos:</strong> CSV (cualquier encoding)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-dental-500 font-bold mt-0.5">•</span>
+                <span><strong className="text-gray-900">Nombres:</strong> "García, Juan" (usar comillas si tiene comas)</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-dental-500 font-bold mt-0.5">•</span>
@@ -558,7 +563,7 @@ const ImportPage: React.FC = () => {
                 <div className="text-sm text-yellow-700">Errores</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">${importResult.total_ars.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-blue-600">${importResult.total_ars.toLocaleString('es-AR')}</div>
                 <div className="text-sm text-blue-700">Total ARS Importado</div>
               </div>
             </div>

@@ -421,7 +421,7 @@ const ConsultasPage: React.FC = () => {
                 {consultasData.data.map((consulta) => (
                   <tr key={consulta.id}>
                     <td>
-                      {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES')}
+                      {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                     </td>
                     <td>
                       {consulta.paciente ? 
@@ -435,7 +435,7 @@ const ConsultasPage: React.FC = () => {
                        'N/A'}
                     </td>
                     <td className="font-medium">
-                      ${consulta.monto_ars.toLocaleString()} ARS
+                      ${consulta.monto_ars.toLocaleString('es-AR')} ARS
                     </td>
                     <td>
                       <span className="capitalize">{consulta.medio_pago}</span>

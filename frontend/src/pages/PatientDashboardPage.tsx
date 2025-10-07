@@ -187,7 +187,7 @@ const PatientDashboardPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Gastado</p>
-                <p className="text-3xl font-bold gradient-text">${totalGastado.toLocaleString()}</p>
+                <p className="text-3xl font-bold gradient-text">${totalGastado.toLocaleString('es-AR')}</p>
               </div>
               <div className="bg-green-100 rounded-xl p-3">
                 <DollarSign className="h-8 w-8 text-green-600" />
@@ -201,7 +201,7 @@ const PatientDashboardPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Promedio</p>
-                <p className="text-3xl font-bold gradient-text">${promedioConsulta.toLocaleString()}</p>
+                <p className="text-3xl font-bold gradient-text">${promedioConsulta.toLocaleString('es-AR')}</p>
               </div>
               <div className="bg-purple-100 rounded-xl p-3">
                 <TrendingUp className="h-8 w-8 text-purple-600" />
@@ -237,7 +237,7 @@ const PatientDashboardPage: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Primera Consulta</p>
               <p className="text-lg font-semibold text-gray-900">
-                {new Date(primeraConsulta.fecha_consulta).toLocaleDateString('es-ES')}
+                {new Date(primeraConsulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
               </p>
               <p className="text-sm text-gray-500">
                 {primeraConsulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
@@ -246,7 +246,7 @@ const PatientDashboardPage: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Última Consulta</p>
               <p className="text-lg font-semibold text-gray-900">
-                {new Date(ultimaConsulta.fecha_consulta).toLocaleDateString('es-ES')}
+                {new Date(ultimaConsulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
               </p>
               <p className="text-sm text-gray-500">
                 {ultimaConsulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
@@ -334,13 +334,13 @@ const PatientDashboardPage: React.FC = () => {
                   .map((consulta) => (
                     <tr key={consulta.id}>
                       <td>
-                        {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES')}
+                        {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </td>
                       <td>
                         {consulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
                       </td>
                       <td className="font-medium">
-                        ${consulta.monto_ars.toLocaleString()} ARS
+                        ${consulta.monto_ars.toLocaleString('es-AR')} ARS
                       </td>
                       <td>
                         <span className="capitalize">{consulta.medio_pago}</span>

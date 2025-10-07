@@ -97,7 +97,7 @@ const CalculadoraPage: React.FC = () => {
                   ✅ Usando su costo real calculado
                 </p>
                 <p className="text-green-700 text-2xl font-bold">
-                  ${costos.costo_hora_ars.toLocaleString()} ARS/hora
+                  ${costos.costo_hora_ars.toLocaleString('es-AR')} ARS/hora
                 </p>
               </div>
             </div>
@@ -172,7 +172,6 @@ const CalculadoraPage: React.FC = () => {
               </label>
               <input
                 type="number"
-                step="1000"
                 min="0"
                 className="form-input"
                 value={formData.costo_materiales_ars}
@@ -191,7 +190,7 @@ const CalculadoraPage: React.FC = () => {
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <label htmlFor="usar_costo_real" className="text-sm text-gray-700">
-                  Usar costo real calculado (${costos.costo_hora_ars.toLocaleString()} ARS/hora)
+                  Usar costo real calculado (${costos.costo_hora_ars.toLocaleString('es-AR')} ARS/hora)
                 </label>
               </div>
             )}
@@ -257,10 +256,10 @@ const CalculadoraPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold gradient-text">
-                          ${recomendacion.precio.toLocaleString()} ARS
+                          ${recomendacion.precio.toLocaleString('es-AR')} ARS
                         </div>
                         <div className="text-sm text-gray-600 font-medium">
-                          Ganancia: ${recomendacion.ganancia.toLocaleString()}
+                          Ganancia: ${recomendacion.ganancia.toLocaleString('es-AR')}
                         </div>
                       </div>
                     </div>
@@ -300,7 +299,7 @@ const CalculadoraPage: React.FC = () => {
                 className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-soft"
               >
                 <div className="text-3xl font-black text-blue-600">
-                  ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000))).toLocaleString()}
+                  ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000))).toLocaleString('es-AR')}
                 </div>
                 <div className="text-sm font-semibold text-blue-800 mt-2">Mano de Obra</div>
               </motion.div>
@@ -309,7 +308,7 @@ const CalculadoraPage: React.FC = () => {
                 className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-soft"
               >
                 <div className="text-3xl font-black text-green-600">
-                  ${formData.costo_materiales_ars.toLocaleString()}
+                  ${formData.costo_materiales_ars.toLocaleString('es-AR')}
                 </div>
                 <div className="text-sm font-semibold text-green-800 mt-2">Materiales</div>
               </motion.div>
@@ -318,7 +317,7 @@ const CalculadoraPage: React.FC = () => {
                 className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl shadow-soft"
               >
                 <div className="text-3xl font-black text-purple-600">
-                  ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000)) + formData.costo_materiales_ars).toLocaleString()}
+                  ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000)) + formData.costo_materiales_ars).toLocaleString('es-AR')}
                 </div>
                 <div className="text-sm font-semibold text-purple-800 mt-2">Costo Total</div>
               </motion.div>

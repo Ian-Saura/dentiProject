@@ -41,7 +41,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
-            {typeof value === 'number' ? value.toLocaleString() : value}
+            {typeof value === 'number' ? value.toLocaleString('es-AR') : value}
           </p>
           {change && (
             <p className={`text-sm mt-1 ${changeColorClasses[change.type]}`}>
