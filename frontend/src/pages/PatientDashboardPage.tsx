@@ -4,8 +4,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { pacientesService, consultasService } from '@/services';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
+import Odontograma from '@/components/Odontograma';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus, Sparkles, User } from 'lucide-react';
+import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus, Sparkles, User, Edit } from 'lucide-react';
 import ClinicalNotesModal from '@/components/ClinicalNotesModal';
 import AddConsultaModal from '@/components/AddConsultaModal';
 
@@ -15,6 +16,7 @@ const PatientDashboardPage: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [showClinicalModal, setShowClinicalModal] = useState(false);
   const [showAddConsultaModal, setShowAddConsultaModal] = useState(false);
+  const [editingConsulta, setEditingConsulta] = useState<any>(null);
   const [selectedConsultationId, setSelectedConsultationId] = useState<number | null>(null);
   const [clinicalNotes, setClinicalNotes] = useState<any[]>([]);
   const [patientId, setPatientId] = useState<number | null>(null);
@@ -23,7 +25,7 @@ const PatientDashboardPage: React.FC = () => {
   const patientName = encodedPatientName ? decodeURIComponent(encodedPatientName) : null;
 
   // Fetch patient consultations
-  const { data: consultas, isLoading: loadingConsultas } = useQuery(
+  const { data: consultas = [], isLoading: loadingConsultas } = useQuery(
     ['patient-consultas', patientName],
     () => patientName ? consultasService.getConsultasByPaciente(patientName) : Promise.resolve([]),
     { 
@@ -54,26 +56,7 @@ const PatientDashboardPage: React.FC = () => {
     }
   );
 
-  if (loadingConsultas) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  if (!patientName || !consultas) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Paciente no encontrado</h3>
-        <button onClick={() => navigate('/pacientes')} className="btn-primary">
-          Volver a Pacientes
-        </button>
-      </div>
-    );
-  }
-
-  // Filter consultations by period
+  // Filter consultations by period (always calculate, even if loading)
   const filteredConsultas = consultas.filter(consulta => {
     if (selectedPeriod === 'all') return true;
     
@@ -124,6 +107,17 @@ const PatientDashboardPage: React.FC = () => {
   const tratamientoMasFrecuente = Object.entries(tratamientos)
     .sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
 
+  // Get treated teeth from all consultations
+  const treatedTeeth = React.useMemo(() => {
+    const teeth = new Set<number>();
+    filteredConsultas.forEach(consulta => {
+      if (consulta.dientes_tratados && Array.isArray(consulta.dientes_tratados)) {
+        consulta.dientes_tratados.forEach((tooth: number) => teeth.add(tooth));
+      }
+    });
+    return Array.from(teeth);
+  }, [filteredConsultas]);
+
   // Get payment methods
   const mediosPago = filteredConsultas.reduce((acc, consulta) => {
     acc[consulta.medio_pago] = (acc[consulta.medio_pago] || 0) + 1;
@@ -136,6 +130,26 @@ const PatientDashboardPage: React.FC = () => {
   );
   const primeraConsulta = sortedConsultas[0];
   const ultimaConsulta = sortedConsultas[sortedConsultas.length - 1];
+
+  // Early returns AFTER all hooks
+  if (loadingConsultas) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!patientName) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Paciente no encontrado</h3>
+        <button onClick={() => navigate('/pacientes')} className="btn-primary">
+          Volver a Pacientes
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -194,64 +208,184 @@ const PatientDashboardPage: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Premium Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Instagram-Style Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <AnimatedCard delay={0.1}>
-          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Prestaciones</p>
-                <p className="text-3xl font-bold gradient-text">{totalConsultas}</p>
+          <motion.div
+            whileHover={{ scale: 1.05, y: -8 }}
+            className="relative overflow-hidden rounded-3xl p-8 h-full bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 text-white shadow-2xl"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="relative z-10">
+              <div className="bg-white/20 backdrop-blur-sm w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                <Calendar className="h-7 w-7" />
               </div>
-              <div className="bg-blue-100 rounded-xl p-3">
-                <Calendar className="h-8 w-8 text-blue-600" />
-              </div>
+              <p className="text-white/90 text-sm font-medium mb-2">Prestaciones</p>
+              <p className="text-5xl font-black mb-1">{totalConsultas}</p>
+              <p className="text-white/80 text-xs font-medium">visitas totales</p>
             </div>
-          </div>
+          </motion.div>
         </AnimatedCard>
 
         <AnimatedCard delay={0.15}>
-          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Gastado</p>
-                <p className="text-3xl font-bold gradient-text">${totalGastado.toLocaleString('es-AR')}</p>
+          <motion.div
+            whileHover={{ scale: 1.05, y: -8 }}
+            className="relative overflow-hidden rounded-3xl p-8 h-full bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 text-white shadow-2xl"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="relative z-10">
+              <div className="bg-white/20 backdrop-blur-sm w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                <DollarSign className="h-7 w-7" />
               </div>
-              <div className="bg-green-100 rounded-xl p-3">
-                <DollarSign className="h-8 w-8 text-green-600" />
-              </div>
+              <p className="text-white/90 text-sm font-medium mb-2">Inversión Total</p>
+              <p className="text-4xl font-black mb-1">${(totalGastado / 1000).toFixed(1)}K</p>
+              <p className="text-white/80 text-xs font-medium">en salud dental</p>
             </div>
-          </div>
+          </motion.div>
         </AnimatedCard>
 
         <AnimatedCard delay={0.2}>
-          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Promedio</p>
-                <p className="text-3xl font-bold gradient-text">${promedioConsulta.toLocaleString('es-AR')}</p>
+          <motion.div
+            whileHover={{ scale: 1.05, y: -8 }}
+            className="relative overflow-hidden rounded-3xl p-8 h-full bg-gradient-to-br from-purple-500 via-pink-600 to-rose-600 text-white shadow-2xl"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="relative z-10">
+              <div className="bg-white/20 backdrop-blur-sm w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                <TrendingUp className="h-7 w-7" />
               </div>
-              <div className="bg-purple-100 rounded-xl p-3">
-                <TrendingUp className="h-8 w-8 text-purple-600" />
-              </div>
+              <p className="text-white/90 text-sm font-medium mb-2">Promedio/Visita</p>
+              <p className="text-4xl font-black mb-1">${(promedioConsulta / 1000).toFixed(1)}K</p>
+              <p className="text-white/80 text-xs font-medium">inversión media</p>
             </div>
-          </div>
+          </motion.div>
         </AnimatedCard>
 
         <AnimatedCard delay={0.25}>
-          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20 h-full">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Tratamiento Frecuente</p>
-                <p className="text-sm font-bold gradient-text truncate">{tratamientoMasFrecuente}</p>
+          <motion.div
+            whileHover={{ scale: 1.05, y: -8 }}
+            className="relative overflow-hidden rounded-3xl p-8 h-full bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 text-white shadow-2xl"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="relative z-10">
+              <div className="bg-white/20 backdrop-blur-sm w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                <Sparkles className="h-7 w-7" />
               </div>
-              <div className="bg-orange-100 rounded-xl p-3">
-                <Activity className="h-8 w-8 text-orange-600" />
+              <p className="text-white/90 text-sm font-medium mb-2">Tratamiento Top</p>
+              <p className="text-lg font-black mb-1 leading-tight truncate">{tratamientoMasFrecuente}</p>
+              <p className="text-white/80 text-xs font-medium">más realizado</p>
+            </div>
+          </motion.div>
+        </AnimatedCard>
+      </div>
+
+      {/* Odontograma Visual */}
+      <AnimatedCard delay={0.3}>
+        <div className="bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 rounded-3xl p-8 border-2 border-cyan-200 shadow-xl">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-3xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                Odontograma
+              </h3>
+              <p className="text-gray-600 mt-1">Mapa dental visual</p>
+            </div>
+            <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-4 rounded-2xl shadow-lg">
+              <Sparkles className="h-8 w-8 text-white" />
+            </div>
+          </div>
+          <Odontograma 
+            treatedTeeth={treatedTeeth} 
+            consultations={filteredConsultas}
+          />
+        </div>
+      </AnimatedCard>
+
+      {/* Historia Clínica Visual */}
+      {filteredConsultas.length > 0 && (
+        <AnimatedCard delay={0.25}>
+          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold flex items-center gap-3">
+                <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-3 rounded-xl">
+                  <Activity className="h-6 w-6 text-white" />
+                </div>
+                <span className="gradient-text">Historia Clínica Visual</span>
+              </h3>
+            </div>
+
+            {/* Timeline de Tratamientos */}
+            <div className="relative">
+              {/* Línea vertical */}
+              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-pink-500 via-purple-500 to-blue-500"></div>
+              
+              <div className="space-y-6">
+                {filteredConsultas
+                  .sort((a, b) => new Date(b.fecha_consulta).getTime() - new Date(a.fecha_consulta).getTime())
+                  .map((consulta, index) => (
+                    <motion.div
+                      key={consulta.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="relative pl-20"
+                    >
+                      {/* Punto en la línea */}
+                      <div className="absolute left-6 top-4 w-5 h-5 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 border-4 border-white shadow-lg z-10"></div>
+                      
+                      {/* Card del tratamiento */}
+                      <motion.div
+                        whileHover={{ scale: 1.02, x: 5 }}
+                        className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 border-2 border-gray-200 shadow-md hover:shadow-xl transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-sm font-bold text-gray-500">
+                                {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                consulta.estado === 'completada' ? 'bg-green-100 text-green-800' :
+                                consulta.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {consulta.estado}
+                              </span>
+                            </div>
+                            <h4 className="text-lg font-bold text-gray-900 mb-2">
+                              {consulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
+                            </h4>
+                            {consulta.dientes_tratados && consulta.dientes_tratados.length > 0 && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-sm text-gray-600">🦷 Dientes:</span>
+                                <div className="flex gap-1">
+                                  {consulta.dientes_tratados.sort((a, b) => a - b).map(tooth => (
+                                    <span key={tooth} className="px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded-lg text-xs font-bold">
+                                      {tooth}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="h-4 w-4" />
+                                ${consulta.monto_ars.toLocaleString('es-AR')}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <CreditCard className="h-4 w-4" />
+                                {consulta.medio_pago}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  ))}
               </div>
             </div>
           </div>
         </AnimatedCard>
-      </div>
+      )}
 
       {/* Patient Timeline */}
       {primeraConsulta && ultimaConsulta && (
@@ -415,7 +549,9 @@ const PatientDashboardPage: React.FC = () => {
           </div>
         
         {filteredConsultas.length > 0 ? (
-          <div className="overflow-x-auto">
+          <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="table">
               <thead>
                 <tr>
@@ -424,7 +560,7 @@ const PatientDashboardPage: React.FC = () => {
                   <th>Monto</th>
                   <th>Medio de Pago</th>
                   <th>Estado</th>
-                  <th>Historia Clínica</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -454,21 +590,82 @@ const PatientDashboardPage: React.FC = () => {
                         </span>
                       </td>
                       <td>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleAddClinicalNote(consulta.id)}
-                          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-sm transition-all"
-                        >
-                          <FileText className="h-4 w-4" />
-                          <span>Ver/Agregar</span>
-                        </motion.button>
+                        <div className="flex gap-2">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                              setEditingConsulta(consulta);
+                              setShowAddConsultaModal(true);
+                            }}
+                            className="flex items-center gap-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm transition-all"
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span>Editar</span>
+                          </motion.button>
+                        </div>
                       </td>
                     </tr>
                   ))}
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filteredConsultas
+              .sort((a, b) => new Date(b.fecha_consulta).getTime() - new Date(a.fecha_consulta).getTime())
+              .map((consulta) => (
+                <motion.div
+                  key={consulta.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-2xl p-4 border-2 border-gray-200 shadow-sm"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </p>
+                      <h4 className="font-bold text-gray-900">
+                        {consulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
+                      </h4>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      consulta.estado === 'completada' ? 'bg-green-100 text-green-800' :
+                      consulta.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {consulta.estado}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2 mb-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Monto:</span>
+                      <span className="font-bold text-gray-900">${consulta.monto_ars.toLocaleString('es-AR')}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Pago:</span>
+                      <span className="capitalize text-gray-900">{consulta.medio_pago}</span>
+                    </div>
+                  </div>
+                  
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setEditingConsulta(consulta);
+                      setShowAddConsultaModal(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-sm"
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span>Editar</span>
+                  </motion.button>
+                </motion.div>
+              ))}
+          </div>
+          </>
         ) : (
           <div className="text-center py-8">
             <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -501,7 +698,11 @@ const PatientDashboardPage: React.FC = () => {
       {/* Add Consulta Modal */}
       <AddConsultaModal
         isOpen={showAddConsultaModal}
-        onClose={() => setShowAddConsultaModal(false)}
+        onClose={() => {
+          setShowAddConsultaModal(false);
+          setEditingConsulta(null);
+        }}
+        editingConsulta={editingConsulta}
         preselectedPatientId={patientId || undefined}
         preselectedPatientName={patientName || undefined}
       />

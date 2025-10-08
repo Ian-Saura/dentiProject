@@ -61,6 +61,7 @@ export interface Consulta {
   monto_ars: number;
   medio_pago: 'efectivo' | 'transferencia' | 'debito' | 'credito' | 'mercadopago' | 'otro';
   pieza_dental?: string;
+  dientes_tratados?: number[];
   tiempo_real_minutos?: number;
   estado: 'completada' | 'pendiente' | 'cancelada' | 'no_asistio';
   proxima_cita?: string;
@@ -79,6 +80,7 @@ export interface ConsultaCreate {
   monto_ars: number;
   medio_pago: 'efectivo' | 'transferencia' | 'debito' | 'credito' | 'mercadopago' | 'otro';
   pieza_dental?: string;
+  dientes_tratados?: number[];
   tiempo_real_minutos?: number;
   estado?: 'completada' | 'pendiente' | 'cancelada' | 'no_asistio';
   proxima_cita?: string;

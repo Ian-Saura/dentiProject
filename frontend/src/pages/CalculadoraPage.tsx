@@ -329,39 +329,48 @@ const CalculadoraPage: React.FC = () => {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-soft border-2 border-blue-200"
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="relative overflow-hidden text-center p-6 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white rounded-2xl shadow-xl"
               >
-                <div className="text-sm text-blue-700 font-semibold mb-1">Costo Mano de Obra</div>
-                <div className="text-3xl font-black text-blue-600">
-                  ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000))).toLocaleString('es-AR')}
-                </div>
-                <div className="text-xs text-blue-600 mt-2">
-                  {formData.tiempo_horas}h × ${(costos?.costo_hora_ars || 29000).toLocaleString('es-AR')}/h
+                <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+                <div className="relative z-10">
+                  <div className="text-xs font-medium text-white/80 mb-1">Costo Mano de Obra</div>
+                  <div className="text-3xl font-black">
+                    ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000))).toLocaleString('es-AR')}
+                  </div>
+                  <div className="text-xs text-white/70 mt-2">
+                    {formData.tiempo_horas}h × ${(costos?.costo_hora_ars || 29000).toLocaleString('es-AR')}/h
+                  </div>
                 </div>
               </motion.div>
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-soft border-2 border-green-200"
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="relative overflow-hidden text-center p-6 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 text-white rounded-2xl shadow-xl"
               >
-                <div className="text-sm text-green-700 font-semibold mb-1">Costo Materiales</div>
-                <div className="text-3xl font-black text-green-600">
-                  ${formData.costo_materiales_ars.toLocaleString('es-AR')}
-                </div>
-                <div className="text-xs text-green-600 mt-2">
-                  Insumos y materiales
+                <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+                <div className="relative z-10">
+                  <div className="text-xs font-medium text-white/80 mb-1">Costo Materiales</div>
+                  <div className="text-3xl font-black">
+                    ${formData.costo_materiales_ars.toLocaleString('es-AR')}
+                  </div>
+                  <div className="text-xs text-white/70 mt-2">
+                    Insumos y materiales
+                  </div>
                 </div>
               </motion.div>
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl shadow-soft border-2 border-purple-300"
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="relative overflow-hidden text-center p-6 bg-gradient-to-br from-purple-500 via-fuchsia-600 to-pink-600 text-white rounded-2xl shadow-xl"
               >
-                <div className="text-sm text-purple-700 font-semibold mb-1">💰 Costo Total Base</div>
-                <div className="text-3xl font-black text-purple-600">
-                  ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000)) + formData.costo_materiales_ars).toLocaleString('es-AR')}
-                </div>
-                <div className="text-xs text-purple-600 mt-2">
-                  Sin margen de ganancia
+                <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+                <div className="relative z-10">
+                  <div className="text-xs font-medium text-white/80 mb-1">💰 Costo Total Base</div>
+                  <div className="text-3xl font-black">
+                    ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000)) + formData.costo_materiales_ars).toLocaleString('es-AR')}
+                  </div>
+                  <div className="text-xs text-white/70 mt-2">
+                    Sin margen de ganancia
+                  </div>
                 </div>
               </motion.div>
             </div>

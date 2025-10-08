@@ -5,6 +5,7 @@ import { X, Users, UserPlus, Sparkles } from 'lucide-react';
 import { consultasService, pacientesService, prestacionesService } from '@/services';
 import toast from 'react-hot-toast';
 import AddPacienteModal from './AddPacienteModal';
+import Odontograma from './Odontograma';
 
 interface AddConsultaModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
   const [patientSearchTerm, setPatientSearchTerm] = useState('');
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
   const [showAddPacienteModal, setShowAddPacienteModal] = useState(false);
+  const [selectedTeeth, setSelectedTeeth] = useState<number[]>([]);
   
   const [formData, setFormData] = useState<ConsultaForm>({
     paciente_id: preselectedPatientId || null,
@@ -52,6 +54,14 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
     fecha_consulta: new Date().toISOString().split('T')[0]
   });
 
+  const handleToothClick = (toothNumber: number) => {
+    setSelectedTeeth(prev => 
+      prev.includes(toothNumber) 
+        ? prev.filter(t => t !== toothNumber)
+        : [...prev, toothNumber]
+    );
+  };
+
   // Fetch patients for autocomplete
   const { data: pacientes } = useQuery('pacientes', () => pacientesService.getPacientes(), {
     enabled: isOpen
@@ -62,12 +72,16 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
     enabled: isOpen
   });
 
-  // Set preselected patient name on mount
+  // Set preselected patient name and ID on mount
   useEffect(() => {
-    if (preselectedPatientName) {
+    if (preselectedPatientId && preselectedPatientName) {
       setPatientSearchTerm(preselectedPatientName);
+      setFormData(prev => ({
+        ...prev,
+        paciente_id: preselectedPatientId
+      }));
     }
-  }, [preselectedPatientName]);
+  }, [preselectedPatientId, preselectedPatientName]);
 
   // Set editing data
   useEffect(() => {
@@ -272,7 +286,8 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         prestacion_usuario_id: prestacionUsuarioId,
         fecha_consulta: formData.fecha_consulta,
         monto_ars: formData.monto_ars,
-        medio_pago: formData.medio_pago
+        medio_pago: formData.medio_pago,
+        dientes_tratados: selectedTeeth
       };
 
       if (editingConsulta) {
@@ -304,7 +319,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         transition={{ type: 'spring', damping: 25 }}
         className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none p-4"
       >
-        <div className="glass rounded-3xl p-6 sm:p-8 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 pointer-events-auto">
+        <div className="glass rounded-3xl p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 pointer-events-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-dental-500" />
@@ -318,7 +333,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
             </button>
           </div>
       
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Patient Autocomplete - Only if not preselected */}
             {!preselectedPatientId ? (
               <div className="relative" ref={dropdownRef}>
@@ -553,8 +568,33 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
               />
             </div>
 
+            {/* Tooth Selection */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                🦷 Dientes Tratados (Opcional)
+              </label>
+              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-6 border-2 border-cyan-200">
+                <p className="text-sm text-gray-600 mb-4 text-center">
+                  Click en los dientes para seleccionar cuáles fueron tratados
+                </p>
+                <Odontograma
+                  selectedTeeth={selectedTeeth}
+                  onToothClick={handleToothClick}
+                  selectable={true}
+                  showTooltip={true}
+                />
+                {selectedTeeth.length > 0 && (
+                  <div className="mt-4 p-3 bg-blue-100 rounded-xl">
+                    <p className="text-sm font-semibold text-blue-900">
+                      ✓ Dientes seleccionados: {selectedTeeth.sort((a, b) => a - b).join(', ')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="col-span-2 flex gap-3 pt-4">
               <button
                 type="button"
                 onClick={handleClose}

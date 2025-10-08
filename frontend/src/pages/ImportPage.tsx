@@ -322,9 +322,14 @@ const ImportPage: React.FC = () => {
       {/* Premium File Upload */}
       <AnimatedCard delay={0.2}>
         <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
-        <h3 className="text-lg font-semibold mb-4">1️⃣ Seleccionar Archivo CSV</h3>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-xl shadow-lg">
+            <FileText className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold gradient-text">1️⃣ Seleccionar Archivo CSV</h3>
+        </div>
         
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+        <div className="border-2 border-dashed border-dental-300 rounded-2xl p-8 text-center bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-all">
           <input
             ref={fileInputRef}
             type="file"
@@ -369,7 +374,12 @@ const ImportPage: React.FC = () => {
       {csvColumns.length > 0 && (
         <AnimatedCard delay={0.3}>
           <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
-          <h3 className="text-lg font-semibold mb-4">2️⃣ Mapear Columnas</h3>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-3 rounded-xl shadow-lg">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold gradient-text">2️⃣ Mapear Columnas</h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -472,8 +482,12 @@ const ImportPage: React.FC = () => {
 
       {/* CSV Preview */}
       {showPreview && csvPreview.length > 0 && (
-        <div className="dental-card">
-          <h3 className="text-lg font-semibold mb-4">👀 Vista Previa del CSV</h3>
+        <AnimatedCard delay={0.4}>
+        <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-3xl">👀</span>
+            <h3 className="text-2xl font-bold gradient-text">Vista Previa del CSV</h3>
+          </div>
           <div className="overflow-x-auto">
             <table className="table text-sm">
               <thead>
@@ -495,13 +509,19 @@ const ImportPage: React.FC = () => {
             </table>
           </div>
         </div>
+        </AnimatedCard>
       )}
 
       {/* Premium Import Button */}
       {csvColumns.length > 0 && (
         <AnimatedCard delay={0.5}>
           <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
-            <h3 className="text-lg font-semibold mb-4">3️⃣ Ejecutar Importación</h3>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-xl shadow-lg">
+                <Upload className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold gradient-text">3️⃣ Ejecutar Importación</h3>
+            </div>
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600 space-y-1">
               <p>• Se normalizarán automáticamente nombres, tratamientos y montos</p>
@@ -533,7 +553,8 @@ const ImportPage: React.FC = () => {
 
       {/* Import Results */}
       {importResult && (
-        <div className={`dental-card ${importResult.error ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+        <AnimatedCard delay={0.6}>
+        <div className={`glass rounded-2xl shadow-soft p-6 border-2 ${importResult.error ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}`}>
           <div className="flex items-center space-x-3 mb-4">
             {importResult.error ? (
               <AlertCircle className="h-8 w-8 text-red-600" />
@@ -551,37 +572,67 @@ const ImportPage: React.FC = () => {
           </div>
 
           {!importResult.error && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{importResult.migrados}</div>
-                <div className="text-sm text-green-700">Consultas Migradas</div>
-              </div>
-              {importResult.duplicados !== undefined && importResult.duplicados > 0 && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{importResult.duplicados}</div>
-                  <div className="text-sm text-purple-700">Duplicados Omitidos</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+              <motion.div
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 text-white shadow-xl"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+                <div className="relative z-10">
+                  <div className="text-xs font-medium text-white/80 mb-1">Consultas Migradas</div>
+                  <div className="text-4xl font-black">{importResult.migrados}</div>
                 </div>
+              </motion.div>
+              
+              {importResult.duplicados !== undefined && importResult.duplicados > 0 && (
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-purple-500 via-violet-600 to-fuchsia-600 text-white shadow-xl"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+                  <div className="relative z-10">
+                    <div className="text-xs font-medium text-white/80 mb-1">Duplicados Omitidos</div>
+                    <div className="text-4xl font-black">{importResult.duplicados}</div>
+                  </div>
+                </motion.div>
               )}
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">{importResult.errores}</div>
-                <div className="text-sm text-yellow-700">Errores</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">${importResult.total_ars.toLocaleString('es-AR')}</div>
-                <div className="text-sm text-blue-700">Total ARS Importado</div>
-              </div>
+              
+              <motion.div
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 text-white shadow-xl"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+                <div className="relative z-10">
+                  <div className="text-xs font-medium text-white/80 mb-1">Errores</div>
+                  <div className="text-4xl font-black">{importResult.errores}</div>
+                </div>
+              </motion.div>
+              
+              <motion.div
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white shadow-xl"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+                <div className="relative z-10">
+                  <div className="text-xs font-medium text-white/80 mb-1">Total ARS Importado</div>
+                  <div className="text-3xl font-black">${(importResult.total_ars / 1000).toFixed(1)}K</div>
+                </div>
+              </motion.div>
             </div>
           )}
 
           <div className="mt-4 flex justify-end">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={resetImport}
-              className="btn-secondary"
+              className="btn-premium"
             >
               Nueva Importación
-            </button>
+            </motion.button>
           </div>
         </div>
+        </AnimatedCard>
       )}
     </div>
   );

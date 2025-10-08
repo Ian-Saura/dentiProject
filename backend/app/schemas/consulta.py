@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, Field, validator
 
@@ -30,6 +30,7 @@ class ConsultaCreate(BaseModel):
     monto_ars: float = Field(..., gt=0)
     medio_pago: MedioPago
     pieza_dental: Optional[str] = Field(None, max_length=10)
+    dientes_tratados: Optional[List[int]] = Field(default_factory=list)
     tiempo_real_minutos: Optional[int] = Field(None, gt=0)
     estado: EstadoConsulta = EstadoConsulta.completada
     proxima_cita: Optional[date] = None
@@ -48,6 +49,7 @@ class ConsultaUpdate(BaseModel):
     monto_ars: Optional[float] = Field(None, gt=0)
     medio_pago: Optional[MedioPago] = None
     pieza_dental: Optional[str] = Field(None, max_length=10)
+    dientes_tratados: Optional[List[int]] = None
     tiempo_real_minutos: Optional[int] = Field(None, gt=0)
     estado: Optional[EstadoConsulta] = None
     proxima_cita: Optional[date] = None
@@ -91,6 +93,7 @@ class ConsultaOut(BaseModel):
     monto_ars: float
     medio_pago: MedioPago
     pieza_dental: Optional[str] = None
+    dientes_tratados: Optional[List[int]] = None
     tiempo_real_minutos: Optional[int] = None
     estado: EstadoConsulta
     proxima_cita: Optional[date] = None

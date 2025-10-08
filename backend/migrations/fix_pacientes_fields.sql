@@ -21,3 +21,4 @@ COMMENT ON COLUMN pacientes.medicamentos_actuales IS 'Medicamentos actuales del 
 COMMENT ON COLUMN pacientes.observaciones_medicas IS 'Observaciones médicas del paciente';
 
 
+

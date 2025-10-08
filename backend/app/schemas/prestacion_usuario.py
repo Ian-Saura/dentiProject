@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -36,8 +36,8 @@ class PrestacionUsuarioOut(BaseModel):
     margen_ganancia_porcentaje: float
     activo: bool
     notas_personales: Optional[str]
-    fecha_creacion: date
-    fecha_actualizacion: date
+    fecha_creacion: datetime
+    fecha_actualizacion: datetime
 
     class Config:
         from_attributes = True

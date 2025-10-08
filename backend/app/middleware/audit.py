@@ -3,6 +3,8 @@ from __future__ import annotations
 import time
 import uuid
 from typing import Callable
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -10,6 +12,9 @@ from starlette.types import ASGIApp
 
 from app.db.session import SessionLocal
 from app.services.auditoria import AuditoriaService
+
+# Thread pool para ejecutar tareas de auditoría en background
+executor = ThreadPoolExecutor(max_workers=2)
 
 
 class AuditMiddleware(BaseHTTPMiddleware):
@@ -50,17 +55,28 @@ class AuditMiddleware(BaseHTTPMiddleware):
         if path in self.excluded_paths or path.startswith("/v1/static"):
             return response
         
-        # Crear log de auditoría en background
-        try:
-            await self._create_audit_log(
-                request=request,
-                response=response,
+        # Crear log de auditoría en background (no bloqueante)
+        # Extraer datos necesarios antes de que el response se cierre
+        ip_address = self._get_client_ip(request)
+        user_agent = request.headers.get("user-agent", "")
+        endpoint = request.url.path
+        metodo_http = request.method
+        usuario_id = getattr(request.state, "user_id", None)
+        status_code = response.status_code
+        
+        # Ejecutar en background sin esperar
+        asyncio.create_task(
+            self._create_audit_log_async(
+                usuario_id=usuario_id,
+                metodo_http=metodo_http,
+                endpoint=endpoint,
+                status_code=status_code,
                 duration_ms=duration_ms,
-                request_id=request_id
+                request_id=request_id,
+                ip_address=ip_address,
+                user_agent=user_agent
             )
-        except Exception as e:
-            # No queremos que falle la request si falla la auditoría
-            print(f"⚠️  Error creating audit log: {e}")
+        )
         
         # Agregar headers de tracking
         response.headers["X-Request-ID"] = request_id
@@ -68,27 +84,51 @@ class AuditMiddleware(BaseHTTPMiddleware):
         
         return response
     
-    async def _create_audit_log(
+    async def _create_audit_log_async(
         self,
-        request: Request,
-        response: Response,
+        usuario_id: int | None,
+        metodo_http: str,
+        endpoint: str,
+        status_code: int,
         duration_ms: int,
-        request_id: str
+        request_id: str,
+        ip_address: str,
+        user_agent: str
     ):
-        """Crear registro de auditoría en la base de datos"""
+        """Crear registro de auditoría en la base de datos de forma asíncrona"""
+        try:
+            # Ejecutar en thread pool para no bloquear el event loop
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                executor,
+                self._create_audit_log_sync,
+                usuario_id,
+                metodo_http,
+                endpoint,
+                status_code,
+                duration_ms,
+                request_id,
+                ip_address,
+                user_agent
+            )
+        except Exception as e:
+            # No queremos que falle si falla la auditoría
+            print(f"⚠️  Error creating audit log: {e}")
+    
+    def _create_audit_log_sync(
+        self,
+        usuario_id: int | None,
+        metodo_http: str,
+        endpoint: str,
+        status_code: int,
+        duration_ms: int,
+        request_id: str,
+        ip_address: str,
+        user_agent: str
+    ):
+        """Crear registro de auditoría (versión síncrona para thread pool)"""
         db = SessionLocal()
         try:
-            # Extraer información del request
-            ip_address = self._get_client_ip(request)
-            user_agent = request.headers.get("user-agent", "")
-            endpoint = request.url.path
-            metodo_http = request.method
-            
-            # Extraer usuario_id si está autenticado
-            usuario_id = None
-            if hasattr(request.state, "user_id"):
-                usuario_id = request.state.user_id
-            
             # Determinar acción basada en método HTTP y path
             accion = self._determine_action(metodo_http, endpoint)
             
@@ -96,7 +136,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
             entidad_tipo = self._determine_entity_type(endpoint)
             
             # Verificar si fue exitoso (2xx o 3xx)
-            exitoso = 200 <= response.status_code < 400
+            exitoso = 200 <= status_code < 400
             
             # Crear log
             AuditoriaService.log_action(
@@ -107,7 +147,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
                 descripcion=f"{metodo_http} {endpoint}",
                 metadata={
                     "request_id": request_id,
-                    "status_code": response.status_code,
+                    "status_code": status_code,
                 },
                 ip_address=ip_address,
                 user_agent=user_agent[:500] if user_agent else None,

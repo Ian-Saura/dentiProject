@@ -4,8 +4,9 @@ import enum
 from datetime import date, datetime
 from typing import Optional
 
-from sqlalchemy import DECIMAL, Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Index
+from sqlalchemy import DECIMAL, Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Index, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import List
 
 from app.db.base import Base
 
@@ -42,6 +43,7 @@ class Consulta(Base):
     monto_ars: Mapped[float] = mapped_column(DECIMAL(10, 2), nullable=False)
     medio_pago: Mapped[MedioPago] = mapped_column(Enum(MedioPago), nullable=False)
     pieza_dental: Mapped[Optional[str]] = mapped_column(String(10))
+    dientes_tratados: Mapped[Optional[List[int]]] = mapped_column(ARRAY(Integer), default=list)
     tiempo_real_minutos: Mapped[Optional[int]] = mapped_column(Integer)
     estado: Mapped[EstadoConsulta] = mapped_column(Enum(EstadoConsulta), default=EstadoConsulta.completada)
     proxima_cita: Mapped[Optional[date]] = mapped_column(Date)

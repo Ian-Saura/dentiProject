@@ -94,7 +94,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/consultas"
+        path="/prestaciones"
         element={
           <ProtectedRoute>
             <Layout>
@@ -103,6 +103,7 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route path="/consultas" element={<Navigate to="/prestaciones" replace />} />
       <Route
         path="/pacientes"
         element={

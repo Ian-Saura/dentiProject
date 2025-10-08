@@ -25,3 +25,4 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_plan ON usuarios(plan);
 CREATE INDEX IF NOT EXISTS idx_usuarios_fecha_vencimiento ON usuarios(fecha_vencimiento);
 
 
+

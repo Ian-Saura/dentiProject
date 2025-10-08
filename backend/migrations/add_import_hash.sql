@@ -11,3 +11,4 @@ CREATE INDEX IF NOT EXISTS idx_consulta_unica ON consultas(usuario_id, paciente_
 COMMENT ON COLUMN consultas.import_hash IS 'SHA256 hash for CSV import duplicate detection';
 
 
+

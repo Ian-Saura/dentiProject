@@ -45,12 +45,17 @@ def extraer_monto_numerico(monto_str):
         elif '.' in monto_clean:
             # Solo hay puntos
             partes = monto_clean.split('.')
+            # Si la última parte tiene exactamente 3 dígitos, es separador de miles (formato argentino)
+            # Ejemplos: 40.000 = 40000, 1.234.567 = 1234567
+            if len(partes[-1]) == 3:
+                # Son separadores de miles: 40.000 -> 40000
+                monto_clean = monto_clean.replace('.', '')
             # Si la última parte tiene 2 o menos dígitos y solo hay un punto, es decimal
-            if monto_clean.count('.') == 1 and len(partes[-1]) <= 2:
+            elif monto_clean.count('.') == 1 and len(partes[-1]) <= 2:
                 # Es decimal: 40.50 -> 40.50 (ya está bien)
                 pass
             else:
-                # Son separadores de miles: 40.000 -> 40000
+                # Son separadores de miles: 40.000.000 -> 40000000
                 monto_clean = monto_clean.replace('.', '')
 
         resultado = float(monto_clean)

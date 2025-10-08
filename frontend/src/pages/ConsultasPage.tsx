@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { consultasService } from '@/services';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
-import { motion } from 'framer-motion';
-import { Calendar, Plus, Search, Filter, Edit, Trash2, Sparkles } from 'lucide-react';
 import AddConsultaModal from '@/components/AddConsultaModal';
+import { motion } from 'framer-motion';
+import { Calendar, DollarSign, TrendingUp, Filter, ChevronDown, Plus, Search, Edit, Trash2, Sparkles } from 'lucide-react';
+import { formatDateToDDMMYYYY } from '@/utils/dateFormat';
 
 const ConsultasPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,6 +112,73 @@ const ConsultasPage: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* Instagram-Style Stats */}
+      {consultasData?.data && consultasData.data.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <AnimatedCard delay={0.1}>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white shadow-xl"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+              <div className="relative z-10">
+                <div className="text-xs font-medium text-white/80 mb-1">Total Prestaciones</div>
+                <div className="text-4xl font-black">{consultasData.total}</div>
+              </div>
+            </motion.div>
+          </AnimatedCard>
+
+          <AnimatedCard delay={0.15}>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 text-white shadow-xl"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+              <div className="relative z-10">
+                <div className="text-xs font-medium text-white/80 mb-1">Ingresos Total</div>
+                <div className="text-3xl font-black">
+                  ${(consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0) / 1000).toFixed(1)}K
+                </div>
+              </div>
+            </motion.div>
+          </AnimatedCard>
+
+          <AnimatedCard delay={0.2}>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 text-white shadow-xl"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+              <div className="relative z-10">
+                <div className="text-xs font-medium text-white/80 mb-1">Promedio</div>
+                <div className="text-3xl font-black">
+                  ${(consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0) / consultasData.data.length / 1000).toFixed(1)}K
+                </div>
+              </div>
+            </motion.div>
+          </AnimatedCard>
+
+          <AnimatedCard delay={0.25}>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-pink-500 via-rose-600 to-red-600 text-white shadow-xl"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+              <div className="relative z-10">
+                <div className="text-xs font-medium text-white/80 mb-1">Este Mes</div>
+                <div className="text-4xl font-black">
+                  {consultasData.data.filter(c => {
+                    const date = new Date(c.fecha_consulta);
+                    const now = new Date();
+                    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                  }).length}
+                </div>
+              </div>
+            </motion.div>
+          </AnimatedCard>
+        </div>
+      )}
+
       {/* Premium Filters */}
       <AnimatedCard delay={0.1}>
         <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
@@ -194,7 +262,7 @@ const ConsultasPage: React.FC = () => {
                   {consultasData.data.map((consulta) => (
                     <tr key={consulta.id}>
                       <td>
-                        {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        {formatDateToDDMMYYYY(consulta.fecha_consulta)}
                       </td>
                       <td>
                         {consulta.paciente ? 
@@ -268,7 +336,7 @@ const ConsultasPage: React.FC = () => {
                         }
                       </h4>
                       <p className="text-sm text-gray-600">
-                        {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        {formatDateToDDMMYYYY(consulta.fecha_consulta)}
                       </p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${

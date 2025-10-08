@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Prestaciones', href: '/consultas', icon: Calendar },
+    { name: 'Prestaciones', href: '/prestaciones', icon: Calendar },
     { name: 'Pacientes', href: '/pacientes', icon: Users },
     { name: 'Reportes', href: '/reportes', icon: TrendingUp },
     { name: 'Calculadora', href: '/calculadora', icon: Calculator },

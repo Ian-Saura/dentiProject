@@ -5,8 +5,9 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import AnimatedCard from '../components/AnimatedCard';
 import ParametrosTab from '../components/ParametrosTab';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Wrench, Building2, Sliders, Sparkles, Plus, X } from 'lucide-react';
+import { Settings, Wrench, Building2, Sliders, Sparkles, Plus, X, Clock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { formatDateToDDMMYYYY } from '../utils/dateFormat';
 
 interface Equipo {
   id: number;
@@ -503,45 +504,88 @@ const ConfiguracionPage: React.FC = () => {
           </AnimatePresence>
 
           {/* Equipment List */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold">Equipos Registrados ({equipos?.length || 0})</h3>
+          <div>
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold gradient-text mb-2">Equipos Registrados</h3>
+              <p className="text-gray-600">Gestiona el equipamiento de tu consultorio ({equipos?.length || 0} equipos)</p>
             </div>
             
-            <div className="divide-y divide-gray-200">
-              {equipos?.map((equipo) => (
-                <div key={equipo.id} className="p-4 sm:p-6 hover:bg-gray-50">
-                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                    <div className="flex-1 w-full">
-                      <h4 className="text-base sm:text-lg font-medium text-gray-900">{equipo.nombre_equipo}</h4>
-                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm text-gray-600">
-                        <div>💰 ${equipo.monto_compra_usd.toLocaleString('es-AR')} USD</div>
-                        <div>⏱️ {equipo.anios_vida_util} años de vida útil</div>
-                        <div>📅 Comprado: {equipo.fecha_compra ? new Date(equipo.fecha_compra).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'No especificada'}</div>
-                        <div className={`font-medium ${equipo.activo ? 'text-green-600' : 'text-red-600'}`}>
-                          {equipo.activo ? '✅ Activo' : '❌ Inactivo'}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {equipos?.map((equipo, index) => (
+                <AnimatedCard key={equipo.id} delay={index * 0.1}>
+                  <motion.div
+                    whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+                    className="bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-transparent hover:border-dental-400 transition-all duration-300"
+                  >
+                    {/* Header con gradiente */}
+                    <div className="bg-gradient-dental p-4 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-2">
+                          <Wrench className="h-6 w-6 text-white" />
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            equipo.activo 
+                              ? 'bg-green-400 text-green-900' 
+                              : 'bg-gray-400 text-gray-900'
+                          }`}>
+                            {equipo.activo ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
+                        <h4 className="text-xl font-bold text-white truncate">{equipo.nombre_equipo}</h4>
+                      </div>
+                    </div>
+
+                    {/* Contenido */}
+                    <div className="p-5">
+                      {/* Monto destacado */}
+                      <div className="mb-4 text-center py-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                        <div className="text-3xl font-black text-green-600">
+                          ${equipo.monto_compra_usd.toLocaleString('es-AR')}
+                        </div>
+                        <div className="text-xs text-green-700 font-medium uppercase tracking-wide">USD</div>
+                      </div>
+
+                      {/* Información */}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Clock className="h-4 w-4 text-dental-500" />
+                          <span className="font-medium">{equipo.anios_vida_util} años</span>
+                          <span className="text-gray-400">de vida útil</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Settings className="h-4 w-4 text-dental-500" />
+                          <span>{formatDateToDDMMYYYY(equipo.fecha_compra)}</span>
                         </div>
                       </div>
+
                       {equipo.observaciones && (
-                        <p className="mt-2 text-sm text-gray-500">{equipo.observaciones}</p>
+                        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <p className="text-xs text-gray-600 line-clamp-2">{equipo.observaciones}</p>
+                        </div>
                       )}
+
+                      {/* Acciones */}
+                      <div className="flex gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleEditEquipo(equipo)}
+                          className="flex-1 bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium py-2 px-3 rounded-lg transition-colors text-sm"
+                        >
+                          ✏️ Editar
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleDeleteEquipo(equipo.id)}
+                          className="bg-red-50 text-red-600 hover:bg-red-100 font-medium py-2 px-3 rounded-lg transition-colors text-sm"
+                        >
+                          🗑️
+                        </motion.button>
+                      </div>
                     </div>
-                    <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
-                      <button
-                        onClick={() => handleEditEquipo(equipo)}
-                        className="flex-1 sm:flex-none text-blue-600 hover:text-blue-800 text-sm px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors"
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEquipo(equipo.id)}
-                        className="flex-1 sm:flex-none text-red-600 hover:text-red-800 text-sm px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
-                      >
-                        🗑️ Eliminar
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </AnimatedCard>
               ))}
             </div>
 

@@ -437,34 +437,58 @@ const FinancialReportsPage: React.FC = () => {
             </table>
           </div>
 
-          {/* Summary */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
-                ${monthlyPL.reduce((sum, m) => sum + m.ingresos, 0).toLocaleString('es-AR')}
+          {/* Instagram-Style Summary */}
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 text-white shadow-xl"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+              <div className="relative z-10">
+                <div className="text-xs font-medium text-white/80 mb-1">Ingresos Totales</div>
+                <div className="text-3xl font-black">
+                  ${(monthlyPL.reduce((sum, m) => sum + m.ingresos, 0) / 1000).toFixed(1)}K
+                </div>
               </div>
-              <div className="text-sm text-green-700">Ingresos Totales</div>
-            </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">
-                ${monthlyPL.reduce((sum, m) => sum + m.gastos_fijos + m.gastos_equipos, 0).toLocaleString('es-AR')}
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-rose-500 via-red-600 to-pink-600 text-white shadow-xl"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+              <div className="relative z-10">
+                <div className="text-xs font-medium text-white/80 mb-1">Gastos Totales</div>
+                <div className="text-3xl font-black">
+                  ${(monthlyPL.reduce((sum, m) => sum + m.gastos_fijos + m.gastos_equipos, 0) / 1000).toFixed(1)}K
+                </div>
               </div>
-              <div className="text-sm text-red-700">Gastos Totales</div>
-            </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
-                ${monthlyPL.reduce((sum, m) => sum + m.utilidad_bruta, 0).toLocaleString('es-AR')}
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white shadow-xl"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+              <div className="relative z-10">
+                <div className="text-xs font-medium text-white/80 mb-1">Utilidad Total</div>
+                <div className="text-3xl font-black">
+                  ${(monthlyPL.reduce((sum, m) => sum + m.utilidad_bruta, 0) / 1000).toFixed(1)}K
+                </div>
               </div>
-              <div className="text-sm text-blue-700">Utilidad Total</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
-                {monthlyPL.length > 0 ? 
-                  (monthlyPL.reduce((sum, m) => sum + m.margen_porcentaje, 0) / monthlyPL.length).toFixed(1) : 0
-                }%
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-purple-500 via-violet-600 to-fuchsia-600 text-white shadow-xl"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
+              <div className="relative z-10">
+                <div className="text-xs font-medium text-white/80 mb-1">Margen Promedio</div>
+                <div className="text-3xl font-black">
+                  {monthlyPL.length > 0 ? 
+                    (monthlyPL.reduce((sum, m) => sum + m.margen_porcentaje, 0) / monthlyPL.length).toFixed(1) : 0
+                  }%
+                </div>
               </div>
-              <div className="text-sm text-purple-700">Margen Promedio</div>
-            </div>
+            </motion.div>
           </div>
           </div>
         </AnimatedCard>

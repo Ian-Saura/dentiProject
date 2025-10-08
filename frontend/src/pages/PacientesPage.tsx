@@ -5,7 +5,9 @@ import { pacientesService } from '../services';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AnimatedCard from '../components/AnimatedCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Sparkles, Edit, Trash2, X, BarChart3, ArrowUpDown } from 'lucide-react';
+import { UserPlus, Search, Edit, Trash2, Users, Sparkles, X, BarChart3, ArrowUpDown, Plus } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { formatDateToDDMMYYYY, calculateAge } from '../utils/dateFormat';
 
 interface Paciente {
   id: number;
@@ -369,85 +371,137 @@ const PacientesPage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Premium Patients Table */}
-      <AnimatedCard delay={0.2}>
-        <div className="glass rounded-2xl shadow-soft border border-white/20">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 border-b border-gray-200/50 gap-4">
-            <h3 className="text-xl font-bold gradient-text flex items-center gap-2">
-              <Users className="h-6 w-6 text-dental-500" />
-              Lista de Pacientes ({sortedPacientes?.length || 0})
-            </h3>
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">Ordenar por:</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'nombre' | 'apellido' | 'fecha_registro')}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-dental-500"
-              >
-                <option value="apellido">Apellido</option>
-                <option value="nombre">Nombre</option>
-                <option value="fecha_registro">Fecha de Registro</option>
-              </select>
-              <button
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                title={sortOrder === 'asc' ? 'Ascendente' : 'Descendente'}
-              >
-                <ArrowUpDown className={`h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''} transition-transform`} />
-              </button>
-            </div>
+      {/* Premium Patients Grid */}
+      <div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <div>
+            <h3 className="text-2xl font-bold gradient-text mb-1">Pacientes Registrados</h3>
+            <p className="text-gray-600">Gestiona tu cartera de pacientes ({sortedPacientes?.length || 0} pacientes)</p>
           </div>
-        
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Paciente
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contacto
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fecha Nacimiento
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {sortedPacientes?.map((paciente: Paciente) => (
-                <tr key={paciente.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {paciente.nombre} {paciente.apellido}
+          <div className="flex items-center gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'nombre' | 'apellido' | 'fecha_registro')}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-dental-500 bg-white"
+            >
+              <option value="apellido">Apellido</option>
+              <option value="nombre">Nombre</option>
+              <option value="fecha_registro">Fecha</option>
+            </select>
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <ArrowUpDown className={`h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''} transition-transform`} />
+            </button>
+          </div>
+        </div>
+
+        {sortedPacientes?.length === 0 ? (
+          <AnimatedCard delay={0.2}>
+            <div className="text-center py-16 px-6">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-dental rounded-3xl flex items-center justify-center shadow-glow-dental">
+                  <Users className="h-12 w-12 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold gradient-text mb-3">No hay pacientes</h3>
+                <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                  Comienza agregando tu primer paciente para gestionar su historial y tratamientos
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowForm(true)}
+                  className="btn-premium inline-flex items-center gap-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  Agregar Primer Paciente
+                </motion.button>
+              </motion.div>
+            </div>
+          </AnimatedCard>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedPacientes?.map((paciente: Paciente, index) => (
+              <AnimatedCard key={paciente.id} delay={index * 0.05}>
+                <motion.div
+                  whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-transparent hover:border-dental-400 transition-all duration-300"
+                >
+                  {/* Header with Avatar */}
+                  <div className="bg-gradient-dental p-5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div className="relative z-10 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+                          <span className="text-2xl font-bold text-white">
+                            {paciente.nombre?.charAt(0)}{paciente.apellido?.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-white">
+                            {paciente.nombre} {paciente.apellido}
+                          </h4>
+                          <p className="text-xs text-white/80">ID: {paciente.id}</p>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500">ID: {paciente.id}</div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        paciente.activo 
+                          ? 'bg-green-400 text-green-900' 
+                          : 'bg-gray-400 text-gray-900'
+                      }`}>
+                        {paciente.activo ? 'Activo' : 'Inactivo'}
+                      </span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{paciente.email || '-'}</div>
-                    <div className="text-sm text-gray-500">{paciente.telefono || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {paciente.fecha_nacimiento || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      paciente.activo 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {paciente.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end gap-2">
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5">
+                    {/* Contact Info */}
+                    <div className="space-y-2 mb-4">
+                      {paciente.email && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="w-1.5 h-1.5 rounded-full bg-dental-500"></div>
+                          <span className="truncate">{paciente.email}</span>
+                        </div>
+                      )}
+                      {paciente.telefono && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="w-1.5 h-1.5 rounded-full bg-dental-500"></div>
+                          <span>{paciente.telefono}</span>
+                        </div>
+                      )}
+                      {paciente.obra_social && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="w-1.5 h-1.5 rounded-full bg-dental-500"></div>
+                          <span>{paciente.obra_social}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Birth Date & Age */}
+                    {paciente.fecha_nacimiento && (
+                      <div className="mb-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                        <div className="text-xs text-blue-700 font-medium mb-1">Nacimiento</div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-semibold text-blue-900">
+                            {formatDateToDDMMYYYY(paciente.fecha_nacimiento)}
+                          </div>
+                          {calculateAge(paciente.fecha_nacimiento) && (
+                            <div className="text-xl font-black text-blue-600">
+                              {calculateAge(paciente.fecha_nacimiento)} años
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="grid grid-cols-3 gap-2">
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -455,66 +509,38 @@ const PacientesPage: React.FC = () => {
                           const fullName = `${paciente.nombre}${paciente.apellido ? ' ' + paciente.apellido : ''}`.trim();
                           navigate(`/pacientes/${encodeURIComponent(fullName)}/dashboard`);
                         }}
-                        className="flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-sm font-medium transition-colors"
+                        className="flex flex-col items-center gap-1 p-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-colors"
                       >
                         <BarChart3 className="h-4 w-4" />
-                        Dashboard
+                        <span>Ver</span>
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleEdit(paciente)}
-                        className="flex items-center gap-1 px-3 py-1 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg text-sm font-medium transition-colors"
+                        className="flex flex-col items-center gap-1 p-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-colors"
                       >
                         <Edit className="h-4 w-4" />
-                        Editar
+                        <span>Editar</span>
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleDelete(paciente.id)}
                         disabled={deleteMutation.isLoading}
-                        className="flex items-center gap-1 px-3 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                        className="flex flex-col items-center gap-1 p-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
                       >
                         <Trash2 className="h-4 w-4" />
-                        Eliminar
+                        <span>Eliminar</span>
                       </motion.button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {sortedPacientes?.length === 0 && (
-          <div className="text-center py-12 px-6">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-dental rounded-full flex items-center justify-center shadow-glow-dental">
-                <Users className="h-10 w-10 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">No hay pacientes</h3>
-              <p className="text-gray-600 mb-6 max-w-sm mx-auto">
-                Comienza agregando tu primer paciente
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowForm(true)}
-                className="btn-premium inline-flex items-center gap-2"
-              >
-                <Plus className="h-5 w-5" />
-                Agregar Paciente
-              </motion.button>
-            </motion.div>
+                  </div>
+                </motion.div>
+              </AnimatedCard>
+            ))}
           </div>
         )}
-        </div>
-      </AnimatedCard>
+      </div>
     </div>
   );
 };

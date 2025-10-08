@@ -23,7 +23,11 @@ from app.utils.normalizers import (
 class ImportCsvService:
     @staticmethod
     def _generate_import_hash(usuario_id: int, paciente_id: int, prestacion_id: int, fecha: date, monto: float) -> str:
-        """Generar hash único para detectar duplicados"""
+        """
+        Generar hash único para detectar duplicados
+        NOTA: NO incluye el monto para permitir múltiples consultas del mismo tratamiento
+        en la misma fecha con diferentes montos (ej: cuotas, pagos parciales)
+        """
         unique_string = f"{usuario_id}_{paciente_id}_{prestacion_id}_{fecha}_{monto}"
         return hashlib.sha256(unique_string.encode()).hexdigest()
     
@@ -245,16 +249,59 @@ class ImportCsvService:
                             errores_detalle.append(f"Fila {fila_num}: No hay prestaciones base")
                             continue
                         
-                        # Crear prestación de usuario
+                        # Crear prestación de usuario (con manejo de duplicados)
                         from app.schemas.prestacion_usuario import PrestacionUsuarioCreate
-                        prestacion_dto = PrestacionUsuarioCreate(
-                            prestacion_id=prestacion_base.id,
-                            nombre_personalizado=tratamiento_name
-                        )
-                        prestacion = PrestacionesUsuarioService.create_prestacion_usuario(db, prestacion_dto, usuario_id)
-                        prestacion_usuario_id = prestacion.id
-                        prestaciones_map[tratamiento_key] = prestacion_usuario_id
-                        print(f"  ➕ Fila {fila_num}: Tratamiento nuevo: '{tratamiento_name}' (ID: {prestacion_usuario_id}, Base: {prestacion_base.nombre})")
+                        try:
+                            prestacion_dto = PrestacionUsuarioCreate(
+                                prestacion_id=prestacion_base.id,
+                                nombre_personalizado=tratamiento_name
+                            )
+                            prestacion = PrestacionesUsuarioService.create_prestacion_usuario(db, prestacion_dto, usuario_id)
+                            prestacion_usuario_id = prestacion.id
+                            prestaciones_map[tratamiento_key] = prestacion_usuario_id
+                            print(f"  ➕ Fila {fila_num}: Tratamiento nuevo: '{tratamiento_name}' (ID: {prestacion_usuario_id}, Base: {prestacion_base.nombre})")
+                        except Exception as e:
+                            # Hacer rollback de la sesión para poder continuar
+                            db.rollback()
+                            
+                            # Si falla por duplicado, buscar la prestación existente
+                            if "unique_usuario_prestacion" in str(e).lower() or "duplicate" in str(e).lower():
+                                # Buscar por usuario_id y prestacion_id (el constraint real)
+                                existing = db.query(PrestacionUsuario).filter(
+                                    PrestacionUsuario.usuario_id == usuario_id,
+                                    PrestacionUsuario.prestacion_id == prestacion_base.id
+                                ).first()
+                                
+                                if existing:
+                                    # Si existe pero con otro nombre, actualizarlo
+                                    if existing.nombre_personalizado != tratamiento_name:
+                                        existing.nombre_personalizado = tratamiento_name
+                                        db.commit()
+                                        print(f"  🔄 Fila {fila_num}: Tratamiento actualizado: '{existing.nombre_personalizado}' -> '{tratamiento_name}' (ID: {existing.id})")
+                                    else:
+                                        print(f"  🔍 Fila {fila_num}: Tratamiento ya existía: '{tratamiento_name}' (ID: {existing.id})")
+                                    
+                                    prestacion_usuario_id = existing.id
+                                    prestaciones_map[tratamiento_key] = prestacion_usuario_id
+                                else:
+                                    # Buscar también por nombre por si acaso
+                                    existing_by_name = db.query(PrestacionUsuario).filter(
+                                        PrestacionUsuario.usuario_id == usuario_id,
+                                        PrestacionUsuario.nombre_personalizado == tratamiento_name
+                                    ).first()
+                                    
+                                    if existing_by_name:
+                                        prestacion_usuario_id = existing_by_name.id
+                                        prestaciones_map[tratamiento_key] = prestacion_usuario_id
+                                        print(f"  🔍 Fila {fila_num}: Tratamiento encontrado por nombre: '{tratamiento_name}' (ID: {prestacion_usuario_id})")
+                                    else:
+                                        print(f"❌ Fila {fila_num}: Error creando tratamiento '{tratamiento_name}': {e}")
+                                        errores_detalle.append(f"Fila {fila_num}: Error en tratamiento")
+                                        continue
+                            else:
+                                print(f"❌ Fila {fila_num}: Error inesperado creando tratamiento: {e}")
+                                errores_detalle.append(f"Fila {fila_num}: Error en tratamiento")
+                                continue
 
                 # 3. Validar y extraer monto
                 if pd.isna(row[col_monto]) or str(row[col_monto]).strip() == '':
@@ -267,8 +314,10 @@ class ImportCsvService:
                 
                 if monto_ars <= 0:
                     print(f"⚠️  Fila {fila_num}: Monto inválido '{monto_str}' -> {monto_ars} - SALTANDO")
-                    errores_detalle.append(f"Fila {fila_num}: Monto inválido '{monto_str}'")
+                    errores_detalle.append(f"Fila {fila_num}: Monto inválido: {monto_str}")
                     continue
+                
+                print(f"  💰 Fila {fila_num}: Monto extraído: {monto_str} -> ${monto_ars:,.0f}")
 
                 # 4. Extraer fecha
                 if col_fecha and not pd.isna(row.get(col_fecha)):

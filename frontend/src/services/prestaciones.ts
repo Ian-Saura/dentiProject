@@ -4,13 +4,13 @@ import { Prestacion, PrestacionUsuario } from '@/types';
 export const prestacionesService = {
   // Catalog prestaciones (read-only)
   async getPrestaciones(): Promise<Prestacion[]> {
-    const response = await api.get<Prestacion[]>('/prestaciones');
+    const response = await api.get<Prestacion[]>('/prestaciones/');
     return response.data;
   },
 
   // User prestaciones (tenanted)
   async getPrestacionesUsuario(): Promise<PrestacionUsuario[]> {
-    const response = await api.get<PrestacionUsuario[]>('/prestaciones-usuario');
+    const response = await api.get<PrestacionUsuario[]>('/prestaciones-usuario/');
     return response.data;
   },
 
@@ -26,7 +26,7 @@ export const prestacionesService = {
     margen_ganancia_porcentaje?: number;
     notas_personales?: string;
   }): Promise<PrestacionUsuario> {
-    const response = await api.post<PrestacionUsuario>('/prestaciones-usuario', prestacion);
+    const response = await api.post<PrestacionUsuario>('/prestaciones-usuario/', prestacion);
     return response.data;
   },
 
