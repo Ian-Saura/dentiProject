@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/contexts/AuthContext';
 import { Activity, Eye, EyeOff, Sparkles } from 'lucide-react';
@@ -11,14 +11,11 @@ const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showDemo, setShowDemo] = useState(false);
   const { login, googleLogin, isLoading } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) return;
-
     try {
       await login(username, password);
       // Force full page reload to ensure auth state is updated
@@ -174,28 +171,6 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="show-demo"
-                name="show-demo"
-                type="checkbox"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                checked={showDemo}
-                onChange={(e) => setShowDemo(e.target.checked)}
-              />
-              <label htmlFor="show-demo" className="ml-2 block text-sm text-gray-700">
-                Mostrar credenciales de prueba
-              </label>
-            </div>
-
-            {showDemo && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Usuario:</strong> admin<br />
-                  <strong>Contraseña:</strong> Contact administrator
-                </p>
-              </div>
-            )}
 
             <motion.div
               whileHover={{ scale: 1.02 }}
