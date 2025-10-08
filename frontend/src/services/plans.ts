@@ -12,7 +12,7 @@ export interface PlanStatus {
 
 export interface AssignPlanRequest {
   plan: 'trial' | 'premium' | 'enterprise';
-  dias_trial?: number;
+  dias_duracion?: number;
 }
 
 export const plansService = {
@@ -34,6 +34,7 @@ export const plansService = {
     return response.data;
   },
 };
+
 
 
 

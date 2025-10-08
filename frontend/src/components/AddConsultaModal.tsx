@@ -317,23 +317,25 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ type: 'spring', damping: 25 }}
-        className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none p-4"
+        className="fixed inset-4 sm:inset-auto sm:relative flex items-center justify-center z-50 pointer-events-none"
       >
-        <div className="glass rounded-3xl p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 pointer-events-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-dental-500" />
-              {editingConsulta ? 'Editar Prestación' : 'Nueva Prestación'}
+        <div className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 w-full sm:max-w-4xl h-full sm:h-auto max-h-full sm:max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 pointer-events-auto">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white/80 backdrop-blur-sm -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 py-3 sm:py-4 z-10 rounded-t-2xl sm:rounded-t-3xl">
+            <h2 className="text-xl sm:text-2xl font-bold gradient-text flex items-center gap-2">
+              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-dental-500" />
+              <span className="hidden xs:inline">{editingConsulta ? 'Editar Prestación' : 'Nueva Prestación'}</span>
+              <span className="xs:hidden">{editingConsulta ? 'Editar' : 'Nueva'}</span>
             </h2>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+              type="button"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           </div>
       
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {/* Patient Autocomplete - Only if not preselected */}
             {!preselectedPatientId ? (
               <div className="relative" ref={dropdownRef}>
@@ -346,8 +348,8 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                   value={patientSearchTerm}
                   onChange={(e) => handlePatientSearchChange(e.target.value)}
                   onFocus={() => !preselectedPatientId && setShowPatientDropdown(true)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
-                  placeholder="Buscar por DNI, nombre o apellido..."
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                  placeholder="Buscar por DNI, nombre..."
                   required={!formData.paciente_id}
                   disabled={!!preselectedPatientId}
                 />
@@ -464,7 +466,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                     })
                   });
                 }}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
               >
                 {/* User's custom prestaciones first */}
                 {prestaciones && prestaciones.length > 0 ? (
@@ -529,7 +531,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                 type="number"
                 value={formData.monto_ars}
                 onChange={(e) => setFormData({ ...formData, monto_ars: Number(e.target.value) })}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
                 min="0"
                 required
               />
@@ -543,7 +545,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
               <select
                 value={formData.medio_pago}
                 onChange={(e) => setFormData({ ...formData, medio_pago: e.target.value as any })}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
               >
                 <option value="efectivo">Efectivo</option>
                 <option value="transferencia">Transferencia</option>
@@ -563,29 +565,31 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                 type="date"
                 value={formData.fecha_consulta}
                 onChange={(e) => setFormData({ ...formData, fecha_consulta: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
                 required
               />
             </div>
 
             {/* Tooth Selection */}
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                 🦷 Dientes Tratados (Opcional)
               </label>
-              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-6 border-2 border-cyan-200">
-                <p className="text-sm text-gray-600 mb-4 text-center">
+              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl sm:rounded-2xl p-3 sm:p-6 border-2 border-cyan-200">
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 text-center">
                   Click en los dientes para seleccionar cuáles fueron tratados
                 </p>
-                <Odontograma
-                  selectedTeeth={selectedTeeth}
-                  onToothClick={handleToothClick}
-                  selectable={true}
-                  showTooltip={true}
-                />
+                <div className="overflow-x-auto overflow-y-visible -mx-3 sm:mx-0 pb-24 pt-6">
+                  <Odontograma
+                    selectedTeeth={selectedTeeth}
+                    onToothClick={handleToothClick}
+                    selectable={true}
+                    showTooltip={true}
+                  />
+                </div>
                 {selectedTeeth.length > 0 && (
-                  <div className="mt-4 p-3 bg-blue-100 rounded-xl">
-                    <p className="text-sm font-semibold text-blue-900">
+                  <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-100 rounded-lg sm:rounded-xl">
+                    <p className="text-xs sm:text-sm font-semibold text-blue-900">
                       ✓ Dientes seleccionados: {selectedTeeth.sort((a, b) => a - b).join(', ')}
                     </p>
                   </div>
@@ -594,18 +598,18 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
             </div>
 
             {/* Buttons */}
-            <div className="col-span-2 flex gap-3 pt-4">
+            <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 sticky bottom-0 bg-white/80 backdrop-blur-sm -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 pb-4 sm:pb-0 -mb-4 sm:mb-0 rounded-b-2xl sm:rounded-b-3xl">
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-lg sm:rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isLoading || updateMutation.isLoading}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-dental-500 to-dental-600 text-white rounded-xl font-bold hover:from-dental-600 hover:to-dental-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-dental-500 to-dental-600 text-white rounded-lg sm:rounded-xl font-bold hover:from-dental-600 hover:to-dental-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {createMutation.isLoading || updateMutation.isLoading ? 'Guardando...' : 'Guardar'}
               </button>

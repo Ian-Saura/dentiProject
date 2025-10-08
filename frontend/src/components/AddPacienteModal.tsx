@@ -140,36 +140,37 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[60]">
         <motion.div
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+          className="bg-white rounded-2xl w-full max-w-2xl h-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl"
         >
           {/* Header */}
-          <div className="sticky top-0 bg-gradient-to-r from-dental-500 to-dental-600 text-white p-6 rounded-t-2xl flex items-center justify-between z-10">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-lg">
-                <User className="w-6 h-6" />
+          <div className="sticky top-0 bg-gradient-to-r from-dental-500 to-dental-600 text-white p-4 sm:p-6 rounded-t-2xl flex items-center justify-between z-10">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-white/20 p-1.5 sm:p-2 rounded-lg">
+                <User className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Nuevo Paciente</h2>
-                <p className="text-sm opacity-90">Complete los datos del paciente</p>
+                <h2 className="text-lg sm:text-2xl font-bold">Nuevo Paciente</h2>
+                <p className="text-xs sm:text-sm opacity-90 hidden xs:block">Complete los datos del paciente</p>
               </div>
             </div>
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg transition-colors"
+              type="button"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
             {/* Nombre y Apellido */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                   <User className="w-4 h-4" />
@@ -179,7 +180,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                   type="text"
                   value={formData.nombre}
                   onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
                   placeholder="Juan"
                   required
                 />
@@ -193,7 +194,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                   type="text"
                   value={formData.apellido}
                   onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
                   placeholder="Pérez"
                   required
                 />
@@ -214,7 +215,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                   if (touched.dni) setTouched({ ...touched, dni: true });
                 }}
                 onBlur={() => setTouched({ ...touched, dni: true })}
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-colors ${
+                className={`w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 rounded-xl focus:outline-none focus:ring-2 transition-colors ${
                   touched.dni && (!formData.dni || formData.dni.length < 7)
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
                     : 'border-gray-300 focus:border-dental-500 focus:ring-dental-500'
@@ -240,7 +241,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
             </div>
 
             {/* Email y Teléfono */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                   <Mail className="w-4 h-4" />
@@ -250,8 +251,8 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
-                  placeholder="juan@email.com (opcional)"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                  placeholder="juan@email.com"
                 />
               </div>
 
@@ -264,14 +265,14 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                   type="tel"
                   value={formData.telefono}
                   onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
-                  placeholder="+54 9 11 1234-5678 (opcional)"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                  placeholder="+54 9 11 1234-5678"
                 />
               </div>
             </div>
 
             {/* Fecha de Nacimiento y Obra Social */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
@@ -281,7 +282,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                   type="date"
                   value={formData.fecha_nacimiento}
                   onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
                 />
               </div>
 
@@ -294,45 +295,46 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                   type="text"
                   value={formData.obra_social}
                   onChange={(e) => setFormData({ ...formData, obra_social: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
-                  placeholder="OSDE, Swiss Medical, etc. (opcional)"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
+                  placeholder="OSDE, Swiss Medical, etc."
                 />
               </div>
             </div>
 
             {/* Info box */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-              <p className="text-sm text-blue-800 mb-2">
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-blue-800 mb-1 sm:mb-2">
                 <strong>💡 Campos obligatorios:</strong> Solo Nombre, Apellido y DNI son requeridos.
               </p>
-              <p className="text-sm text-blue-800">
+              <p className="text-xs sm:text-sm text-blue-800">
                 <strong>🆔 DNI:</strong> Será usado como identificador único. Asegúrate de ingresarlo correctamente para evitar duplicados.
               </p>
             </div>
 
             {/* Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4 sticky bottom-0 bg-white/80 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-0 -mb-4 sm:mb-0 rounded-b-2xl">
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isLoading}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-dental-500 to-dental-600 text-white rounded-xl font-bold hover:from-dental-600 hover:to-dental-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-dental-500 to-dental-600 text-white rounded-xl font-bold hover:from-dental-600 hover:to-dental-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
               >
                 {createMutation.isLoading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Guardando...
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span className="hidden xs:inline">Guardando...</span>
                   </>
                 ) : (
                   <>
-                    <Save className="w-5 h-5" />
-                    Guardar Paciente
+                    <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden xs:inline">Guardar Paciente</span>
+                    <span className="xs:hidden">Guardar</span>
                   </>
                 )}
               </button>

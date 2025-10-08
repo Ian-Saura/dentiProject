@@ -6,6 +6,7 @@ from typing import Dict, Optional
 from sqlalchemy.orm import Session
 
 from app.models import Usuario
+from app.models.usuarios import Plan
 
 
 class PlanService:
@@ -16,7 +17,7 @@ class PlanService:
         db: Session,
         user: Usuario,
         plan: str,
-        dias_trial: int = 7
+        dias_duracion: Optional[int] = None
     ) -> Usuario:
         """
         Asignar un plan a un usuario
@@ -25,19 +26,26 @@ class PlanService:
             db: Sesión de base de datos
             user: Usuario al que asignar el plan
             plan: Tipo de plan (trial, premium, enterprise)
-            dias_trial: Días de duración del trial (solo aplica para plan trial)
+            dias_duracion: Días de duración del plan (opcional). Si no se especifica:
+                          - trial: 14 días por defecto
+                          - premium/enterprise: sin vencimiento
         
         Returns:
             Usuario actualizado
         """
-        user.plan = plan
+        # Convert string to Plan enum
+        user.plan = Plan(plan)
         user.fecha_inicio_plan = date.today()
         
-        if plan == "trial":
-            # Trial expira después de X días
-            user.fecha_vencimiento = date.today() + timedelta(days=dias_trial)
-        elif plan in ["premium", "enterprise"]:
-            # Premium y Enterprise no expiran
+        # Determinar fecha de vencimiento
+        if dias_duracion is not None:
+            # Si se especifica duración, aplicarla a cualquier plan
+            user.fecha_vencimiento = date.today() + timedelta(days=dias_duracion)
+        elif plan == "trial":
+            # Trial expira después de 14 días por defecto
+            user.fecha_vencimiento = date.today() + timedelta(days=14)
+        else:
+            # Premium y Enterprise sin vencimiento por defecto
             user.fecha_vencimiento = None
         
         db.commit()
@@ -113,6 +121,7 @@ class PlanService:
         """
         status = PlanService.get_plan_status(user)
         return status["puede_usar_app"]
+
 
 
 

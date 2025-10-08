@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from sqlalchemy import or_, select
+from sqlalchemy import or_, and_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
@@ -24,14 +24,26 @@ def list_pacientes(
 
     if filtros:
         if "q" in filtros and filtros["q"]:
-            q = filtros["q"]
-            query = query.where(
-                or_(
-                    Paciente.nombre.ilike(f"%{q}%"),
-                    Paciente.apellido.ilike(f"%{q}%"),
-                    Paciente.dni.ilike(f"%{q}%"),
-                )
-            )
+            q = filtros["q"].strip()
+            # Búsqueda mejorada: nombre, apellido, DNI, o iniciales
+            search_conditions = [
+                Paciente.nombre.ilike(f"%{q}%"),
+                Paciente.apellido.ilike(f"%{q}%"),
+                Paciente.dni.ilike(f"%{q}%"),
+            ]
+            
+            # Si son 2-3 caracteres, buscar por iniciales (ej: "JP" = Juan Pérez)
+            if len(q) >= 2 and len(q) <= 3 and q.isalpha():
+                # Buscar donde nombre empiece con primera letra Y apellido con segunda
+                if len(q) == 2:
+                    search_conditions.append(
+                        and_(
+                            Paciente.nombre.ilike(f"{q[0]}%"),
+                            Paciente.apellido.ilike(f"{q[1]}%")
+                        )
+                    )
+            
+            query = query.where(or_(*search_conditions))
         if "activo" in filtros:
             query = query.where(Paciente.activo == filtros["activo"])
 
@@ -58,14 +70,26 @@ def count_pacientes(
 
     if filtros:
         if "q" in filtros and filtros["q"]:
-            q = filtros["q"]
-            query = query.where(
-                or_(
-                    Paciente.nombre.ilike(f"%{q}%"),
-                    Paciente.apellido.ilike(f"%{q}%"),
-                    Paciente.dni.ilike(f"%{q}%"),
-                )
-            )
+            q = filtros["q"].strip()
+            # Búsqueda mejorada: nombre, apellido, DNI, o iniciales
+            search_conditions = [
+                Paciente.nombre.ilike(f"%{q}%"),
+                Paciente.apellido.ilike(f"%{q}%"),
+                Paciente.dni.ilike(f"%{q}%"),
+            ]
+            
+            # Si son 2-3 caracteres, buscar por iniciales (ej: "JP" = Juan Pérez)
+            if len(q) >= 2 and len(q) <= 3 and q.isalpha():
+                # Buscar donde nombre empiece con primera letra Y apellido con segunda
+                if len(q) == 2:
+                    search_conditions.append(
+                        and_(
+                            Paciente.nombre.ilike(f"{q[0]}%"),
+                            Paciente.apellido.ilike(f"{q[1]}%")
+                        )
+                    )
+            
+            query = query.where(or_(*search_conditions))
         if "activo" in filtros:
             query = query.where(Paciente.activo == filtros["activo"])
 

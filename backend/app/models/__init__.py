@@ -12,6 +12,7 @@ from .prestaciones_usuario import PrestacionUsuario
 from .configuracion_usuario import ConfiguracionUsuario
 from .vistas import VPrestacionPrecio
 from .auditoria import Auditoria
+from .turnos import Turno, ConfiguracionTurnos
 
 __all__ = [
     "Role",
@@ -29,4 +30,6 @@ __all__ = [
     "ConfiguracionUsuario",
     "VPrestacionPrecio",
     "Auditoria",
+    "Turno",
+    "ConfiguracionTurnos",
 ]

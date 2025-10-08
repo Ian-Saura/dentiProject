@@ -344,7 +344,7 @@ def assign_user_plan(
         db=db,
         user=user,
         plan=plan_request.plan,
-        dias_trial=plan_request.dias_trial or 7
+        dias_duracion=plan_request.dias_duracion
     )
     
     # Log action
@@ -355,7 +355,7 @@ def assign_user_plan(
         entidad_tipo="usuario",
         entidad_id=user_id,
         descripcion=f"Plan asignado: {plan_request.plan}",
-        metadata={"plan": plan_request.plan, "dias_trial": plan_request.dias_trial},
+        metadata={"plan": plan_request.plan, "dias_duracion": plan_request.dias_duracion},
         exitoso=True
     )
     
@@ -368,7 +368,7 @@ def assign_user_plan(
             "id": updated_user.id,
             "username": updated_user.username,
             "email": updated_user.email,
-            "plan": updated_user.plan,
+            "plan": updated_user.plan.value,
         },
         "plan_status": plan_status
     }

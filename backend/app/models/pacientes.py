@@ -32,7 +32,9 @@ class Paciente(Base):
 
     usuario: Mapped["Usuario"] = relationship(back_populates="pacientes")
     consultas: Mapped[List["Consulta"]] = relationship(back_populates="paciente", cascade="all, delete-orphan")
+    turnos: Mapped[List["Turno"]] = relationship(back_populates="paciente")
 
 
 from app.models.usuarios import Usuario  # noqa: E402
 from app.models.consultas import Consulta  # noqa: E402
+from app.models.turnos import Turno  # noqa: E402

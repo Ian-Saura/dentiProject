@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Shield, Activity, Trash2, Ban, Check, X, Info, CreditCard, Crown, Clock, AlertTriangle, Sparkles } from 'lucide-react';
+import { Users, Shield, Activity, Trash2, Ban, Check, Info, CreditCard, Crown, Clock, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService, UserWithRole, Role, AdminStats } from '../services/admin';
 import { plansService } from '../services/plans';
@@ -20,7 +20,8 @@ export default function AdminPage() {
   const [selectedRole, setSelectedRole] = useState('');
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('');
-  const [trialDays, setTrialDays] = useState(7);
+  const [planDuration, setPlanDuration] = useState<number | undefined>(undefined);
+  const [hasExpiration, setHasExpiration] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -104,16 +105,19 @@ export default function AdminPage() {
     try {
       await plansService.assignPlan(selectedUser.id, {
         plan: selectedPlan as 'trial' | 'premium' | 'enterprise',
-        dias_trial: selectedPlan === 'trial' ? trialDays : undefined,
+        dias_duracion: hasExpiration ? planDuration : undefined,
       });
       toast.success(`Plan ${selectedPlan} asignado exitosamente a ${selectedUser.username}`);
       setShowPlanModal(false);
       setSelectedUser(null);
       setSelectedPlan('');
-      setTrialDays(7);
+      setPlanDuration(undefined);
+      setHasExpiration(false);
       loadData();
     } catch (error: any) {
-      toast.error('Error al asignar plan: ' + (error.response?.data?.detail || error.message));
+      const errorMessage = error.response?.data?.detail || error.message || 'Error desconocido';
+      toast.error('Error al asignar plan: ' + errorMessage);
+      console.error('Error completo:', error);
     }
   };
 
@@ -132,7 +136,7 @@ export default function AdminPage() {
   }
 
   // Helper function to get plan badge styling
-  const getPlanBadge = (plan: string, diasRestantes?: number | null) => {
+  const getPlanBadge = (plan: string) => {
     if (plan === 'premium' || plan === 'enterprise') {
       return {
         bg: 'bg-gradient-to-r from-purple-600 to-pink-600',
@@ -142,14 +146,11 @@ export default function AdminPage() {
       };
     }
     if (plan === 'trial') {
-      const isExpired = diasRestantes !== undefined && diasRestantes !== null && diasRestantes < 0;
-      const isExpiringSoon = diasRestantes !== undefined && diasRestantes !== null && diasRestantes >= 0 && diasRestantes <= 3;
-      
       return {
-        bg: isExpired ? 'bg-red-100' : isExpiringSoon ? 'bg-yellow-100' : 'bg-blue-100',
-        text: isExpired ? 'text-red-800' : isExpiringSoon ? 'text-yellow-800' : 'text-blue-800',
-        icon: isExpired ? <AlertTriangle className="w-4 h-4" /> : <Clock className="w-4 h-4" />,
-        label: isExpired ? 'Expirado' : `Trial ${diasRestantes}d`,
+        bg: 'bg-blue-100',
+        text: 'text-blue-800',
+        icon: <Clock className="w-4 h-4" />,
+        label: 'Trial',
       };
     }
     return {
@@ -348,7 +349,7 @@ export default function AdminPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {(() => {
-                      const badge = getPlanBadge(user.plan || '', user.dias_restantes);
+                      const badge = getPlanBadge(user.plan || '');
                       return (
                         <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-bold rounded-full ${badge.bg} ${badge.text}`}>
                           {badge.icon}
@@ -499,17 +500,17 @@ export default function AdminPage() {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl"
+              className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl max-h-[95vh] overflow-y-auto"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-purple-100 p-3 rounded-xl">
-                  <Crown className="w-6 h-6 text-purple-600" />
+              <div className="flex items-center gap-2 sm:gap-3 mb-4">
+                <div className="bg-purple-100 p-2 sm:p-3 rounded-xl">
+                  <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
+                <div className="flex-1">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">
                     Asignar Plan
                   </h3>
-                  <p className="text-sm text-gray-500">{selectedUser.username}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">{selectedUser.username}</p>
                 </div>
               </div>
             <div className="mb-4">
@@ -528,24 +529,43 @@ export default function AdminPage() {
               </select>
             </div>
             
-            {selectedPlan === 'trial' && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Días de Trial
-                </label>
+            <div className="mb-4">
+              <label className="flex items-center gap-2 mb-2">
                 <input
-                  type="number"
-                  value={trialDays}
-                  onChange={(e) => setTrialDays(parseInt(e.target.value) || 7)}
-                  min="1"
-                  max="90"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  type="checkbox"
+                  checked={hasExpiration}
+                  onChange={(e) => {
+                    setHasExpiration(e.target.checked);
+                    if (!e.target.checked) setPlanDuration(undefined);
+                    else if (selectedPlan === 'trial') setPlanDuration(7);
+                  }}
+                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  El trial expirará después de {trialDays} días
-                </p>
-              </div>
-            )}
+                <span className="text-sm font-medium text-gray-700">
+                  Plan con fecha de vencimiento
+                </span>
+              </label>
+              
+              {hasExpiration && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Días de duración
+                  </label>
+                  <input
+                    type="number"
+                    value={planDuration || ''}
+                    onChange={(e) => setPlanDuration(parseInt(e.target.value) || undefined)}
+                    min="1"
+                    max="365"
+                    placeholder="Ej: 30, 90, 365"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {planDuration ? `El plan expirará después de ${planDuration} días` : 'Ingrese la cantidad de días'}
+                  </p>
+                </div>
+              )}
+            </div>
             
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 mb-4">
               <p className="text-sm font-medium text-gray-800">
@@ -582,7 +602,8 @@ export default function AdminPage() {
                   setShowPlanModal(false);
                   setSelectedUser(null);
                   setSelectedPlan('');
-                  setTrialDays(7);
+                  setPlanDuration(undefined);
+                  setHasExpiration(false);
                 }}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >

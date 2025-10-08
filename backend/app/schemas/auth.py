@@ -151,13 +151,19 @@ class ChangePassword(BaseModel):
 class AssignPlanRequest(BaseModel):
     """Asignar plan a un usuario"""
     plan: str = Field(..., description="trial, premium, o enterprise")
-    dias_trial: Optional[int] = Field(7, description="Días de trial (solo para plan trial)")
+    dias_duracion: Optional[int] = Field(None, description="Días de duración del plan (opcional, si no se especifica el plan no expira)")
     
     @validator('plan')
     def validate_plan(cls, v):
         allowed = ['trial', 'premium', 'enterprise']
         if v not in allowed:
             raise ValueError(f'Plan must be one of: {", ".join(allowed)}')
+        return v
+    
+    @validator('dias_duracion')
+    def validate_dias_duracion(cls, v):
+        if v is not None and v < 1:
+            raise ValueError('dias_duracion debe ser mayor a 0')
         return v
 
 

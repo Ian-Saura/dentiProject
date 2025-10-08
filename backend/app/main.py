@@ -23,6 +23,7 @@ from app.api.v1.routes_consultas_utils import router as consultas_utils_router
 from app.api.v1.routes_calculadora import router as calculadora_router
 from app.api.v1.routes_import import router as import_router
 from app.api.v1.routes_precios import router as precios_router
+from app.api.v1.routes_turnos import router as turnos_router
 from app.core.config import get_settings
 from app.core.logging import RequestIdMiddleware
 from app.middleware.audit import AuditMiddleware
@@ -69,6 +70,7 @@ app.include_router(consultas_utils_router, prefix=settings.api_prefix)
 app.include_router(calculadora_router, prefix=settings.api_prefix)
 app.include_router(import_router, prefix=settings.api_prefix)
 app.include_router(precios_router, prefix=settings.api_prefix)
+app.include_router(turnos_router, prefix=settings.api_prefix)
 
 
 @app.on_event("startup")

@@ -209,19 +209,19 @@ const PatientDashboardPage: React.FC = () => {
       </motion.div>
 
       {/* Instagram-Style Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AnimatedCard delay={0.1}>
           <motion.div
             whileHover={{ scale: 1.05, y: -8 }}
-            className="relative overflow-hidden rounded-3xl p-8 h-full bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 text-white shadow-2xl"
+            className="relative overflow-hidden rounded-2xl p-5 h-full bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 text-white shadow-xl"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
             <div className="relative z-10">
-              <div className="bg-white/20 backdrop-blur-sm w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                <Calendar className="h-7 w-7" />
+              <div className="bg-white/20 backdrop-blur-sm w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <Calendar className="h-5 w-5" />
               </div>
-              <p className="text-white/90 text-sm font-medium mb-2">Prestaciones</p>
-              <p className="text-5xl font-black mb-1">{totalConsultas}</p>
+              <p className="text-white/90 text-xs font-medium mb-1">Prestaciones</p>
+              <p className="text-4xl font-black mb-1">{totalConsultas}</p>
               <p className="text-white/80 text-xs font-medium">visitas totales</p>
             </div>
           </motion.div>
@@ -230,15 +230,15 @@ const PatientDashboardPage: React.FC = () => {
         <AnimatedCard delay={0.15}>
           <motion.div
             whileHover={{ scale: 1.05, y: -8 }}
-            className="relative overflow-hidden rounded-3xl p-8 h-full bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 text-white shadow-2xl"
+            className="relative overflow-hidden rounded-2xl p-5 h-full bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 text-white shadow-xl"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
             <div className="relative z-10">
-              <div className="bg-white/20 backdrop-blur-sm w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                <DollarSign className="h-7 w-7" />
+              <div className="bg-white/20 backdrop-blur-sm w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <DollarSign className="h-5 w-5" />
               </div>
-              <p className="text-white/90 text-sm font-medium mb-2">Inversión Total</p>
-              <p className="text-4xl font-black mb-1">${(totalGastado / 1000).toFixed(1)}K</p>
+              <p className="text-white/90 text-xs font-medium mb-1">Inversión Total</p>
+              <p className="text-3xl font-black mb-1">${(totalGastado / 1000).toFixed(1)}K</p>
               <p className="text-white/80 text-xs font-medium">en salud dental</p>
             </div>
           </motion.div>
@@ -247,15 +247,15 @@ const PatientDashboardPage: React.FC = () => {
         <AnimatedCard delay={0.2}>
           <motion.div
             whileHover={{ scale: 1.05, y: -8 }}
-            className="relative overflow-hidden rounded-3xl p-8 h-full bg-gradient-to-br from-purple-500 via-pink-600 to-rose-600 text-white shadow-2xl"
+            className="relative overflow-hidden rounded-2xl p-5 h-full bg-gradient-to-br from-purple-500 via-pink-600 to-rose-600 text-white shadow-xl"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
             <div className="relative z-10">
-              <div className="bg-white/20 backdrop-blur-sm w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                <TrendingUp className="h-7 w-7" />
+              <div className="bg-white/20 backdrop-blur-sm w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <TrendingUp className="h-5 w-5" />
               </div>
-              <p className="text-white/90 text-sm font-medium mb-2">Promedio/Visita</p>
-              <p className="text-4xl font-black mb-1">${(promedioConsulta / 1000).toFixed(1)}K</p>
+              <p className="text-white/90 text-xs font-medium mb-1">Promedio/Visita</p>
+              <p className="text-3xl font-black mb-1">${(promedioConsulta / 1000).toFixed(1)}K</p>
               <p className="text-white/80 text-xs font-medium">inversión media</p>
             </div>
           </motion.div>
@@ -264,15 +264,15 @@ const PatientDashboardPage: React.FC = () => {
         <AnimatedCard delay={0.25}>
           <motion.div
             whileHover={{ scale: 1.05, y: -8 }}
-            className="relative overflow-hidden rounded-3xl p-8 h-full bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 text-white shadow-2xl"
+            className="relative overflow-hidden rounded-2xl p-5 h-full bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 text-white shadow-xl"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
             <div className="relative z-10">
-              <div className="bg-white/20 backdrop-blur-sm w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                <Sparkles className="h-7 w-7" />
+              <div className="bg-white/20 backdrop-blur-sm w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-lg">
+                <Sparkles className="h-5 w-5" />
               </div>
-              <p className="text-white/90 text-sm font-medium mb-2">Tratamiento Top</p>
-              <p className="text-lg font-black mb-1 leading-tight truncate">{tratamientoMasFrecuente}</p>
+              <p className="text-white/90 text-xs font-medium mb-1">Tratamiento Top</p>
+              <p className="text-base font-black mb-1 leading-tight truncate">{tratamientoMasFrecuente}</p>
               <p className="text-white/80 text-xs font-medium">más realizado</p>
             </div>
           </motion.div>
@@ -281,7 +281,7 @@ const PatientDashboardPage: React.FC = () => {
 
       {/* Odontograma Visual */}
       <AnimatedCard delay={0.3}>
-        <div className="bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 rounded-3xl p-8 border-2 border-cyan-200 shadow-xl">
+        <div className="relative z-30 bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 rounded-3xl p-8 border-2 border-cyan-200 shadow-xl overflow-visible">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-3xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
@@ -293,10 +293,12 @@ const PatientDashboardPage: React.FC = () => {
               <Sparkles className="h-8 w-8 text-white" />
             </div>
           </div>
-          <Odontograma 
-            treatedTeeth={treatedTeeth} 
-            consultations={filteredConsultas}
-          />
+          <div className="overflow-visible">
+            <Odontograma 
+              treatedTeeth={treatedTeeth} 
+              consultations={filteredConsultas}
+            />
+          </div>
         </div>
       </AnimatedCard>
 

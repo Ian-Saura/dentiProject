@@ -72,6 +72,9 @@ const Odontograma: React.FC<OdontogramaProps> = ({
         whileTap={selectable ? { scale: 0.9 } : {}}
         onClick={() => selectable && onToothClick?.(number)}
         className={`relative group ${selectable ? 'cursor-pointer' : 'cursor-default'}`}
+        style={{ zIndex: hoveredTooth === number ? 10000 : 10 }}
+        onMouseEnter={() => setHoveredTooth(number)}
+        onMouseLeave={() => setHoveredTooth(null)}
       >
         <motion.div
           whileHover={{ rotate: [0, -5, 5, 0] }}
@@ -88,7 +91,7 @@ const Odontograma: React.FC<OdontogramaProps> = ({
           const treatments = getToothTreatments(number);
           // Tooltip siempre hacia arriba con z-index muy alto
           return (
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999]">
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ zIndex: 10001 }}>
               <div className="bg-gray-900 text-white text-xs rounded-xl py-3 px-4 shadow-2xl min-w-[200px]">
                 <div className="font-bold text-sm mb-2 border-b border-gray-700 pb-2">
                   🦷 Diente #{number}

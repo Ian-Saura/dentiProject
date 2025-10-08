@@ -18,6 +18,8 @@ import ConfiguracionPage from '@/pages/ConfiguracionPage';
 import ImportPage from '@/pages/ImportPage';
 import FinancialReportsPage from '@/pages/FinancialReportsPage';
 import TrialExpiredPage from '@/pages/TrialExpiredPage';
+import TurnosPage from '@/pages/TurnosPage';
+import ReservarTurnoPage from '@/pages/ReservarTurnoPage';
 
 // Google OAuth Client ID
 const GOOGLE_CLIENT_ID = '814453800673-39hb3apvtc1d5bdo68k9cq83isn75n2j.apps.googleusercontent.com';
@@ -164,6 +166,18 @@ const AppRoutes: React.FC = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/turnos"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <TurnosPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              {/* Ruta pública para reservar turnos */}
+              <Route path="/reservar-turno/:usuario_id" element={<ReservarTurnoPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
