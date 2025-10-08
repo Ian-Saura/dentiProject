@@ -154,17 +154,35 @@ class ImportCsvService:
                     nombre = name_parts[0] if name_parts else "Desconocido"
                     apellido = name_parts[1] if len(name_parts) > 1 else ""
                     
-                    # Find or create patient (prevents duplicates)
-                    paciente = PacientesService.find_or_create_paciente(
-                        db, nombre, apellido, None, usuario_id
-                    )
-                    paciente_id = paciente.id
-                    pacientes_map[paciente_key] = paciente_id
+                    # Generate temporary DNI for CSV imports (format: CSV-timestamp-hash)
+                    # This ensures uniqueness while being identifiable as CSV import
+                    import time
+                    temp_dni = f"CSV-{int(time.time())}-{abs(hash(paciente_name)) % 10000:04d}"
                     
-                    if paciente.fecha_registro.date() == date.today():
-                        print(f"  ➕ Fila {fila_num}: Paciente nuevo creado: '{paciente_name}' (ID: {paciente_id})")
-                    else:
-                        print(f"  🔍 Fila {fila_num}: Paciente existente encontrado: '{paciente_name}' (ID: {paciente_id})")
+                    # Find or create patient with temporary DNI
+                    try:
+                        paciente = PacientesService.find_or_create_paciente(
+                            db, nombre, apellido, temp_dni, usuario_id
+                        )
+                        paciente_id = paciente.id
+                        pacientes_map[paciente_key] = paciente_id
+                        
+                        if paciente.fecha_registro.date() == date.today():
+                            print(f"  ➕ Fila {fila_num}: Paciente nuevo creado: '{paciente_name}' (ID: {paciente_id}, DNI temp: {temp_dni})")
+                        else:
+                            print(f"  🔍 Fila {fila_num}: Paciente existente encontrado: '{paciente_name}' (ID: {paciente_id})")
+                    except ValueError as e:
+                        # If DNI validation fails, create directly with PacienteCreate
+                        paciente_dto = PacienteCreate(
+                            nombre=nombre,
+                            apellido=apellido,
+                            dni=temp_dni
+                        )
+                        from app.repositories.pacientes import create_paciente
+                        paciente = create_paciente(db, paciente_dto, usuario_id)
+                        paciente_id = paciente.id
+                        pacientes_map[paciente_key] = paciente_id
+                        print(f"  ➕ Fila {fila_num}: Paciente nuevo creado (directo): '{paciente_name}' (ID: {paciente_id}, DNI temp: {temp_dni})")
 
                 # 2. Validar y obtener tratamiento
                 if pd.isna(row[col_tratamiento]) or str(row[col_tratamiento]).strip() == '':

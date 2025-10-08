@@ -9,10 +9,10 @@ interface PacienteForm {
   nombre: string;
   apellido: string;
   dni: string;
-  email: string;
-  telefono: string;
-  fecha_nacimiento: string;
-  obra_social: string;
+  email?: string;
+  telefono?: string;
+  fecha_nacimiento?: string;
+  obra_social?: string;
 }
 
 interface AddPacienteModalProps {
@@ -106,7 +106,16 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
       return;
     }
 
-    createMutation.mutate(formData);
+    // Prepare data, removing empty email if not provided
+    const dataToSend = {
+      ...formData,
+      email: formData.email?.trim() === '' ? undefined : formData.email,
+      telefono: formData.telefono?.trim() === '' ? undefined : formData.telefono,
+      fecha_nacimiento: formData.fecha_nacimiento === '' ? undefined : formData.fecha_nacimiento,
+      obra_social: formData.obra_social?.trim() === '' ? undefined : formData.obra_social,
+    };
+
+    createMutation.mutate(dataToSend);
   };
 
   const handleClose = () => {
@@ -235,28 +244,28 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  Email
+                  Email <span className="text-gray-500 text-xs font-normal">(opcional)</span>
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
-                  placeholder="juan@email.com"
+                  placeholder="juan@email.com (opcional)"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                   <Phone className="w-4 h-4" />
-                  Teléfono
+                  Teléfono <span className="text-gray-500 text-xs font-normal">(opcional)</span>
                 </label>
                 <input
                   type="tel"
                   value={formData.telefono}
                   onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
-                  placeholder="+54 9 11 1234-5678"
+                  placeholder="+54 9 11 1234-5678 (opcional)"
                 />
               </div>
             </div>
@@ -266,7 +275,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  Fecha de Nacimiento
+                  Fecha de Nacimiento <span className="text-gray-500 text-xs font-normal">(opcional)</span>
                 </label>
                 <input
                   type="date"
@@ -279,23 +288,25 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                   <Building2 className="w-4 h-4" />
-                  Obra Social
+                  Obra Social <span className="text-gray-500 text-xs font-normal">(opcional)</span>
                 </label>
                 <input
                   type="text"
                   value={formData.obra_social}
                   onChange={(e) => setFormData({ ...formData, obra_social: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
-                  placeholder="OSDE, Swiss Medical, etc."
+                  placeholder="OSDE, Swiss Medical, etc. (opcional)"
                 />
               </div>
             </div>
 
             {/* Info box */}
             <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+              <p className="text-sm text-blue-800 mb-2">
+                <strong>💡 Campos obligatorios:</strong> Solo Nombre, Apellido y DNI son requeridos.
+              </p>
               <p className="text-sm text-blue-800">
-                <strong>💡 Importante:</strong> El DNI será usado como identificador único. 
-                Asegúrate de ingresarlo correctamente para evitar duplicados.
+                <strong>🆔 DNI:</strong> Será usado como identificador único. Asegúrate de ingresarlo correctamente para evitar duplicados.
               </p>
             </div>
 

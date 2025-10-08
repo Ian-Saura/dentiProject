@@ -22,7 +22,7 @@ interface ConsultaForm {
   prestacion_usuario_id: number | null;
   tratamiento: string;
   monto_ars: number;
-  medio_pago: string;
+  medio_pago: 'efectivo' | 'transferencia' | 'debito' | 'credito' | 'mercadopago' | 'otro';
   fecha_consulta: string;
 }
 
@@ -38,7 +38,6 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
   
   const [patientSearchTerm, setPatientSearchTerm] = useState('');
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
-  const [isCreatingNewPatient, setIsCreatingNewPatient] = useState(false);
   const [showAddPacienteModal, setShowAddPacienteModal] = useState(false);
   
   const [formData, setFormData] = useState<ConsultaForm>({
@@ -49,7 +48,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
     prestacion_usuario_id: null,
     tratamiento: 'Consulta',
     monto_ars: 30000,
-    medio_pago: 'Efectivo',
+    medio_pago: 'efectivo',
     fecha_consulta: new Date().toISOString().split('T')[0]
   });
 
@@ -169,12 +168,11 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
       prestacion_usuario_id: null,
       tratamiento: 'Consulta',
       monto_ars: 30000,
-      medio_pago: 'Efectivo',
+      medio_pago: 'efectivo',
       fecha_consulta: new Date().toISOString().split('T')[0]
     });
     setPatientSearchTerm(preselectedPatientName || '');
     setShowPatientDropdown(false);
-    setIsCreatingNewPatient(false);
   };
 
   const handleClose = () => {
@@ -192,7 +190,6 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
     });
     setPatientSearchTerm(`${patient.dni} - ${patient.nombre} ${patient.apellido}`);
     setShowPatientDropdown(false);
-    setIsCreatingNewPatient(false);
   };
 
   const handlePatientSearchChange = (value: string) => {
@@ -212,23 +209,60 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
       let pacienteId = formData.paciente_id;
       let prestacionUsuarioId = formData.prestacion_usuario_id;
 
-      // Step 1: Find prestacion_usuario
+      if (!pacienteId) {
+        toast.error('Por favor selecciona un paciente o crea uno nuevo');
+        return;
+      }
+
+      // Step 1: Find or create prestacion_usuario
       if (!prestacionUsuarioId && prestaciones) {
         const existingPrestacion = prestaciones.find(p => 
           p.nombre_personalizado === formData.tratamiento
         );
         if (existingPrestacion) {
           prestacionUsuarioId = existingPrestacion.id;
+        } else {
+          // Create new prestacion_usuario if not found
+          try {
+            // Find the base prestacion from catalog by name
+            const basePrestacionesResponse = await prestacionesService.getPrestaciones();
+            const basePrestacion = basePrestacionesResponse.find(p => 
+              p.nombre.toLowerCase() === formData.tratamiento.toLowerCase()
+            );
+            
+            if (basePrestacion) {
+              // Create user's custom prestacion
+              const newPrestacion = await prestacionesService.createPrestacionUsuario({
+                prestacion_id: basePrestacion.id,
+                nombre_personalizado: formData.tratamiento,
+                margen_ganancia_porcentaje: 50 // Default margin
+              });
+              prestacionUsuarioId = newPrestacion.id;
+              // Invalidate cache to refresh prestaciones list
+              queryClient.invalidateQueries('prestaciones-usuario');
+            } else {
+              // If not in catalog, create a generic one (use first available)
+              const genericPrestacion = basePrestacionesResponse[0];
+              if (genericPrestacion) {
+                const newPrestacion = await prestacionesService.createPrestacionUsuario({
+                  prestacion_id: genericPrestacion.id,
+                  nombre_personalizado: formData.tratamiento,
+                  margen_ganancia_porcentaje: 50
+                });
+                prestacionUsuarioId = newPrestacion.id;
+                queryClient.invalidateQueries('prestaciones-usuario');
+              }
+            }
+          } catch (error) {
+            console.error('Error creating prestacion:', error);
+            toast.error('Error al crear la prestación. Por favor intenta nuevamente.');
+            return;
+          }
         }
       }
 
-      if (!pacienteId) {
-        toast.error('Por favor selecciona un paciente o crea uno nuevo');
-        return;
-      }
-
       if (!prestacionUsuarioId) {
-        toast.error('No se encontró la prestación. Por favor contacta al soporte.');
+        toast.error('No se pudo crear la prestación. Por favor contacta al soporte.');
         return;
       }
 
@@ -375,7 +409,6 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                       onClick={() => {
                         setFormData({ ...formData, paciente_id: null, paciente_nombre: '', paciente_apellido: '' });
                         setPatientSearchTerm('');
-                        setIsCreatingNewPatient(false);
                       }}
                       className="text-dental-600 hover:text-dental-800"
                     >
@@ -401,23 +434,75 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
               </label>
               <select
                 value={formData.tratamiento}
-                onChange={(e) => setFormData({ ...formData, tratamiento: e.target.value })}
+                onChange={(e) => {
+                  const selectedTratamiento = e.target.value;
+                  // Find if this prestacion exists and has a configured price
+                  const existingPrestacion = prestaciones?.find(p => p.nombre_personalizado === selectedTratamiento);
+                  
+                  setFormData({ 
+                    ...formData, 
+                    tratamiento: selectedTratamiento,
+                    prestacion_usuario_id: existingPrestacion?.id || null,
+                    // Update amount if prestacion has a configured price
+                    ...(existingPrestacion?.prestacion?.tiempo_estimado_min && {
+                      // You can add price calculation logic here if needed
+                    })
+                  });
+                }}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
               >
-                <option value="Consulta">Consulta</option>
-                <option value="Consulta de Urgencia">Consulta de Urgencia</option>
-                <option value="Limpieza">Limpieza</option>
-                <option value="Operatoria Simple">Operatoria Simple</option>
-                <option value="Operatoria Compleja">Operatoria Compleja</option>
-                <option value="Endodoncia">Endodoncia</option>
-                <option value="Corona">Corona</option>
-                <option value="Extracción Simple">Extracción Simple</option>
-                <option value="Extracción Compleja">Extracción Compleja</option>
-                <option value="Blanqueamiento">Blanqueamiento</option>
-                <option value="Implante">Implante</option>
-                <option value="Placa estabilizadora oclusal">Placa estabilizadora oclusal</option>
-                <option value="Obra social">Obra social</option>
+                {/* User's custom prestaciones first */}
+                {prestaciones && prestaciones.length > 0 ? (
+                  <>
+                    <optgroup label="Tus Prestaciones">
+                      {prestaciones
+                        .filter(p => p.activo)
+                        .sort((a, b) => (a.nombre_personalizado || '').localeCompare(b.nombre_personalizado || ''))
+                        .map(p => (
+                          <option key={p.id} value={p.nombre_personalizado}>
+                            {p.nombre_personalizado}
+                          </option>
+                        ))}
+                    </optgroup>
+                    <optgroup label="Prestaciones Comunes">
+                      <option value="Consulta">Consulta</option>
+                      <option value="Consulta de Urgencia">Consulta de Urgencia</option>
+                      <option value="Limpieza">Limpieza</option>
+                      <option value="Operatoria Simple">Operatoria Simple</option>
+                      <option value="Operatoria Compleja">Operatoria Compleja</option>
+                      <option value="Endodoncia">Endodoncia</option>
+                      <option value="Corona">Corona</option>
+                      <option value="Extracción Simple">Extracción Simple</option>
+                      <option value="Extracción Compleja">Extracción Compleja</option>
+                      <option value="Blanqueamiento">Blanqueamiento</option>
+                      <option value="Implante">Implante</option>
+                      <option value="Placa estabilizadora oclusal">Placa estabilizadora oclusal</option>
+                      <option value="Obra social">Obra social</option>
+                    </optgroup>
+                  </>
+                ) : (
+                  <>
+                    <option value="Consulta">Consulta</option>
+                    <option value="Consulta de Urgencia">Consulta de Urgencia</option>
+                    <option value="Limpieza">Limpieza</option>
+                    <option value="Operatoria Simple">Operatoria Simple</option>
+                    <option value="Operatoria Compleja">Operatoria Compleja</option>
+                    <option value="Endodoncia">Endodoncia</option>
+                    <option value="Corona">Corona</option>
+                    <option value="Extracción Simple">Extracción Simple</option>
+                    <option value="Extracción Compleja">Extracción Compleja</option>
+                    <option value="Blanqueamiento">Blanqueamiento</option>
+                    <option value="Implante">Implante</option>
+                    <option value="Placa estabilizadora oclusal">Placa estabilizadora oclusal</option>
+                    <option value="Obra social">Obra social</option>
+                  </>
+                )}
               </select>
+              {prestaciones && prestaciones.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Si seleccionas una prestación que no tienes configurada, se creará automáticamente
+                </p>
+              )}
             </div>
 
             {/* Amount */}
@@ -442,15 +527,15 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
               </label>
               <select
                 value={formData.medio_pago}
-                onChange={(e) => setFormData({ ...formData, medio_pago: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, medio_pago: e.target.value as any })}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
               >
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia">Transferencia</option>
-                <option value="Débito">Débito</option>
-                <option value="Crédito">Crédito</option>
-                <option value="Mercado Pago">Mercado Pago</option>
-                <option value="Obra Social">Obra Social</option>
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="debito">Débito</option>
+                <option value="credito">Crédito</option>
+                <option value="mercadopago">Mercado Pago</option>
+                <option value="otro">Otro</option>
               </select>
             </div>
 
@@ -507,7 +592,6 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
             paciente_dni: newPatient.dni
           });
           setPatientSearchTerm(`${newPatient.dni} - ${newPatient.nombre} ${newPatient.apellido}`);
-          setIsCreatingNewPatient(false);
           setShowAddPacienteModal(false);
         }}
       />

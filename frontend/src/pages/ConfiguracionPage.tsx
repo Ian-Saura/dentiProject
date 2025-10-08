@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { equiposService, gastosService, configService } from '../services';
+import { equiposService, gastosService, configService, analyticsService } from '../services';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AnimatedCard from '../components/AnimatedCard';
+import ParametrosTab from '../components/ParametrosTab';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Wrench, Building2, Sliders, Sparkles, Plus, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -45,6 +46,10 @@ const ConfiguracionPage: React.FC = () => {
   const [showGastoForm, setShowGastoForm] = useState(false);
   const [editingEquipo, setEditingEquipo] = useState<Equipo | null>(null);
   const [editingGasto, setEditingGasto] = useState<Gasto | null>(null);
+  
+  // Estados para parámetros
+  const [dolarBlue, setDolarBlue] = useState<number | null>(null);
+  const [usarCostoManual, setUsarCostoManual] = useState(false);
 
   const [equipoForm, setEquipoForm] = useState<EquipoForm>({
     nombre_equipo: '',
@@ -93,6 +98,32 @@ const ConfiguracionPage: React.FC = () => {
       }
     }
   );
+
+  const { data: costosAnalisis } = useQuery(
+    'costos-analisis',
+    analyticsService.getCostosAnalisis
+  );
+
+  // Fetch dólar blue from API
+  useEffect(() => {
+    const fetchDolarBlue = async () => {
+      try {
+        const response = await fetch('https://dolarapi.com/v1/dolares/blue');
+        const data = await response.json();
+        setDolarBlue(data.venta); // Precio de venta del dólar blue
+      } catch (error) {
+        console.error('Error fetching dólar blue:', error);
+      }
+    };
+    fetchDolarBlue();
+  }, []);
+
+  // Initialize usarCostoManual from config
+  useEffect(() => {
+    if (config) {
+      setUsarCostoManual(config.usar_costo_manual || false);
+    }
+  }, [config]);
 
   // Equipment mutations
   const createEquipoMutation = useMutation(equiposService.createEquipo, {
@@ -153,6 +184,10 @@ const ConfiguracionPage: React.FC = () => {
   const updateConfigMutation = useMutation(configService.updateConfig, {
     onSuccess: () => {
       queryClient.invalidateQueries('configuracion');
+      queryClient.invalidateQueries('costos-analisis');
+      queryClient.invalidateQueries('analytics-resumen');
+      queryClient.invalidateQueries('analytics-kpis');
+      queryClient.invalidateQueries('punto-equilibrio');
       toast.success('✅ Parámetros actualizados correctamente');
     },
     onError: () => {
@@ -230,16 +265,6 @@ const ConfiguracionPage: React.FC = () => {
 
   // Show loading only if all are loading for the first time
   if (loadingEquipos && loadingGastos && loadingConfig) return <LoadingSpinner />;
-
-  // Set default values if config is not available
-  const safeConfig = config || {
-    id: 0,
-    horas_anuales_trabajadas: 1100,
-    tipo_cambio_usd_ars: 1335,
-    margen_ganancia_porcentaje: 40,
-    costo_hora_manual_ars: 29000,
-    usar_costo_manual: false
-  };
 
   return (
     <div className="space-y-6">
@@ -713,158 +738,14 @@ const ConfiguracionPage: React.FC = () => {
 
       {/* Parameters Tab */}
       {activeTab === 'parametros' && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold">Parámetros de Cálculo</h2>
-            <p className="text-gray-600 mt-1">Configura los parámetros para el cálculo automático del costo por hora</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <form className="space-y-6" onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              updateConfigMutation.mutate({
-                horas_anuales_trabajadas: Number(formData.get('horas_anuales')) || 1100,
-                tipo_cambio_usd_ars: Number(formData.get('tipo_cambio')) || 1335,
-                margen_ganancia_porcentaje: Number(formData.get('margen_ganancia')) || 40,
-                costo_hora_manual_ars: Number(formData.get('costo_hora_manual')) || 29000,
-                usar_costo_manual: false,
-              });
-            }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Horas anuales trabajadas
-                  </label>
-                  <input
-                    type="number"
-                    name="horas_anuales"
-                    defaultValue={safeConfig.horas_anuales_trabajadas}
-                    min={500}
-                    max={3000}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Horas productivas anuales (descontando vacaciones, días no trabajados, etc.)
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de cambio USD/ARS
-                  </label>
-                  <input
-                    type="number"
-                    name="tipo_cambio"
-                    defaultValue={safeConfig.tipo_cambio_usd_ars || 1335}
-                    min={100}
-                    max={10000}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Para convertir equipos en USD a ARS
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Margen de ganancia objetivo (%)
-                  </label>
-                  <input
-                    type="range"
-                    name="margen_ganancia"
-                    defaultValue={safeConfig.margen_ganancia_porcentaje || 40}
-                    min={10}
-                    max={200}
-                    step={5}
-                    className="w-full"
-                    id="margen-range"
-                    onChange={(e) => {
-                      const display = document.getElementById('margen-display');
-                      if (display) display.textContent = e.target.value + '%';
-                    }}
-                  />
-                  <div className="flex justify-between text-sm text-gray-500 mt-1">
-                    <span>10%</span>
-                    <span id="margen-display" className="font-bold text-dental-600 text-lg">{safeConfig.margen_ganancia_porcentaje || 40}% (actual)</span>
-                    <span>200%</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Margen de ganancia deseado sobre los costos
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Costo por hora manual (ARS)
-                  </label>
-                  <input
-                    type="number"
-                    name="costo_hora_manual"
-                    defaultValue={safeConfig.costo_hora_manual_ars || 29000}
-                    min={5000}
-                    max={500000}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Usado cuando no se calcula automáticamente desde equipos y gastos
-                  </p>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={updateConfigMutation.isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                  {updateConfigMutation.isLoading ? (
-                    <>
-                      <LoadingSpinner size="sm" />
-                      <span>Guardando...</span>
-                    </>
-                  ) : (
-                    <>
-                      💾 Actualizar Parámetros
-                    </>
-                  )}
-                </motion.button>
-              </div>
-            </form>
-          </div>
-
-          {/* Cost Calculation Summary */}
-          <div className="bg-blue-50 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-4">📊 Cálculo Actual del Costo por Hora</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">$28,500</div>
-                <div className="text-sm text-blue-700">Costo/Hora Real</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">3</div>
-                <div className="text-sm text-blue-700">Equipos Activos</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">4</div>
-                <div className="text-sm text-blue-700">Gastos Fijos</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">1,100</div>
-                <div className="text-sm text-blue-700">Horas Anuales</div>
-              </div>
-            </div>
-
-            <div className="text-sm text-blue-700">
-              <p><strong>Fórmula:</strong> (Costo Anual Equipos + Gastos Fijos Anuales) ÷ Horas Anuales</p>
-              <p className="mt-2">
-                <strong>Cálculo:</strong> Los equipos se amortizan con inflación del 4% anual. 
-                Los gastos fijos se multiplican por 12 meses.
-              </p>
-            </div>
-          </div>
-        </div>
+        <ParametrosTab
+          config={config}
+          costosAnalisis={costosAnalisis}
+          dolarBlue={dolarBlue}
+          usarCostoManual={usarCostoManual}
+          setUsarCostoManual={setUsarCostoManual}
+          updateConfigMutation={updateConfigMutation}
+        />
       )}
     </div>
   );

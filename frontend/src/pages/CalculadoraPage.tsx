@@ -229,10 +229,30 @@ const CalculadoraPage: React.FC = () => {
           
           {calculateMutation.data ? (
             <div className="space-y-4">
+              {/* Cost breakdown summary */}
+              <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                <p className="text-sm font-semibold text-blue-900 mb-2">📊 Desglose de Costos Base:</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="text-blue-800">
+                    <span className="font-medium">Mano de obra:</span> ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000))).toLocaleString('es-AR')}
+                  </div>
+                  <div className="text-blue-800">
+                    <span className="font-medium">Materiales:</span> ${formData.costo_materiales_ars.toLocaleString('es-AR')}
+                  </div>
+                </div>
+                <div className="mt-2 pt-2 border-t border-blue-300">
+                  <span className="font-bold text-blue-900">Costo Total: ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000)) + formData.costo_materiales_ars).toLocaleString('es-AR')}</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-3">
+                💡 Los precios incluyen el margen de ganancia sobre el costo total (mano de obra + materiales)
+              </p>
+
               {calculateMutation.data.map((recomendacion, index) => {
-                const colors = ['yellow', 'green', 'blue', 'purple'];
                 const emojis = ['🟡', '🟢', '🔵', '🟣'];
                 const isRecommended = recomendacion.margen.includes('Competitivo');
+                const costoBase = (formData.tiempo_horas * (costos?.costo_hora_ars || 29000)) + formData.costo_materiales_ars;
                 
                 return (
                   <motion.div
@@ -247,7 +267,7 @@ const CalculadoraPage: React.FC = () => {
                         : 'border-gray-200 bg-white/50'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-3">
                         <span className="text-2xl">{emojis[index]}</span>
                         <span className="font-semibold text-lg">
@@ -257,11 +277,21 @@ const CalculadoraPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold gradient-text">
-                          ${recomendacion.precio.toLocaleString('es-AR')} ARS
+                          ${recomendacion.precio.toLocaleString('es-AR')}
                         </div>
-                        <div className="text-sm text-gray-600 font-medium">
-                          Ganancia: ${recomendacion.ganancia.toLocaleString('es-AR')}
+                        <div className="text-xs text-gray-500 font-medium">
+                          Precio Final
                         </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-600 space-y-1 pl-11">
+                      <div className="flex justify-between">
+                        <span>Costo base:</span>
+                        <span className="font-medium">${costoBase.toLocaleString('es-AR')}</span>
+                      </div>
+                      <div className="flex justify-between text-green-700 font-semibold">
+                        <span>+ Ganancia:</span>
+                        <span>${recomendacion.ganancia.toLocaleString('es-AR')}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -290,38 +320,56 @@ const CalculadoraPage: React.FC = () => {
       {calculateMutation.data && (
         <AnimatedCard delay={0.4}>
           <div className="glass rounded-2xl p-6 shadow-soft border border-white/20">
-            <h3 className="text-xl font-bold gradient-text mb-6 flex items-center gap-2">
+            <h3 className="text-xl font-bold gradient-text mb-4 flex items-center gap-2">
               <DollarSign className="h-6 w-6 text-dental-500" />
-              Análisis de Costos
+              Análisis Detallado de Costos
             </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              📝 Fórmula: <span className="font-mono font-semibold text-gray-800">(Costo Materiales + Costo Mano de Obra) × (1 + Margen)</span>
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-soft"
+                className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-soft border-2 border-blue-200"
               >
+                <div className="text-sm text-blue-700 font-semibold mb-1">Costo Mano de Obra</div>
                 <div className="text-3xl font-black text-blue-600">
                   ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000))).toLocaleString('es-AR')}
                 </div>
-                <div className="text-sm font-semibold text-blue-800 mt-2">Mano de Obra</div>
+                <div className="text-xs text-blue-600 mt-2">
+                  {formData.tiempo_horas}h × ${(costos?.costo_hora_ars || 29000).toLocaleString('es-AR')}/h
+                </div>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-soft"
+                className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-soft border-2 border-green-200"
               >
+                <div className="text-sm text-green-700 font-semibold mb-1">Costo Materiales</div>
                 <div className="text-3xl font-black text-green-600">
                   ${formData.costo_materiales_ars.toLocaleString('es-AR')}
                 </div>
-                <div className="text-sm font-semibold text-green-800 mt-2">Materiales</div>
+                <div className="text-xs text-green-600 mt-2">
+                  Insumos y materiales
+                </div>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl shadow-soft"
+                className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl shadow-soft border-2 border-purple-300"
               >
+                <div className="text-sm text-purple-700 font-semibold mb-1">💰 Costo Total Base</div>
                 <div className="text-3xl font-black text-purple-600">
                   ${((formData.tiempo_horas * (costos?.costo_hora_ars || 29000)) + formData.costo_materiales_ars).toLocaleString('es-AR')}
                 </div>
-                <div className="text-sm font-semibold text-purple-800 mt-2">Costo Total</div>
+                <div className="text-xs text-purple-600 mt-2">
+                  Sin margen de ganancia
+                </div>
               </motion.div>
+            </div>
+            <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
+              <p className="text-sm text-yellow-900">
+                <span className="font-bold">⚠️ Importante:</span> El costo total base es lo mínimo que necesitas cobrar para cubrir tus gastos. 
+                Los precios recomendados arriba incluyen el margen de ganancia sobre este costo base.
+              </p>
             </div>
           </div>
         </AnimatedCard>

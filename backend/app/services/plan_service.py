@@ -115,3 +115,4 @@ class PlanService:
         return status["puede_usar_app"]
 
 
+

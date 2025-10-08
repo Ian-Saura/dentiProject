@@ -4,7 +4,7 @@ import { consultasService } from '@/services';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
 import { motion } from 'framer-motion';
-import { Calendar, Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
+import { Calendar, Plus, Search, Filter, Edit, Trash2, Sparkles } from 'lucide-react';
 import AddConsultaModal from '@/components/AddConsultaModal';
 
 const ConsultasPage: React.FC = () => {
@@ -340,7 +340,7 @@ const ConsultasPage: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setShowForm(true)}
+                onClick={() => setShowModal(true)}
                 className="btn-premium inline-flex items-center gap-2"
               >
                 <Plus className="h-5 w-5" />

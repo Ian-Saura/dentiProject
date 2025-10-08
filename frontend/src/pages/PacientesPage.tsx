@@ -12,9 +12,9 @@ interface Paciente {
   nombre: string;
   apellido: string;
   dni?: string;
-  email: string;
-  telefono: string;
-  fecha_nacimiento: string;
+  email?: string;
+  telefono?: string;
+  fecha_nacimiento?: string;
   obra_social?: string;
   activo: boolean;
 }
@@ -22,11 +22,11 @@ interface Paciente {
 interface PacienteForm {
   nombre: string;
   apellido: string;
-  dni: string;
-  email: string;
-  telefono: string;
-  fecha_nacimiento: string;
-  obra_social: string;
+  dni?: string;
+  email?: string;
+  telefono?: string;
+  fecha_nacimiento?: string;
+  obra_social?: string;
 }
 
 const PacientesPage: React.FC = () => {
@@ -123,10 +123,20 @@ const PacientesPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Prepare data, removing empty optional fields
+    const dataToSend = {
+      ...formData,
+      email: formData.email?.trim() === '' ? undefined : formData.email,
+      telefono: formData.telefono?.trim() === '' ? undefined : formData.telefono,
+      fecha_nacimiento: formData.fecha_nacimiento === '' ? undefined : formData.fecha_nacimiento,
+      obra_social: formData.obra_social?.trim() === '' ? undefined : formData.obra_social,
+      dni: formData.dni?.trim() === '' ? undefined : formData.dni,
+    };
+    
     if (editingPaciente) {
-      updateMutation.mutate({ id: editingPaciente.id, data: formData });
+      updateMutation.mutate({ id: editingPaciente.id, data: dataToSend });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(dataToSend);
     }
   };
 
@@ -136,9 +146,9 @@ const PacientesPage: React.FC = () => {
       nombre: paciente.nombre,
       apellido: paciente.apellido,
       dni: paciente.dni || '',
-      email: paciente.email,
-      telefono: paciente.telefono,
-      fecha_nacimiento: paciente.fecha_nacimiento,
+      email: paciente.email || '',
+      telefono: paciente.telefono || '',
+      fecha_nacimiento: paciente.fecha_nacimiento || '',
       obra_social: paciente.obra_social || ''
     });
     setShowForm(true);
@@ -268,7 +278,7 @@ const PacientesPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  DNI
+                  DNI * <span className="text-xs text-gray-500 font-normal">(obligatorio)</span>
                 </label>
                 <input
                   type="text"
@@ -276,49 +286,53 @@ const PacientesPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="12345678"
+                  minLength={7}
+                  required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Obra Social
+                  Obra Social <span className="text-xs text-gray-500 font-normal">(opcional)</span>
                 </label>
                 <input
                   type="text"
                   value={formData.obra_social}
                   onChange={(e) => setFormData({ ...formData, obra_social: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="OSDE, Swiss Medical, etc."
+                  placeholder="OSDE, Swiss Medical, etc. (opcional)"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
+                  Email <span className="text-xs text-gray-500 font-normal">(opcional)</span>
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="email@ejemplo.com (opcional)"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono
+                  Teléfono <span className="text-xs text-gray-500 font-normal">(opcional)</span>
                 </label>
                 <input
                   type="tel"
                   value={formData.telefono}
                   onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="+54 9 11 1234-5678 (opcional)"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha de Nacimiento
+                  Fecha de Nacimiento <span className="text-xs text-gray-500 font-normal">(opcional)</span>
                 </label>
                 <input
                   type="date"
@@ -417,11 +431,11 @@ const PacientesPage: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{paciente.email}</div>
-                    <div className="text-sm text-gray-500">{paciente.telefono}</div>
+                    <div className="text-sm text-gray-900">{paciente.email || '-'}</div>
+                    <div className="text-sm text-gray-500">{paciente.telefono || '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {paciente.fecha_nacimiento}
+                    {paciente.fecha_nacimiento || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${

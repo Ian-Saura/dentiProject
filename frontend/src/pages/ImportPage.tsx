@@ -21,7 +21,7 @@ interface ImportResult {
   total_ars: number;
   duplicados?: number;
   message?: string;
-  error?: string;
+  error?: string; // Error message if import failed
 }
 
 const ImportPage: React.FC = () => {
@@ -49,7 +49,10 @@ const ImportPage: React.FC = () => {
         if (result.error) {
           toast.error(result.error);
         } else {
-          toast.success(`✅ Importación exitosa: ${result.migrados} consultas migradas`);
+          const msg = result.migrados > 0 
+            ? `✅ Importación exitosa: ${result.migrados} consultas migradas` 
+            : '⚠️ No se importaron nuevas consultas';
+          toast.success(msg);
           // Invalidate ALL queries to refresh dashboard data
           queryClient.invalidateQueries('consultas');
           queryClient.invalidateQueries('analytics-resumen');
@@ -500,10 +503,11 @@ const ImportPage: React.FC = () => {
           <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
             <h3 className="text-lg font-semibold mb-4">3️⃣ Ejecutar Importación</h3>
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 space-y-1">
               <p>• Se normalizarán automáticamente nombres, tratamientos y montos</p>
               <p>• Los datos se validarán antes de la importación</p>
               <p>• Se mostrarán estadísticas detalladas del proceso</p>
+              <p className="text-blue-600 font-medium">💡 Los pacientes nuevos recibirán un DNI temporal (formato CSV-xxxxx) que puedes actualizar después</p>
             </div>
             <button
               onClick={handleImport}

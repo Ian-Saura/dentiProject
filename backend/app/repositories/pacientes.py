@@ -4,6 +4,8 @@ from typing import Dict, List, Optional
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
 
 from app.models import Paciente
 from app.schemas import PacienteCreate, PacienteUpdate
@@ -79,11 +81,21 @@ def get_paciente(db: Session, paciente_id: int, usuario_id: int) -> Optional[Pac
 
 
 def create_paciente(db: Session, dto: PacienteCreate, usuario_id: int) -> Paciente:
-    paciente = Paciente(**dto.model_dump(), usuario_id=usuario_id)
-    db.add(paciente)
-    db.commit()
-    db.refresh(paciente)
-    return paciente
+    try:
+        paciente = Paciente(**dto.model_dump(), usuario_id=usuario_id)
+        db.add(paciente)
+        db.commit()
+        db.refresh(paciente)
+        return paciente
+    except IntegrityError as e:
+        db.rollback()
+        error_msg = str(e.orig)
+        if 'dni' in error_msg.lower() and 'unique' in error_msg.lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Ya existe un paciente con DNI {dto.dni}. Los DNI deben ser únicos."
+            )
+        raise HTTPException(status_code=400, detail="Error al crear paciente. Verifica los datos ingresados.")
 
 
 def update_paciente(
