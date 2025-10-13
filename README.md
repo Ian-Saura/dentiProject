@@ -1,17 +1,25 @@
 # Denti Project - Dental Practice Management System
 
-## 🎉 Status: Production Ready
+## 🎉 Status: Production Ready & Deployed
 
 A comprehensive management system for dental practices with financial tracking, patient management, and treatment analysis.
+
+**🌐 LIVE APPLICATION:** http://66.97.44.23
 
 ---
 
 ## 🚀 Quick Start
 
-### Access the Application
+### Production Access
+```
+URL: http://66.97.44.23
+Username: admin
+Password: EfHrx&0P1U3aFb
+```
+
+### Local Development
 ```
 URL: http://localhost
-Login: Contact administrator for credentials
 ```
 
 ⚠️ **IMPORTANT**: Always use `http://localhost` (NOT `localhost:3000`)
@@ -272,12 +280,121 @@ http://localhost:8000/v1/docs
 
 ---
 
+## 🚀 Deployment
+
+### Production Deployment
+
+We have automated deployment scripts for easy production deployment:
+
+#### Full Deploy with SSL
+```bash
+cd deploy
+./full_deploy_with_ssl.sh
+```
+
+This will:
+- ✅ Build frontend locally
+- ✅ Create deployment package
+- ✅ Upload to production server
+- ✅ Build and start Docker containers
+- ✅ Apply database migrations
+- ✅ Create admin user
+- ✅ Run health checks
+
+**Time:** ~3-5 minutes
+
+#### Quick Deploy (Individual Files)
+For fast updates without full rebuild:
+```bash
+cd deploy
+./quick_deploy.sh backend/app/services/file.py
+./quick_deploy.sh frontend/src/pages/Dashboard.tsx
+```
+
+**Time:** ~1-2 minutes
+
+#### Check Server Status
+```bash
+cd deploy
+./check_server_status.sh
+```
+
+Shows:
+- Server connectivity
+- Service health
+- Container status
+- Resource usage
+- Recent logs
+
+### Server Information
+
+**SSH Access:**
+```bash
+ssh -p 5661 root@66.97.44.23
+```
+
+**View Logs:**
+```bash
+cd /opt/dentiproject
+docker compose logs -f
+```
+
+**Restart Services:**
+```bash
+cd /opt/dentiproject
+docker compose restart
+```
+
+### SSL/HTTPS Setup
+
+To enable HTTPS:
+
+1. Edit `deploy/full_deploy_with_ssl.sh`:
+   ```bash
+   DOMAIN="denti.yourdomain.com"
+   ```
+
+2. Configure DNS A record pointing to `66.97.44.23`
+
+3. Run deployment:
+   ```bash
+   ./full_deploy_with_ssl.sh
+   ```
+
+4. Get Let's Encrypt certificate:
+   ```bash
+   ssh -p 5661 root@66.97.44.23
+   certbot --nginx -d denti.yourdomain.com
+   ```
+
+For detailed deployment instructions, see:
+- `deploy/DEPLOY_INSTRUCTIONS.md`
+- `DEPLOYMENT_SUCCESS.md`
+
+---
+
 ## 🆘 Support
 
+### Local Development
 For issues or questions:
 1. Check application logs: `docker-compose logs`
 2. Verify all services are running: `docker-compose ps`
 3. Restart services: `docker-compose restart`
+
+### Production Server
+1. Check status: `./deploy/check_server_status.sh`
+2. View logs: `ssh -p 5661 root@66.97.44.23 "cd /opt/dentiproject && docker compose logs -f"`
+3. Restart: `ssh -p 5661 root@66.97.44.23 "cd /opt/dentiproject && docker compose restart"`
+
+---
+
+## 📚 Documentation
+
+- `DEPLOYMENT_SUCCESS.md` - Complete deployment guide and credentials
+- `deploy/DEPLOY_INSTRUCTIONS.md` - Detailed deployment instructions
+- `PRODUCTION_READY.md` - Production readiness checklist
+- `SECURITY.md` - Security guidelines
+- API Documentation: http://66.97.44.23/v1/docs
 
 ---
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, Settings, Link as LinkIcon, Clock, Sliders, X, Menu } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Plus, Settings, Link as LinkIcon, Clock, Sliders, X, Menu, User } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppMode } from '../contexts/AppModeContext';
 import CalendarioTurnos from '../components/turnos/CalendarioTurnos';
 import QuickTurnoModal from '../components/turnos/QuickTurnoModal';
 import ConfiguracionAvanzada from '../components/turnos/ConfiguracionAvanzada';
@@ -9,6 +11,8 @@ import { Turno, ConfiguracionTurnos } from '../types/turnos';
 import * as turnosService from '../services/turnos';
 
 export default function TurnosPage() {
+  const navigate = useNavigate();
+  const { mode } = useAppMode();
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showConfiguracion, setShowConfiguracion] = useState(false);
@@ -84,6 +88,13 @@ export default function TurnosPage() {
     const hora = `${String(now.getHours()).padStart(2, '0')}:00`;
     setQuickTurnoData({ fecha, hora });
     setShowMobileMenu(false);
+  };
+
+  const handleGoToPatientDashboard = () => {
+    if (turnoSeleccionado) {
+      const fullName = `${turnoSeleccionado.nombre_paciente} ${turnoSeleccionado.apellido_paciente}`;
+      navigate(`/${mode}/pacientes/${encodeURIComponent(fullName)}/dashboard`);
+    }
   };
 
   return (
@@ -250,10 +261,22 @@ export default function TurnosPage() {
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-3">
-                      <label className="text-xs text-gray-500 uppercase font-medium">Paciente</label>
-                      <p className="font-semibold text-gray-900 mt-1">
-                        {turnoSeleccionado.nombre_paciente} {turnoSeleccionado.apellido_paciente}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <label className="text-xs text-gray-500 uppercase font-medium">Paciente</label>
+                          <p className="font-semibold text-gray-900 mt-1">
+                            {turnoSeleccionado.nombre_paciente} {turnoSeleccionado.apellido_paciente}
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleGoToPatientDashboard}
+                          className="ml-2 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-xs font-medium transition-colors flex items-center gap-1.5"
+                          title="Ver dashboard del paciente"
+                        >
+                          <User className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Ver Dashboard</span>
+                        </button>
+                      </div>
                     </div>
 
                     {turnoSeleccionado.telefono_paciente && (

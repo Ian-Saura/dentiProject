@@ -66,3 +66,8 @@ COMMIT;
 -- Patients with TEMP-* DNI should be updated by users to real DNI
 
 
+
+
+
+
+

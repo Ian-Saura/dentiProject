@@ -4,8 +4,11 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
 
 // Pages
+import LandingPage from '@/pages/LandingPage';
+import FAQPage from '@/pages/FAQPage';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import AdminPage from '@/pages/AdminPage';
@@ -20,12 +23,14 @@ import FinancialReportsPage from '@/pages/FinancialReportsPage';
 import TrialExpiredPage from '@/pages/TrialExpiredPage';
 import TurnosPage from '@/pages/TurnosPage';
 import ReservarTurnoPage from '@/pages/ReservarTurnoPage';
+import OperationalDashboard from '@/pages/OperationalDashboard';
 
 // Google OAuth Client ID
 const GOOGLE_CLIENT_ID = '814453800673-39hb3apvtc1d5bdo68k9cq83isn75n2j.apps.googleusercontent.com';
 
 // Components
-import Layout from '@/components/Layout';
+import AnalyticalLayout from '@/components/AnalyticalLayout';
+import OperationalLayout from '@/components/OperationalLayout';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 // Create a client
@@ -53,6 +58,24 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+// Mode Router Component
+const ModeRouter: React.FC = () => {
+  const { mode } = useAppMode();
+  const { isAuthenticated } = useAuth();
+
+  // Redirect based on mode when accessing root
+  if (isAuthenticated) {
+    if (mode === 'operational') {
+      return <Navigate to="/operational/turnos" replace />;
+    } else {
+      return <Navigate to="/analytical/dashboard" replace />;
+    }
+  }
+
+  // If not authenticated, this shouldn't be called (handled by routes)
+  return <Navigate to="/" replace />;
+};
+
 // App Routes Component
 const AppRoutes: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -60,12 +83,24 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route 
+        path="/" 
+        element={isAuthenticated ? <ModeRouter /> : <LandingPage />} 
+      />
+      <Route 
+        path="/landing" 
+        element={isAuthenticated ? <ModeRouter /> : <LandingPage />} 
+      />
+      <Route 
+        path="/faq" 
+        element={<FAQPage />} 
+      />
+      <Route 
         path="/login" 
-        element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} 
+        element={isAuthenticated ? <ModeRouter /> : <LoginPage />} 
       />
       <Route 
         path="/register" 
-        element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} 
+        element={isAuthenticated ? <ModeRouter /> : <RegisterPage />} 
       />
       <Route 
         path="/trial-expired" 
@@ -75,110 +110,169 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         } 
       />
+
+      {/* Root redirect based on mode */}
+      <Route path="/" element={<ProtectedRoute><ModeRouter /></ProtectedRoute>} />
+
+      {/* Analytical Mode Routes */}
       <Route
-        path="/"
+        path="/analytical/dashboard"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AnalyticalLayout>
               <DashboardPage />
-            </Layout>
+            </AnalyticalLayout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/admin"
+        path="/analytical/admin"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AnalyticalLayout>
               <AdminPage />
-            </Layout>
+            </AnalyticalLayout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/prestaciones"
+        path="/analytical/prestaciones"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AnalyticalLayout>
               <ConsultasPage />
-            </Layout>
+            </AnalyticalLayout>
           </ProtectedRoute>
         }
       />
-      <Route path="/consultas" element={<Navigate to="/prestaciones" replace />} />
       <Route
-        path="/pacientes"
+        path="/analytical/pacientes"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AnalyticalLayout>
               <PacientesPage />
-            </Layout>
+            </AnalyticalLayout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/pacientes/:patientName/dashboard"
+        path="/analytical/pacientes/:patientName/dashboard"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AnalyticalLayout>
               <PatientDashboardPage />
-            </Layout>
+            </AnalyticalLayout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/calculadora"
+        path="/analytical/calculadora"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AnalyticalLayout>
               <CalculadoraPage />
-            </Layout>
+            </AnalyticalLayout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/configuracion"
+        path="/analytical/configuracion"
         element={
           <ProtectedRoute>
-            <Layout>
+            <AnalyticalLayout>
               <ConfiguracionPage />
-            </Layout>
+            </AnalyticalLayout>
           </ProtectedRoute>
         }
       />
-              <Route
-                path="/import"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <ImportPage />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/reportes"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <FinancialReportsPage />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/turnos"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <TurnosPage />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              {/* Ruta pública para reservar turnos */}
-              <Route path="/reservar-turno/:usuario_id" element={<ReservarTurnoPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="/analytical/import"
+        element={
+          <ProtectedRoute>
+            <AnalyticalLayout>
+              <ImportPage />
+            </AnalyticalLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analytical/reportes"
+        element={
+          <ProtectedRoute>
+            <AnalyticalLayout>
+              <FinancialReportsPage />
+            </AnalyticalLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analytical/turnos"
+        element={
+          <ProtectedRoute>
+            <AnalyticalLayout>
+              <TurnosPage />
+            </AnalyticalLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Operational Mode Routes */}
+      <Route
+        path="/operational/turnos"
+        element={
+          <ProtectedRoute>
+            <OperationalLayout>
+              <TurnosPage />
+            </OperationalLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/operational/prestaciones"
+        element={
+          <ProtectedRoute>
+            <OperationalLayout>
+              <ConsultasPage />
+            </OperationalLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/operational/pacientes"
+        element={
+          <ProtectedRoute>
+            <OperationalLayout>
+              <PacientesPage />
+            </OperationalLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/operational/pacientes/:patientName/dashboard"
+        element={
+          <ProtectedRoute>
+            <OperationalLayout>
+              <PatientDashboardPage />
+            </OperationalLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Legacy redirects */}
+      <Route path="/consultas" element={<Navigate to="/analytical/prestaciones" replace />} />
+      <Route path="/prestaciones" element={<Navigate to="/analytical/prestaciones" replace />} />
+      <Route path="/pacientes" element={<Navigate to="/analytical/pacientes" replace />} />
+      <Route path="/turnos" element={<Navigate to="/analytical/turnos" replace />} />
+      <Route path="/admin" element={<Navigate to="/analytical/admin" replace />} />
+      <Route path="/calculadora" element={<Navigate to="/analytical/calculadora" replace />} />
+      <Route path="/configuracion" element={<Navigate to="/analytical/configuracion" replace />} />
+      <Route path="/import" element={<Navigate to="/analytical/import" replace />} />
+      <Route path="/reportes" element={<Navigate to="/analytical/reportes" replace />} />
+
+      {/* Ruta pública para reservar turnos */}
+      <Route path="/reservar-turno/:usuario_id" element={<ReservarTurnoPage />} />
+      
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
@@ -188,37 +282,39 @@ const App: React.FC = () => {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Router>
-            <div className="min-h-screen bg-gray-50">
-              <AppRoutes />
-              <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
-                  duration: 3000,
-                  iconTheme: {
-                    primary: '#10b981',
-                    secondary: '#fff',
-                  },
-                },
-                error: {
-                  duration: 5000,
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: '#fff',
-                  },
-                },
-              }}
-            />
-          </div>
-        </Router>
-      </AuthProvider>
-    </QueryClientProvider>
+          <AppModeProvider>
+            <Router>
+              <div className="min-h-screen bg-gray-50">
+                <AppRoutes />
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: '#363636',
+                      color: '#fff',
+                    },
+                    success: {
+                      duration: 3000,
+                      iconTheme: {
+                        primary: '#10b981',
+                        secondary: '#fff',
+                      },
+                    },
+                    error: {
+                      duration: 5000,
+                      iconTheme: {
+                        primary: '#ef4444',
+                        secondary: '#fff',
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </Router>
+          </AppModeProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </GoogleOAuthProvider>
   );
 };

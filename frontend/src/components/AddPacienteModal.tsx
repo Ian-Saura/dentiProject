@@ -13,6 +13,8 @@ interface PacienteForm {
   telefono?: string;
   fecha_nacimiento?: string;
   obra_social?: string;
+  alergias?: string;
+  medicamentos_actuales?: string;
 }
 
 interface AddPacienteModalProps {
@@ -37,7 +39,9 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
     email: '',
     telefono: '',
     fecha_nacimiento: '',
-    obra_social: ''
+    obra_social: '',
+    alergias: '',
+    medicamentos_actuales: ''
   });
 
   const [touched, setTouched] = useState({
@@ -106,13 +110,15 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
       return;
     }
 
-    // Prepare data, removing empty email if not provided
+    // Prepare data, removing empty fields if not provided
     const dataToSend = {
       ...formData,
       email: formData.email?.trim() === '' ? undefined : formData.email,
       telefono: formData.telefono?.trim() === '' ? undefined : formData.telefono,
       fecha_nacimiento: formData.fecha_nacimiento === '' ? undefined : formData.fecha_nacimiento,
       obra_social: formData.obra_social?.trim() === '' ? undefined : formData.obra_social,
+      alergias: formData.alergias?.trim() === '' ? undefined : formData.alergias,
+      medicamentos_actuales: formData.medicamentos_actuales?.trim() === '' ? undefined : formData.medicamentos_actuales,
     };
 
     createMutation.mutate(dataToSend);
@@ -126,7 +132,9 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
       email: '',
       telefono: '',
       fecha_nacimiento: '',
-      obra_social: ''
+      obra_social: '',
+      alergias: '',
+      medicamentos_actuales: ''
     });
     setTouched({
       nombre: false,
@@ -298,6 +306,41 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                   className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
                   placeholder="OSDE, Swiss Medical, etc."
                 />
+              </div>
+            </div>
+
+            {/* Información Médica */}
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3 sm:p-4">
+              <h3 className="text-sm font-bold text-red-800 mb-3 flex items-center gap-2">
+                🏥 Información Médica <span className="text-xs font-normal text-red-600">(opcional pero importante)</span>
+              </h3>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-red-700 mb-1">
+                    🚨 Alergias
+                  </label>
+                  <textarea
+                    value={formData.alergias}
+                    onChange={(e) => setFormData({ ...formData, alergias: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border-2 border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    placeholder="Ej: Penicilina, látex, anestesia local..."
+                    rows={2}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-red-700 mb-1">
+                    💊 Medicamentos Actuales
+                  </label>
+                  <textarea
+                    value={formData.medicamentos_actuales}
+                    onChange={(e) => setFormData({ ...formData, medicamentos_actuales: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border-2 border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    placeholder="Ej: Aspirina 100mg diaria, Enalapril 10mg..."
+                    rows={2}
+                  />
+                </div>
               </div>
             </div>
 

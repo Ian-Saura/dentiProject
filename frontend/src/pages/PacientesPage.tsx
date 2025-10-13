@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Search, Edit, Trash2, Users, Sparkles, X, BarChart3, ArrowUpDown, Plus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDateToDDMMYYYY, calculateAge } from '../utils/dateFormat';
+import { useAppMode } from '../contexts/AppModeContext';
 
 interface Paciente {
   id: number;
@@ -33,6 +34,7 @@ interface PacienteForm {
 
 const PacientesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { mode } = useAppMode();
   const [showForm, setShowForm] = useState(false);
   const [editingPaciente, setEditingPaciente] = useState<Paciente | null>(null);
   const [sortBy, setSortBy] = useState<'nombre' | 'apellido' | 'fecha_registro'>('apellido');
@@ -507,7 +509,7 @@ const PacientesPage: React.FC = () => {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => {
                           const fullName = `${paciente.nombre}${paciente.apellido ? ' ' + paciente.apellido : ''}`.trim();
-                          navigate(`/pacientes/${encodeURIComponent(fullName)}/dashboard`);
+                          navigate(`/${mode}/pacientes/${encodeURIComponent(fullName)}/dashboard`);
                         }}
                         className="flex flex-col items-center gap-1 p-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-colors"
                       >

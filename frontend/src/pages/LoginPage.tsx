@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/contexts/AuthContext';
-import { Activity, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { motion } from 'framer-motion';
@@ -57,21 +57,19 @@ const LoginPage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-center"
         >
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-6">
             <motion.div 
               className="relative"
-              whileHover={{ scale: 1.05, rotate: 5 }}
+              whileHover={{ scale: 1.02 }}
               transition={{ type: "spring", stiffness: 400 }}
             >
-              <div className="absolute inset-0 bg-gradient-dental rounded-full blur-xl opacity-50 animate-pulse-slow"></div>
-              <div className="relative flex items-center justify-center space-x-3 bg-white rounded-2xl px-6 py-4 shadow-glow-dental">
-                <Activity className="h-10 w-10 text-transparent bg-gradient-dental bg-clip-text" style={{ 
-                  background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #8b5cf6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }} />
-                <span className="text-3xl font-black gradient-text">Manny App</span>
-                <Sparkles className="h-6 w-6 text-yellow-400 animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-dental rounded-3xl blur-2xl opacity-30 animate-pulse-slow"></div>
+              <div className="relative bg-white rounded-3xl px-8 py-6 shadow-2xl border border-gray-100">
+                <img 
+                  src="/Gemini_Generated_Image_hffliphffliphffl.png" 
+                  alt="Manny Logo" 
+                  className="w-48 h-auto"
+                />
               </div>
             </motion.div>
           </div>
@@ -79,17 +77,17 @@ const LoginPage: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-3xl font-extrabold text-gray-900"
+            className="mt-4 text-2xl font-bold text-gray-900"
           >
-            Sistema de Gestión <span className="gradient-text">Dental Premium</span>
+            Sistema de Gestión para Profesionales de la Salud
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-3 text-base text-gray-600 font-medium"
+            className="mt-2 text-sm text-gray-600"
           >
-            Transforma tu práctica con tecnología de vanguardia
+            Accede a tu cuenta para gestionar consultas y pacientes
           </motion.p>
         </motion.div>
 

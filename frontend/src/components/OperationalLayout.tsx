@@ -1,0 +1,274 @@
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAppMode } from '@/contexts/AppModeContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Calendar,
+  Users,
+  FileText,
+  Menu,
+  X,
+  LogOut,
+  User,
+  Zap,
+  ChevronRight,
+  BarChart3,
+  Clock,
+} from 'lucide-react';
+
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const OperationalLayout: React.FC<LayoutProps> = ({ children }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const { setMode } = useAppMode();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Simple navigation for operational mode - only essential items
+  const navigation = [
+    { name: 'Turnos', href: '/operational/turnos', icon: Clock, emoji: '📅', color: 'from-blue-500 to-cyan-500' },
+    { name: 'Prestaciones', href: '/operational/prestaciones', icon: FileText, emoji: '📋', color: 'from-green-500 to-emerald-500' },
+    { name: 'Pacientes', href: '/operational/pacientes', icon: Users, emoji: '👥', color: 'from-purple-500 to-pink-500' },
+  ];
+
+  const switchToAnalytical = () => {
+    setMode('analytical');
+    navigate('/');
+  };
+
+  const getEspecialidadEmoji = (especialidad: string) => {
+    const emojis = {
+      odontologia: '🦷',
+      dermatologia: '🧴',
+      kinesiologia: '🏃‍♂️',
+    };
+    return emojis[especialidad as keyof typeof emojis] || '🏥';
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50">
+      {/* Mobile sidebar */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" />
+            </motion.div>
+
+            <motion.div
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 shadow-2xl lg:hidden"
+            >
+              <div className="flex h-16 items-center justify-between px-6 border-b border-white/10">
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <div className="bg-white rounded-lg p-1.5">
+                      <Zap className="h-6 w-6 text-cyan-600" />
+                    </div>
+                  </div>
+                  <span className="text-xl font-bold text-white">Operativo</span>
+                </div>
+                <button onClick={() => setSidebarOpen(false)} className="text-white/70 hover:text-white transition-colors">
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                {navigation.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center space-x-3 px-4 py-4 rounded-2xl text-base font-semibold transition-all ${
+                        isActive
+                          ? 'bg-white text-cyan-600 shadow-lg'
+                          : 'text-white/90 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <span className="text-2xl">{item.emoji}</span>
+                      <span>{item.name}</span>
+                      {isActive && <ChevronRight className="h-5 w-5 ml-auto" />}
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* Switch Mode Button */}
+              <div className="px-4 py-4 border-t border-white/10 space-y-2">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={switchToAnalytical}
+                  className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium bg-white/20 text-white hover:bg-white/30 w-full transition-all"
+                >
+                  <BarChart3 className="h-5 w-5" />
+                  <span>Modo Analítico</span>
+                  <ChevronRight className="h-4 w-4 ml-auto" />
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    logout();
+                    setSidebarOpen(false);
+                  }}
+                  className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:bg-red-500/20 hover:text-white w-full transition-all"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span>Cerrar Sesión</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop sidebar */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+        <div className="flex flex-col flex-grow bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 shadow-2xl">
+          <div className="flex h-16 items-center px-6 border-b border-white/10">
+            <div className="flex items-center space-x-2">
+              <div className="bg-white rounded-lg p-1.5 shadow-lg">
+                <Zap className="h-6 w-6 text-cyan-600" />
+              </div>
+              <span className="text-xl font-bold text-white">Operativo</span>
+            </div>
+          </div>
+
+          {/* User info */}
+          <div className="px-4 py-4 border-b border-white/10">
+            <div className="flex items-center space-x-3 p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+              <div className="flex-shrink-0">
+                <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-md">
+                  <User className="h-6 w-6 text-cyan-600" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">
+                  {user?.nombre} {getEspecialidadEmoji(user?.especialidad || 'odontologia')}
+                </p>
+                <p className="text-xs text-white/70 capitalize font-medium">
+                  Modo Rápido
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <motion.div
+                  key={item.name}
+                  whileHover={{ scale: 1.02, x: 4 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
+                >
+                  <Link
+                    to={item.href}
+                    className={`flex items-center space-x-3 px-4 py-4 rounded-2xl text-base font-semibold transition-all ${
+                      isActive
+                        ? 'bg-white text-cyan-600 shadow-xl'
+                        : 'text-white/90 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-2xl">{item.emoji}</span>
+                    <span>{item.name}</span>
+                    {isActive && <ChevronRight className="h-5 w-5 ml-auto" />}
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </nav>
+
+          {/* Switch Mode & Logout */}
+          <div className="px-4 py-4 border-t border-white/10 space-y-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={switchToAnalytical}
+              className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium bg-white/20 text-white hover:bg-white/30 w-full transition-all backdrop-blur-sm"
+            >
+              <BarChart3 className="h-5 w-5" />
+              <span>Modo Analítico</span>
+              <ChevronRight className="h-4 w-4 ml-auto" />
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={logout}
+              className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:bg-red-500/20 hover:text-white w-full transition-all"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Cerrar Sesión</span>
+            </motion.button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="lg:pl-72">
+        {/* Top bar - Super simple for operational mode */}
+        <div className="sticky top-0 z-30 flex h-16 items-center gap-x-4 border-b border-white/50 bg-white/80 backdrop-blur-xl px-4 shadow-sm sm:px-6 lg:px-8">
+          <button
+            type="button"
+            className="-m-2.5 p-2.5 text-gray-700 lg:hidden hover:bg-gray-100 rounded-lg transition-colors"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+
+          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+            <div className="flex flex-1 items-center">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold text-gray-700">
+                  {new Date().toLocaleDateString('es-ES', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                </span>
+                <span className="text-sm text-gray-500 font-medium">
+                  {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Page content with animation */}
+        <motion.main
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="py-6"
+        >
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </motion.main>
+      </div>
+    </div>
+  );
+};
+
+export default OperationalLayout;
+

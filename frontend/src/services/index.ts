@@ -6,6 +6,7 @@ export { consultasService } from './consultas';
 export { calculadoraService } from './calculadora';
 export { importService } from './import';
 export { configService } from './config';
+export * as turnosService from './turnos';
 
 // Additional services for CRUD operations
 export * from './pacientes';

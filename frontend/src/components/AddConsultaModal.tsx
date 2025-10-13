@@ -36,11 +36,13 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const modalContentRef = useRef<HTMLDivElement>(null);
   
   const [patientSearchTerm, setPatientSearchTerm] = useState('');
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
   const [showAddPacienteModal, setShowAddPacienteModal] = useState(false);
   const [selectedTeeth, setSelectedTeeth] = useState<number[]>([]);
+  const [selectedPatientAlergias, setSelectedPatientAlergias] = useState<string>('');
   
   const [formData, setFormData] = useState<ConsultaForm>({
     paciente_id: preselectedPatientId || null,
@@ -100,6 +102,34 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
       setPatientSearchTerm(`${editingConsulta.paciente.dni} - ${editingConsulta.paciente.nombre} ${editingConsulta.paciente.apellido}`);
     }
   }, [editingConsulta]);
+
+  // Reset scroll position when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      // Immediate scroll reset
+      if (modalContentRef.current) {
+        modalContentRef.current.scrollTop = 0;
+      }
+      
+      // Additional resets to ensure it stays at top
+      const timer1 = setTimeout(() => {
+        if (modalContentRef.current) {
+          modalContentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+        }
+      }, 0);
+      
+      const timer2 = setTimeout(() => {
+        if (modalContentRef.current) {
+          modalContentRef.current.scrollTo({ top: 0, behavior: 'auto' });
+        }
+      }, 100);
+      
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
+  }, [isOpen]);
 
   // Handle click outside dropdown
   useEffect(() => {
@@ -187,6 +217,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
     });
     setPatientSearchTerm(preselectedPatientName || '');
     setShowPatientDropdown(false);
+    setSelectedPatientAlergias('');
   };
 
   const handleClose = () => {
@@ -202,6 +233,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
       paciente_apellido: patient.apellido,
       paciente_dni: patient.dni || ''
     });
+    setSelectedPatientAlergias(patient.alergias || '');
     setPatientSearchTerm(`${patient.dni} - ${patient.nombre} ${patient.apellido}`);
     setShowPatientDropdown(false);
   };
@@ -310,17 +342,17 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={handleClose}
-        className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50"
       />
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ type: 'spring', damping: 25 }}
-        className="fixed inset-4 sm:inset-auto sm:relative flex items-center justify-center z-50 pointer-events-none"
+        className="fixed inset-0 flex items-start justify-center z-50 pointer-events-none overflow-y-auto p-4 sm:pt-16"
       >
-        <div className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 w-full sm:max-w-4xl h-full sm:h-auto max-h-full sm:max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 pointer-events-auto">
-          <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white/80 backdrop-blur-sm -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 py-3 sm:py-4 z-10 rounded-t-2xl sm:rounded-t-3xl">
+        <div ref={modalContentRef} className="glass rounded-2xl sm:rounded-3xl p-0 w-full sm:max-w-4xl sm:my-4 overflow-y-auto overscroll-contain shadow-2xl border border-white/20 pointer-events-auto" style={{ scrollBehavior: 'auto', maxHeight: 'calc(100vh - 8rem)' }}>
+          <div className="flex items-center justify-between mb-0 sticky top-0 bg-white/95 backdrop-blur-sm px-4 sm:px-6 md:px-8 py-4 z-30 rounded-t-2xl sm:rounded-t-3xl border-b border-gray-200">
             <h2 className="text-xl sm:text-2xl font-bold gradient-text flex items-center gap-2">
               <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-dental-500" />
               <span className="hidden xs:inline">{editingConsulta ? 'Editar Prestación' : 'Nueva Prestación'}</span>
@@ -335,7 +367,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
             </button>
           </div>
       
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 px-4 sm:px-6 md:px-8 py-6">
             {/* Patient Autocomplete - Only if not preselected */}
             {!preselectedPatientId ? (
               <div className="relative" ref={dropdownRef}>
@@ -414,24 +446,42 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
 
                 {/* Selected indicator */}
                 {formData.paciente_id && (
-                  <div className="mt-2 px-3 py-2 bg-dental-50 border border-dental-200 rounded-lg flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-dental-600" />
-                      <span className="text-sm font-medium text-dental-900">
-                        {formData.paciente_nombre} {formData.paciente_apellido}
-                      </span>
+                  <>
+                    <div className="mt-2 px-3 py-2 bg-dental-50 border border-dental-200 rounded-lg flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-dental-600" />
+                        <span className="text-sm font-medium text-dental-900">
+                          {formData.paciente_nombre} {formData.paciente_apellido}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, paciente_id: null, paciente_nombre: '', paciente_apellido: '' });
+                          setPatientSearchTerm('');
+                          setSelectedPatientAlergias('');
+                        }}
+                        className="text-dental-600 hover:text-dental-800"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({ ...formData, paciente_id: null, paciente_nombre: '', paciente_apellido: '' });
-                        setPatientSearchTerm('');
-                      }}
-                      className="text-dental-600 hover:text-dental-800"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                    
+                    {/* Alergias Alert */}
+                    {selectedPatientAlergias && (
+                      <div className="mt-3 px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                            <span className="text-red-600 font-bold text-lg">⚠️</span>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-bold text-red-900 mb-1">ALERGIAS DEL PACIENTE</h4>
+                            <p className="text-sm text-red-700 whitespace-pre-line">{selectedPatientAlergias}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
               </div>
@@ -571,15 +621,16 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
             </div>
 
             {/* Tooth Selection */}
-            <div className="col-span-1 md:col-span-2">
+            <div className="col-span-1 md:col-span-2 mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                 🦷 Dientes Tratados (Opcional)
               </label>
-              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl sm:rounded-2xl p-3 sm:p-6 border-2 border-cyan-200">
-                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 text-center">
+              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border-2 border-cyan-200">
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 text-center">
                   Click en los dientes para seleccionar cuáles fueron tratados
                 </p>
-                <div className="overflow-x-auto overflow-y-visible -mx-3 sm:mx-0 pb-24 pt-6">
+              <div className="relative overflow-x-auto overflow-y-visible pb-2" style={{ minHeight: '320px' }}>
+                <div className="min-w-[800px] scale-75 sm:scale-90 md:scale-100 origin-top">
                   <Odontograma
                     selectedTeeth={selectedTeeth}
                     onToothClick={handleToothClick}
@@ -587,8 +638,9 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                     showTooltip={true}
                   />
                 </div>
+              </div>
                 {selectedTeeth.length > 0 && (
-                  <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-100 rounded-lg sm:rounded-xl">
+                  <div className="mt-3 p-2 sm:p-3 bg-blue-100 rounded-lg">
                     <p className="text-xs sm:text-sm font-semibold text-blue-900">
                       ✓ Dientes seleccionados: {selectedTeeth.sort((a, b) => a - b).join(', ')}
                     </p>
@@ -598,7 +650,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
             </div>
 
             {/* Buttons */}
-            <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 sticky bottom-0 bg-white/80 backdrop-blur-sm -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 pb-4 sm:pb-0 -mb-4 sm:mb-0 rounded-b-2xl sm:rounded-b-3xl">
+            <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 sticky bottom-0 bg-white/95 backdrop-blur-md -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 pb-4 -mb-6 rounded-b-2xl sm:rounded-b-3xl border-t-2 border-gray-300 shadow-xl z-30">
               <button
                 type="button"
                 onClick={handleClose}

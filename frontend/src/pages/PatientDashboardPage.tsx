@@ -39,12 +39,12 @@ const PatientDashboardPage: React.FC = () => {
     }
   );
 
-  // Fetch patient details to get ID even if no consultations
+  // Fetch patient details to get ID and full patient info
   const { data: pacientesData } = useQuery(
     'pacientes',
     () => pacientesService.getPacientes(),
     {
-      enabled: !!patientName && !patientId,
+      enabled: !!patientName,
       onSuccess: (data) => {
         if (data && patientName) {
           const patient = data.find(p => `${p.nombre} ${p.apellido}` === patientName);
@@ -55,6 +55,9 @@ const PatientDashboardPage: React.FC = () => {
       }
     }
   );
+
+  // Get full patient data
+  const currentPatient = pacientesData?.find(p => `${p.nombre} ${p.apellido}` === patientName);
 
   // Filter consultations by period (always calculate, even if loading)
   const filteredConsultas = consultas.filter(consulta => {
@@ -207,6 +210,48 @@ const PatientDashboardPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Medical Info Alert - Alergias y Medicamentos */}
+      {currentPatient && (currentPatient.alergias || currentPatient.medicamentos_actuales) && (
+        <AnimatedCard delay={0.05}>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-2xl p-4 sm:p-6 shadow-lg"
+          >
+            <div className="flex items-start gap-3">
+              <div className="bg-red-500 p-2 rounded-xl flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-900 mb-3 flex items-center gap-2">
+                  🏥 Información Médica Importante
+                </h3>
+                <div className="space-y-3">
+                  {currentPatient.alergias && (
+                    <div className="bg-white/60 rounded-xl p-3 border border-red-200">
+                      <p className="text-sm font-bold text-red-800 mb-1 flex items-center gap-2">
+                        🚨 Alergias
+                      </p>
+                      <p className="text-sm text-red-900 font-medium">{currentPatient.alergias}</p>
+                    </div>
+                  )}
+                  {currentPatient.medicamentos_actuales && (
+                    <div className="bg-white/60 rounded-xl p-3 border border-orange-200">
+                      <p className="text-sm font-bold text-orange-800 mb-1 flex items-center gap-2">
+                        💊 Medicamentos Actuales
+                      </p>
+                      <p className="text-sm text-orange-900 font-medium">{currentPatient.medicamentos_actuales}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatedCard>
+      )}
 
       {/* Instagram-Style Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

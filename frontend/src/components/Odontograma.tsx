@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Treatment {
@@ -30,12 +31,28 @@ const Odontograma: React.FC<OdontogramaProps> = ({
   showTooltip = true
 }) => {
   const [hoveredTooth, setHoveredTooth] = useState<number | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const toothRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   
   // Obtener tratamientos de un diente específico
   const getToothTreatments = (toothNumber: number) => {
     return consultations
       .filter(c => c.dientes_tratados?.includes(toothNumber))
       .sort((a, b) => new Date(b.fecha_consulta).getTime() - new Date(a.fecha_consulta).getTime());
+  };
+
+  const handleToothHover = (toothNumber: number, event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setTooltipPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    });
+    setHoveredTooth(toothNumber);
+  };
+
+  const handleToothLeave = () => {
+    setHoveredTooth(null);
+    setTooltipPosition(null);
   };
   // Numeración dental universal (18 al 48)
   const teethTop = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
@@ -68,13 +85,14 @@ const Odontograma: React.FC<OdontogramaProps> = ({
     return (
       <motion.div
         key={number}
+        ref={(el) => { toothRefs.current[number] = el; }}
         whileHover={{ scale: 1.2, y: -5 }}
         whileTap={selectable ? { scale: 0.9 } : {}}
         onClick={() => selectable && onToothClick?.(number)}
         className={`relative group ${selectable ? 'cursor-pointer' : 'cursor-default'}`}
         style={{ zIndex: hoveredTooth === number ? 10000 : 10 }}
-        onMouseEnter={() => setHoveredTooth(number)}
-        onMouseLeave={() => setHoveredTooth(null)}
+        onMouseEnter={(e) => showTooltip && handleToothHover(number, e)}
+        onMouseLeave={handleToothLeave}
       >
         <motion.div
           whileHover={{ rotate: [0, -5, 5, 0] }}
@@ -85,55 +103,6 @@ const Odontograma: React.FC<OdontogramaProps> = ({
             {number}
           </span>
         </motion.div>
-        
-        {/* Tooltip Rico con Historial */}
-        {showTooltip && (() => {
-          const treatments = getToothTreatments(number);
-          // Tooltip siempre hacia arriba con z-index muy alto
-          return (
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ zIndex: 10001 }}>
-              <div className="bg-gray-900 text-white text-xs rounded-xl py-3 px-4 shadow-2xl min-w-[200px]">
-                <div className="font-bold text-sm mb-2 border-b border-gray-700 pb-2">
-                  🦷 Diente #{number}
-                </div>
-                
-                {treatments.length > 0 ? (
-                  <div className="space-y-2">
-                    <div className="text-green-300 font-semibold text-[10px] uppercase">
-                      ✓ {treatments.length} Tratamiento{treatments.length > 1 ? 's' : ''}
-                    </div>
-                    {treatments.slice(0, 3).map((treatment, idx) => (
-                      <div key={treatment.id} className="border-l-2 border-green-500 pl-2 py-1">
-                        <div className="text-[10px] text-gray-400">
-                          {new Date(treatment.fecha_consulta).toLocaleDateString('es-ES', { 
-                            day: '2-digit', 
-                            month: 'short', 
-                            year: 'numeric' 
-                          })}
-                        </div>
-                        <div className="font-medium text-white">
-                          {treatment.prestacion_usuario?.nombre_personalizado || 'Tratamiento'}
-                        </div>
-                        <div className="text-[10px] text-green-400">
-                          ${treatment.monto_ars.toLocaleString('es-AR')}
-                        </div>
-                      </div>
-                    ))}
-                    {treatments.length > 3 && (
-                      <div className="text-[10px] text-gray-500 italic">
-                        +{treatments.length - 3} más...
-                      </div>
-                    )}
-                  </div>
-                ) : isSelected ? (
-                  <div className="text-blue-300">⦿ Seleccionado</div>
-                ) : (
-                  <div className="text-gray-400">Sin tratamientos</div>
-                )}
-              </div>
-            </div>
-          );
-        })()}
       </motion.div>
     );
   };
@@ -171,6 +140,75 @@ const Odontograma: React.FC<OdontogramaProps> = ({
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Inferior</span>
         </div>
       </div>
+
+      {/* Tooltip using Portal - renders outside modal */}
+      {showTooltip && hoveredTooth !== null && tooltipPosition && createPortal(
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          transition={{ duration: 0.2 }}
+          style={{
+            position: 'fixed',
+            left: `${tooltipPosition.x}px`,
+            top: `${tooltipPosition.y}px`,
+            transform: 'translate(-50%, -100%)',
+            zIndex: 999999,
+            pointerEvents: 'none'
+          }}
+        >
+          <div className="bg-gray-900 text-white text-xs rounded-xl py-3 px-4 shadow-2xl min-w-[220px] max-w-[300px]">
+            <div className="font-bold text-sm mb-2 border-b border-gray-700 pb-2">
+              🦷 Diente #{hoveredTooth}
+            </div>
+            
+            {(() => {
+              const treatments = getToothTreatments(hoveredTooth);
+              const isSelected = selectedTeeth.includes(hoveredTooth);
+              const isTreated = treatedTeeth.includes(hoveredTooth);
+              
+              if (treatments.length > 0) {
+                return (
+                  <div className="space-y-2">
+                    <div className="text-green-300 font-semibold text-[10px] uppercase">
+                      ✓ {treatments.length} Tratamiento{treatments.length > 1 ? 's' : ''}
+                    </div>
+                    {treatments.slice(0, 3).map((treatment) => (
+                      <div key={treatment.id} className="border-l-2 border-green-500 pl-2 py-1">
+                        <div className="text-[10px] text-gray-400">
+                          {new Date(treatment.fecha_consulta).toLocaleDateString('es-ES', { 
+                            day: '2-digit', 
+                            month: 'short', 
+                            year: 'numeric' 
+                          })}
+                        </div>
+                        <div className="font-medium text-white">
+                          {treatment.prestacion_usuario?.nombre_personalizado || 'Tratamiento'}
+                        </div>
+                        <div className="text-[10px] text-green-400">
+                          ${treatment.monto_ars.toLocaleString('es-AR')}
+                        </div>
+                      </div>
+                    ))}
+                    {treatments.length > 3 && (
+                      <div className="text-[10px] text-gray-500 italic">
+                        +{treatments.length - 3} más...
+                      </div>
+                    )}
+                  </div>
+                );
+              } else if (isSelected) {
+                return <div className="text-blue-300">⦿ Seleccionado para tratamiento</div>;
+              } else if (isTreated) {
+                return <div className="text-green-300">✓ Con tratamientos</div>;
+              } else {
+                return <div className="text-gray-400">Sin tratamientos registrados</div>;
+              }
+            })()}
+          </div>
+        </motion.div>,
+        document.body
+      )}
     </div>
   );
 };
