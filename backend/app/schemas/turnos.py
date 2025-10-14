@@ -166,16 +166,50 @@ class DisponibilidadResponse(BaseModel):
 
 # ==================== Links compartibles ====================
 
+class LinkTurnoBase(BaseModel):
+    """Base schema for booking links"""
+    duracion_minutos: int = Field(..., ge=15, le=120)
+    mensaje_personalizado: Optional[str] = Field(None, max_length=500)
+
+
+class LinkTurnoCreate(LinkTurnoBase):
+    """Schema to create a new booking link"""
+    pass
+
+
+class LinkTurnoUpdate(BaseModel):
+    """Schema to update a booking link"""
+    activo: Optional[bool] = None
+    mensaje_personalizado: Optional[str] = None
+
+
 class LinkTurnoResponse(BaseModel):
-    """Información del link público para reservar turnos"""
+    """Information about a booking link"""
+    id: int
+    token: str
     url: str
     duracion_minutos: int
     activo: bool
-    mensaje_bienvenida: Optional[str] = None
+    mensaje_personalizado: Optional[str] = None
+    usos_totales: int
+    fecha_creacion: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class LinkTurnoPublicResponse(BaseModel):
+    """Public information about a booking link (for patients)"""
+    duracion_minutos: int
+    mensaje_personalizado: Optional[str] = None
+    activo: bool
+    nombre_profesional: str
+    especialidad: str
 
 
 class GenerarLinkRequest(BaseModel):
     duracion_minutos: int = Field(..., description="Duración del turno en minutos")
+    mensaje_personalizado: Optional[str] = Field(None, max_length=500)
     
 
 # ==================== Confirmación ====================

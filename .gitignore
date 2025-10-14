@@ -9,6 +9,7 @@ SECURITY.md
 !*.env.example
 backend/.env
 backend/env.docker
+deploy/deploy_to_vps.sh
 
 # Python
 __pycache__/
@@ -59,7 +60,6 @@ backups/
 *.backup
 
 # SSL
-manny.com.ar.key
-manny.com.ar.crt
+
 
 .env

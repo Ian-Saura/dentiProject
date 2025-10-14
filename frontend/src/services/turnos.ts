@@ -121,3 +121,35 @@ export const cancelarTurnoPublico = async (token: string, motivo?: string): Prom
   const response = await api.post(`/turnos/publico/reserva/${token}/cancelar`, { motivo });
   return response.data;
 };
+
+// ==================== Rutas Públicas con Token (Nuevo Sistema) ====================
+
+export const getLinkInfo = async (token: string): Promise<{
+  duracion_minutos: number;
+  mensaje_personalizado?: string;
+  activo: boolean;
+  nombre_profesional: string;
+  especialidad: string;
+}> => {
+  const response = await api.get(`/turnos/publico/link/${token}/info`);
+  return response.data;
+};
+
+export const getDisponibilidadPorToken = async (
+  token: string,
+  fecha_desde: string,
+  fecha_hasta: string
+): Promise<DisponibilidadResponse> => {
+  const response = await api.get(`/turnos/publico/link/${token}/disponibilidad`, {
+    params: { fecha_desde, fecha_hasta },
+  });
+  return response.data;
+};
+
+export const reservarTurnoConToken = async (
+  token: string,
+  turno: TurnoCreatePublic
+): Promise<Turno> => {
+  const response = await api.post(`/turnos/publico/link/${token}/reservar`, turno);
+  return response.data;
+};

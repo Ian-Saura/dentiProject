@@ -66,6 +66,7 @@ class Usuario(Base):
     auditorias: Mapped[List["Auditoria"]] = relationship(back_populates="usuario", cascade="all, delete-orphan")
     turnos: Mapped[List["Turno"]] = relationship(back_populates="usuario", cascade="all, delete-orphan")
     configuracion_turnos: Mapped[Optional["ConfiguracionTurnos"]] = relationship(back_populates="usuario", uselist=False, cascade="all, delete-orphan")
+    link_turnos: Mapped[List["LinkTurno"]] = relationship(back_populates="usuario", cascade="all, delete-orphan")
 
 
 from app.models.roles import Role  # noqa: E402  # type: ignore  # pylint: disable=wrong-import-position
@@ -78,3 +79,4 @@ from app.models.prestaciones_usuario import PrestacionUsuario  # noqa: E402  # t
 from app.models.configuracion_usuario import ConfiguracionUsuario  # noqa: E402  # type: ignore  # pylint: disable=wrong-import-position
 from app.models.auditoria import Auditoria  # noqa: E402  # type: ignore  # pylint: disable=wrong-import-position
 from app.models.turnos import Turno, ConfiguracionTurnos  # noqa: E402  # type: ignore  # pylint: disable=wrong-import-position
+from app.models.link_turnos import LinkTurno  # noqa: E402  # type: ignore  # pylint: disable=wrong-import-position

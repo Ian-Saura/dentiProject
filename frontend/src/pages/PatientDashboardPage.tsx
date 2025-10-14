@@ -6,9 +6,11 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
 import Odontograma from '@/components/Odontograma';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus, Sparkles, User, Edit } from 'lucide-react';
+import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus, Sparkles, User, Edit, Phone, Mail, MessageCircle, MapPin, Hash, CalendarPlus, CalendarCheck } from 'lucide-react';
 import ClinicalNotesModal from '@/components/ClinicalNotesModal';
 import AddConsultaModal from '@/components/AddConsultaModal';
+import AddPacienteModal from '@/components/AddPacienteModal';
+import QuickAppointmentModal from '@/components/QuickAppointmentModal';
 
 const PatientDashboardPage: React.FC = () => {
   const { patientName: encodedPatientName } = useParams<{ patientName: string }>();
@@ -16,6 +18,8 @@ const PatientDashboardPage: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [showClinicalModal, setShowClinicalModal] = useState(false);
   const [showAddConsultaModal, setShowAddConsultaModal] = useState(false);
+  const [showQuickAppointmentModal, setShowQuickAppointmentModal] = useState(false);
+  const [showEditPacienteModal, setShowEditPacienteModal] = useState(false);
   const [editingConsulta, setEditingConsulta] = useState<any>(null);
   const [selectedConsultationId, setSelectedConsultationId] = useState<number | null>(null);
   const [clinicalNotes, setClinicalNotes] = useState<any[]>([]);
@@ -40,7 +44,7 @@ const PatientDashboardPage: React.FC = () => {
   );
 
   // Fetch patient details to get ID and full patient info
-  const { data: pacientesData } = useQuery(
+  const { data: pacientesData, refetch: refetchPatients } = useQuery(
     'pacientes',
     () => pacientesService.getPacientes(),
     {
@@ -58,6 +62,14 @@ const PatientDashboardPage: React.FC = () => {
 
   // Get full patient data
   const currentPatient = pacientesData?.find(p => `${p.nombre} ${p.apellido}` === patientName);
+
+  // Get next upcoming appointment
+  const nextAppointment = consultas
+    .filter(c => {
+      const consultaDate = new Date(c.fecha_hora);
+      return consultaDate > new Date() && (c.estado === 'pendiente' || c.estado === 'confirmada');
+    })
+    .sort((a, b) => new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime())[0];
 
   // Filter consultations by period (always calculate, even if loading)
   const filteredConsultas = consultas.filter(consulta => {
@@ -79,10 +91,8 @@ const PatientDashboardPage: React.FC = () => {
     }
   });
 
-  // Calculate statistics
+  // Calculate statistics (for charts)
   const totalConsultas = filteredConsultas.length;
-  const totalGastado = filteredConsultas.reduce((sum, c) => sum + c.monto_ars, 0);
-  const promedioConsulta = totalConsultas > 0 ? totalGastado / totalConsultas : 0;
 
   // Clinical notes handlers
   const handleAddClinicalNote = (consultationId: number) => {
@@ -107,8 +117,6 @@ const PatientDashboardPage: React.FC = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  const tratamientoMasFrecuente = Object.entries(tratamientos)
-    .sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
 
   // Get treated teeth from all consultations
   const treatedTeeth = React.useMemo(() => {
@@ -211,39 +219,176 @@ const PatientDashboardPage: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* Quick Info & Actions Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Patient Quick Info */}
+        <AnimatedCard delay={0.05}>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm h-full">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <User className="h-4 w-4 text-blue-600" />
+                Información del Paciente
+              </h3>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowEditPacienteModal(true)}
+                className="text-blue-600 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Editar información del paciente"
+              >
+                <Edit className="h-4 w-4" />
+              </motion.button>
+            </div>
+            
+            {currentPatient && (
+              <div className="grid grid-cols-2 gap-2">
+                {currentPatient.dni && (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <Hash className="h-4 w-4 text-gray-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">DNI</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{currentPatient.dni}</p>
+                    </div>
+                  </div>
+                )}
+                {currentPatient.telefono && (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <Phone className="h-4 w-4 text-gray-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">Teléfono</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{currentPatient.telefono}</p>
+                    </div>
+                  </div>
+                )}
+                {currentPatient.email && (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg col-span-2">
+                    <Mail className="h-4 w-4 text-gray-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">Email</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{currentPatient.email}</p>
+                    </div>
+                  </div>
+                )}
+                {currentPatient.direccion && (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg col-span-2">
+                    <MapPin className="h-4 w-4 text-gray-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">Dirección</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{currentPatient.direccion}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </AnimatedCard>
+
+        {/* Quick Actions & Next Appointment */}
+        <AnimatedCard delay={0.15}>
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-4 text-white shadow-lg h-full">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Acciones Rápidas
+              </h3>
+              {nextAppointment && (
+                <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1 whitespace-nowrap">
+                  <CalendarCheck className="h-3 w-3" />
+                  {new Date(nextAppointment.fecha_hora).toLocaleDateString('es-AR', {
+                    day: '2-digit',
+                    month: 'short'
+                  })} {new Date(nextAppointment.fecha_hora).toLocaleTimeString('es-AR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowQuickAppointmentModal(true)}
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-3 rounded-lg flex flex-col items-center justify-center gap-1 transition-all border border-white/30"
+              >
+                <CalendarPlus className="h-5 w-5" />
+                <p className="font-bold text-xs">Agendar</p>
+              </motion.button>
+
+              {currentPatient?.telefono && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => window.open(`tel:${currentPatient.telefono}`)}
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-3 rounded-lg flex flex-col items-center justify-center gap-1 transition-all border border-white/30"
+                >
+                  <Phone className="h-5 w-5" />
+                  <p className="font-bold text-xs">Llamar</p>
+                </motion.button>
+              )}
+
+              {currentPatient?.telefono && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => window.open(`https://wa.me/${currentPatient.telefono.replace(/\D/g, '')}`)}
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-3 rounded-lg flex flex-col items-center justify-center gap-1 transition-all border border-white/30"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  <p className="font-bold text-xs">WhatsApp</p>
+                </motion.button>
+              )}
+
+              {currentPatient?.email && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => window.open(`mailto:${currentPatient.email}`)}
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-3 rounded-lg flex flex-col items-center justify-center gap-1 transition-all border border-white/30"
+                >
+                  <Mail className="h-5 w-5" />
+                  <p className="font-bold text-xs">Email</p>
+                </motion.button>
+              )}
+            </div>
+          </div>
+        </AnimatedCard>
+      </div>
+
       {/* Medical Info Alert - Alergias y Medicamentos */}
       {currentPatient && (currentPatient.alergias || currentPatient.medicamentos_actuales) && (
-        <AnimatedCard delay={0.05}>
+        <AnimatedCard delay={0.15}>
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-2xl p-4 sm:p-6 shadow-lg"
+            className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-300 rounded-xl p-3 shadow-sm"
           >
-            <div className="flex items-start gap-3">
-              <div className="bg-red-500 p-2 rounded-xl flex-shrink-0">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-start gap-2">
+              <div className="bg-red-500 p-1.5 rounded-lg flex-shrink-0">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-red-900 mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-bold text-red-900 mb-2 flex items-center gap-2">
                   🏥 Información Médica Importante
                 </h3>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {currentPatient.alergias && (
-                    <div className="bg-white/60 rounded-xl p-3 border border-red-200">
-                      <p className="text-sm font-bold text-red-800 mb-1 flex items-center gap-2">
+                    <div className="bg-white/60 rounded-lg p-2 border border-red-200">
+                      <p className="text-xs font-bold text-red-800 mb-1 flex items-center gap-1">
                         🚨 Alergias
                       </p>
-                      <p className="text-sm text-red-900 font-medium">{currentPatient.alergias}</p>
+                      <p className="text-xs text-red-900">{currentPatient.alergias}</p>
                     </div>
                   )}
                   {currentPatient.medicamentos_actuales && (
-                    <div className="bg-white/60 rounded-xl p-3 border border-orange-200">
-                      <p className="text-sm font-bold text-orange-800 mb-1 flex items-center gap-2">
-                        💊 Medicamentos Actuales
+                    <div className="bg-white/60 rounded-lg p-2 border border-orange-200">
+                      <p className="text-xs font-bold text-orange-800 mb-1 flex items-center gap-1">
+                        💊 Medicamentos
                       </p>
-                      <p className="text-sm text-orange-900 font-medium">{currentPatient.medicamentos_actuales}</p>
+                      <p className="text-xs text-orange-900">{currentPatient.medicamentos_actuales}</p>
                     </div>
                   )}
                 </div>
@@ -253,90 +398,14 @@ const PatientDashboardPage: React.FC = () => {
         </AnimatedCard>
       )}
 
-      {/* Instagram-Style Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <AnimatedCard delay={0.1}>
-          <motion.div
-            whileHover={{ scale: 1.05, y: -8 }}
-            className="relative overflow-hidden rounded-2xl p-5 h-full bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 text-white shadow-xl"
-          >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
-            <div className="relative z-10">
-              <div className="bg-white/20 backdrop-blur-sm w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-lg">
-                <Calendar className="h-5 w-5" />
-              </div>
-              <p className="text-white/90 text-xs font-medium mb-1">Prestaciones</p>
-              <p className="text-4xl font-black mb-1">{totalConsultas}</p>
-              <p className="text-white/80 text-xs font-medium">visitas totales</p>
-            </div>
-          </motion.div>
-        </AnimatedCard>
-
-        <AnimatedCard delay={0.15}>
-          <motion.div
-            whileHover={{ scale: 1.05, y: -8 }}
-            className="relative overflow-hidden rounded-2xl p-5 h-full bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 text-white shadow-xl"
-          >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
-            <div className="relative z-10">
-              <div className="bg-white/20 backdrop-blur-sm w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-lg">
-                <DollarSign className="h-5 w-5" />
-              </div>
-              <p className="text-white/90 text-xs font-medium mb-1">Inversión Total</p>
-              <p className="text-3xl font-black mb-1">${(totalGastado / 1000).toFixed(1)}K</p>
-              <p className="text-white/80 text-xs font-medium">en salud dental</p>
-            </div>
-          </motion.div>
-        </AnimatedCard>
-
-        <AnimatedCard delay={0.2}>
-          <motion.div
-            whileHover={{ scale: 1.05, y: -8 }}
-            className="relative overflow-hidden rounded-2xl p-5 h-full bg-gradient-to-br from-purple-500 via-pink-600 to-rose-600 text-white shadow-xl"
-          >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
-            <div className="relative z-10">
-              <div className="bg-white/20 backdrop-blur-sm w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-lg">
-                <TrendingUp className="h-5 w-5" />
-              </div>
-              <p className="text-white/90 text-xs font-medium mb-1">Promedio/Visita</p>
-              <p className="text-3xl font-black mb-1">${(promedioConsulta / 1000).toFixed(1)}K</p>
-              <p className="text-white/80 text-xs font-medium">inversión media</p>
-            </div>
-          </motion.div>
-        </AnimatedCard>
-
-        <AnimatedCard delay={0.25}>
-          <motion.div
-            whileHover={{ scale: 1.05, y: -8 }}
-            className="relative overflow-hidden rounded-2xl p-5 h-full bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 text-white shadow-xl"
-          >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
-            <div className="relative z-10">
-              <div className="bg-white/20 backdrop-blur-sm w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-lg">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <p className="text-white/90 text-xs font-medium mb-1">Tratamiento Top</p>
-              <p className="text-base font-black mb-1 leading-tight truncate">{tratamientoMasFrecuente}</p>
-              <p className="text-white/80 text-xs font-medium">más realizado</p>
-            </div>
-          </motion.div>
-        </AnimatedCard>
-      </div>
-
       {/* Odontograma Visual */}
       <AnimatedCard delay={0.3}>
-        <div className="relative z-30 bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 rounded-3xl p-8 border-2 border-cyan-200 shadow-xl overflow-visible">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-3xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                Odontograma
-              </h3>
-              <p className="text-gray-600 mt-1">Mapa dental visual</p>
-            </div>
-            <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-4 rounded-2xl shadow-lg">
-              <Sparkles className="h-8 w-8 text-white" />
-            </div>
+        <div className="relative z-30 bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 rounded-xl p-4 border border-cyan-200 shadow-sm overflow-visible">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-cyan-600" />
+              Odontograma
+            </h3>
           </div>
           <div className="overflow-visible">
             <Odontograma 
@@ -350,22 +419,20 @@ const PatientDashboardPage: React.FC = () => {
       {/* Historia Clínica Visual */}
       {filteredConsultas.length > 0 && (
         <AnimatedCard delay={0.25}>
-          <div className="glass rounded-2xl shadow-soft p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold flex items-center gap-3">
-                <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-3 rounded-xl">
-                  <Activity className="h-6 w-6 text-white" />
-                </div>
-                <span className="gradient-text">Historia Clínica Visual</span>
+          <div className="glass rounded-xl shadow-sm p-4 border border-white/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold flex items-center gap-2">
+                <Activity className="h-4 w-4 text-pink-500" />
+                <span className="gradient-text">Historia Clínica</span>
               </h3>
             </div>
 
             {/* Timeline de Tratamientos */}
             <div className="relative">
               {/* Línea vertical */}
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-pink-500 via-purple-500 to-blue-500"></div>
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-pink-500 via-purple-500 to-blue-500"></div>
               
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {filteredConsultas
                   .sort((a, b) => new Date(b.fecha_consulta).getTime() - new Date(a.fecha_consulta).getTime())
                   .map((consulta, index) => (
@@ -373,120 +440,51 @@ const PatientDashboardPage: React.FC = () => {
                       key={consulta.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="relative pl-20"
+                      transition={{ delay: index * 0.05 }}
+                      className="relative pl-12"
                     >
                       {/* Punto en la línea */}
-                      <div className="absolute left-6 top-4 w-5 h-5 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 border-4 border-white shadow-lg z-10"></div>
+                      <div className="absolute left-3 top-2 w-3 h-3 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 border-2 border-white shadow-md z-10"></div>
                       
                       {/* Card del tratamiento */}
                       <motion.div
-                        whileHover={{ scale: 1.02, x: 5 }}
-                        className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 border-2 border-gray-200 shadow-md hover:shadow-xl transition-all"
+                        whileHover={{ scale: 1.01, x: 3 }}
+                        className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-all"
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="text-sm font-bold text-gray-500">
-                                {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
-                              </span>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                consulta.estado === 'completada' ? 'bg-green-100 text-green-800' :
-                                consulta.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {consulta.estado}
-                              </span>
-                            </div>
-                            <h4 className="text-lg font-bold text-gray-900 mb-2">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="text-xs font-bold text-gray-500 whitespace-nowrap">
+                              {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              consulta.estado === 'completada' ? 'bg-green-100 text-green-700' :
+                              consulta.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {consulta.estado}
+                            </span>
+                            <h4 className="text-sm font-bold text-gray-900 truncate">
                               {consulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
                             </h4>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-600">
                             {consulta.dientes_tratados && consulta.dientes_tratados.length > 0 && (
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-sm text-gray-600">🦷 Dientes:</span>
-                                <div className="flex gap-1">
-                                  {consulta.dientes_tratados.sort((a, b) => a - b).map(tooth => (
-                                    <span key={tooth} className="px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded-lg text-xs font-bold">
-                                      {tooth}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
+                              <span className="flex items-center gap-1">
+                                🦷 {consulta.dientes_tratados.sort((a, b) => a - b).join(', ')}
+                              </span>
                             )}
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <span className="flex items-center gap-1">
-                                <DollarSign className="h-4 w-4" />
-                                ${consulta.monto_ars.toLocaleString('es-AR')}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <CreditCard className="h-4 w-4" />
-                                {consulta.medio_pago}
-                              </span>
-                            </div>
+                            <span className="flex items-center gap-1 font-bold">
+                              ${(consulta.monto_ars / 1000).toFixed(0)}K
+                            </span>
+                            <span className="text-xs">
+                              {consulta.medio_pago}
+                            </span>
                           </div>
                         </div>
                       </motion.div>
                     </motion.div>
                   ))}
               </div>
-            </div>
-          </div>
-        </AnimatedCard>
-      )}
-
-      {/* Patient Timeline */}
-      {primeraConsulta && ultimaConsulta && (
-        <AnimatedCard delay={0.3}>
-          <div className="glass rounded-2xl shadow-soft p-8 border border-white/20">
-            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-3 rounded-xl">
-                <Clock className="h-6 w-6 text-white" />
-              </div>
-              <span className="gradient-text">Línea de Tiempo del Paciente</span>
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <motion.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200 shadow-sm"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="bg-green-500 p-3 rounded-xl shadow-md">
-                    <Calendar className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-green-700 mb-1">Primera Prestación</p>
-                    <p className="text-2xl font-black text-green-900">
-                      {new Date(primeraConsulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                    </p>
-                    <div className="mt-2 bg-white/60 px-3 py-1 rounded-lg inline-block">
-                      <p className="text-sm font-medium text-green-800">
-                        {primeraConsulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border-2 border-blue-200 shadow-sm"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="bg-blue-500 p-3 rounded-xl shadow-md">
-                    <Calendar className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-blue-700 mb-1">Última Prestación</p>
-                    <p className="text-2xl font-black text-blue-900">
-                      {new Date(ultimaConsulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                    </p>
-                    <div className="mt-2 bg-white/60 px-3 py-1 rounded-lg inline-block">
-                      <p className="text-sm font-medium text-blue-800">
-                        {ultimaConsulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
             </div>
           </div>
         </AnimatedCard>
@@ -752,6 +750,48 @@ const PatientDashboardPage: React.FC = () => {
         editingConsulta={editingConsulta}
         preselectedPatientId={patientId || undefined}
         preselectedPatientName={patientName || undefined}
+      />
+
+      {/* Quick Appointment Modal */}
+      {patientId && patientName ? (
+        <QuickAppointmentModal
+          isOpen={showQuickAppointmentModal}
+          onClose={() => setShowQuickAppointmentModal(false)}
+          patientId={patientId}
+          patientName={patientName}
+          onSuccess={() => {
+            setShowQuickAppointmentModal(false);
+          }}
+        />
+      ) : showQuickAppointmentModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-2xl p-6 text-center">
+            <p className="text-gray-600 mb-4">Cargando información del paciente...</p>
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Paciente Modal */}
+      <AddPacienteModal
+        isOpen={showEditPacienteModal}
+        onClose={() => setShowEditPacienteModal(false)}
+        editingPatientId={patientId || undefined}
+        initialData={currentPatient ? {
+          nombre: currentPatient.nombre,
+          apellido: currentPatient.apellido,
+          dni: currentPatient.dni,
+          email: currentPatient.email,
+          telefono: currentPatient.telefono,
+          fecha_nacimiento: currentPatient.fecha_nacimiento,
+          obra_social: currentPatient.obra_social,
+          alergias: currentPatient.alergias,
+          medicamentos_actuales: currentPatient.medicamentos_actuales
+        } : undefined}
+        onSuccess={() => {
+          refetchPatients();
+          setShowEditPacienteModal(false);
+        }}
       />
     </div>
   );

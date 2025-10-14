@@ -270,7 +270,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/reportes" element={<Navigate to="/analytical/reportes" replace />} />
 
       {/* Ruta pública para reservar turnos */}
-      <Route path="/reservar-turno/:usuario_id" element={<ReservarTurnoPage />} />
+      <Route path="/reservar-turno/:token" element={<ReservarTurnoPage />} />
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

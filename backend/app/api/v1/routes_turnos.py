@@ -20,11 +20,13 @@ from app.schemas.turnos import (
     ConfiguracionTurnosResponse,
     DisponibilidadResponse,
     LinkTurnoResponse,
+    LinkTurnoPublicResponse,
     GenerarLinkRequest,
     ConfirmarTurnoRequest,
     CancelarTurnoRequest,
 )
 from app.repositories import turnos as turnos_repo
+from app.repositories import link_turnos as link_turnos_repo
 from app.services.turnos_service import TurnosService
 
 router = APIRouter(prefix="/turnos", tags=["turnos"])
@@ -283,13 +285,24 @@ def generar_link(
     tenant = TenantContext(current_user)
     
     # Obtener base URL del request
-    base_url = str(request.base_url).rstrip('/')
+    # En desarrollo local, apuntar al frontend (Vite)
+    # En producción, usar el mismo dominio
+    backend_url = str(request.base_url).rstrip('/')
+    
+    # Detectar si estamos en desarrollo local
+    if 'localhost:8000' in backend_url or '127.0.0.1:8000' in backend_url:
+        # Apuntar al frontend de Vite
+        frontend_url = 'http://localhost:3000'
+    else:
+        # En producción, el frontend y backend están en el mismo dominio
+        # La URL del frontend es la misma sin el /v1
+        frontend_url = backend_url.replace('/v1', '').replace(':8000', '')
     
     return TurnosService.generar_link_reserva(
         db=db,
         usuario_id=tenant.user_id,
         duracion_minutos=request_data.duracion_minutos,
-        base_url=base_url,
+        base_url=frontend_url,
     )
 
 
@@ -407,3 +420,117 @@ def cancelar_turno_publico(
     db.commit()
     db.refresh(turno)
     return turno
+
+
+# ==================== Rutas públicas con token (nuevo sistema) ====================
+
+@router.get("/publico/link/{token}/info", response_model=LinkTurnoPublicResponse)
+def get_link_info(
+    token: str,
+    db: Session = Depends(get_db),
+):
+    """Obtiene información del link de reserva (sin autenticación)"""
+    link = link_turnos_repo.get_link_by_token(db, token)
+    if not link:
+        raise HTTPException(status_code=404, detail="Link no encontrado")
+    
+    if not link.activo:
+        raise HTTPException(status_code=400, detail="Este link ha sido desactivado")
+    
+    # Verificar expiración si está configurada
+    from datetime import datetime
+    if link.fecha_expiracion and datetime.now() > link.fecha_expiracion:
+        raise HTTPException(status_code=400, detail="Este link ha expirado")
+    
+    # Construir nombre profesional
+    nombre_completo = f"{link.usuario.nombre} {link.usuario.apellido}".strip() if hasattr(link.usuario, 'nombre') and hasattr(link.usuario, 'apellido') else "Profesional"
+    especialidad = link.usuario.especialidad if hasattr(link.usuario, 'especialidad') else "Profesional de la salud"
+    
+    # Retornar información pública del link
+    return LinkTurnoPublicResponse(
+        duracion_minutos=link.duracion_minutos,
+        mensaje_personalizado=link.mensaje_personalizado,
+        activo=link.activo,
+        nombre_profesional=nombre_completo,
+        especialidad=especialidad,
+    )
+
+
+@router.get("/publico/link/{token}/disponibilidad", response_model=DisponibilidadResponse)
+def get_disponibilidad_por_token(
+    token: str,
+    fecha_desde: date = Query(...),
+    fecha_hasta: date = Query(...),
+    db: Session = Depends(get_db),
+):
+    """Obtiene slots disponibles usando el token del link (sin autenticación)"""
+    # Buscar el link por token
+    link = link_turnos_repo.get_link_by_token(db, token)
+    if not link:
+        raise HTTPException(status_code=404, detail="Link no encontrado")
+    
+    if not link.activo:
+        raise HTTPException(status_code=400, detail="Este link ha sido desactivado")
+    
+    # Verificar expiración
+    from datetime import datetime
+    if link.fecha_expiracion and datetime.now() > link.fecha_expiracion:
+        raise HTTPException(status_code=400, detail="Este link ha expirado")
+    
+    # Obtener slots disponibles con la duración pre-configurada del link
+    return TurnosService.obtener_slots_disponibles(
+        db=db,
+        usuario_id=link.usuario_id,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        duracion_minutos=link.duracion_minutos,
+    )
+
+
+@router.post("/publico/link/{token}/reservar", response_model=TurnoResponsePublic)
+def reservar_turno_con_token(
+    token: str,
+    turno: TurnoCreatePublic,
+    db: Session = Depends(get_db),
+):
+    """Reserva un turno usando el token del link (sin autenticación)"""
+    # Buscar el link por token
+    link = link_turnos_repo.get_link_by_token(db, token)
+    if not link:
+        raise HTTPException(status_code=404, detail="Link no encontrado")
+    
+    if not link.activo:
+        raise HTTPException(status_code=400, detail="Este link ha sido desactivado")
+    
+    # Verificar expiración
+    from datetime import datetime
+    if link.fecha_expiracion and datetime.now() > link.fecha_expiracion:
+        raise HTTPException(status_code=400, detail="Este link ha expirado")
+    
+    # Forzar la duración del link (no permitir que el cliente la cambie)
+    turno.duracion_minutos = link.duracion_minutos
+    
+    # Validar que el turno se puede reservar
+    TurnosService.validar_turno_publico(
+        db=db,
+        usuario_id=link.usuario_id,
+        fecha=turno.fecha,
+        hora_inicio=turno.hora_inicio,
+        duracion_minutos=link.duracion_minutos,
+    )
+    
+    # Generar token único para la reserva
+    reserva_token = TurnosService.generar_token_reserva()
+    
+    # Crear el turno
+    turno_creado = turnos_repo.create_turno_publico(
+        db=db,
+        dto=turno,
+        usuario_id=link.usuario_id,
+        token=reserva_token,
+    )
+    
+    # Incrementar contador de usos del link
+    link_turnos_repo.increment_link_usage(db, link.id)
+    
+    return turno_creado

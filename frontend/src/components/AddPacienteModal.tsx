@@ -22,13 +22,15 @@ interface AddPacienteModalProps {
   onClose: () => void;
   onSuccess?: (paciente: any) => void;
   initialData?: Partial<PacienteForm>;
+  editingPatientId?: number;
 }
 
 const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  initialData
+  initialData,
+  editingPatientId
 }) => {
   const queryClient = useQueryClient();
   
@@ -73,6 +75,24 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
       toast.error(error.response?.data?.detail || 'Error al crear paciente');
     }
   });
+
+  const updateMutation = useMutation(
+    (data: { id: number; paciente: Partial<PacienteForm> }) =>
+      pacientesService.updatePaciente(data.id, data.paciente),
+    {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries('pacientes');
+        toast.success(`Paciente ${data.nombre} ${data.apellido} actualizado exitosamente`);
+        if (onSuccess) {
+          onSuccess(data);
+        }
+        handleClose();
+      },
+      onError: (error: any) => {
+        toast.error(error.response?.data?.detail || 'Error al actualizar paciente');
+      }
+    }
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,7 +141,11 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
       medicamentos_actuales: formData.medicamentos_actuales?.trim() === '' ? undefined : formData.medicamentos_actuales,
     };
 
-    createMutation.mutate(dataToSend);
+    if (editingPatientId) {
+      updateMutation.mutate({ id: editingPatientId, paciente: dataToSend });
+    } else {
+      createMutation.mutate(dataToSend);
+    }
   };
 
   const handleClose = () => {
@@ -162,8 +186,12 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                 <User className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-2xl font-bold">Nuevo Paciente</h2>
-                <p className="text-xs sm:text-sm opacity-90 hidden xs:block">Complete los datos del paciente</p>
+                <h2 className="text-lg sm:text-2xl font-bold">
+                  {editingPatientId ? 'Editar Paciente' : 'Nuevo Paciente'}
+                </h2>
+                <p className="text-xs sm:text-sm opacity-90 hidden xs:block">
+                  {editingPatientId ? 'Modifica los datos del paciente' : 'Complete los datos del paciente'}
+                </p>
               </div>
             </div>
             <button
@@ -213,18 +241,23 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                 <CreditCard className="w-4 h-4" />
-                DNI *
+                DNI * {editingPatientId && <span className="text-xs text-gray-500">(no editable)</span>}
               </label>
               <input
                 type="text"
                 value={formData.dni}
                 onChange={(e) => {
-                  setFormData({ ...formData, dni: e.target.value });
-                  if (touched.dni) setTouched({ ...touched, dni: true });
+                  if (!editingPatientId) {
+                    setFormData({ ...formData, dni: e.target.value });
+                    if (touched.dni) setTouched({ ...touched, dni: true });
+                  }
                 }}
                 onBlur={() => setTouched({ ...touched, dni: true })}
+                disabled={!!editingPatientId}
                 className={`w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                  touched.dni && (!formData.dni || formData.dni.length < 7)
+                  editingPatientId 
+                    ? 'bg-gray-100 cursor-not-allowed text-gray-600'
+                    : touched.dni && (!formData.dni || formData.dni.length < 7)
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
                     : 'border-gray-300 focus:border-dental-500 focus:ring-dental-500'
                 }`}
@@ -365,10 +398,10 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={createMutation.isLoading}
+                disabled={createMutation.isLoading || updateMutation.isLoading}
                 className="flex-1 px-4 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-dental-500 to-dental-600 text-white rounded-xl font-bold hover:from-dental-600 hover:to-dental-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
               >
-                {createMutation.isLoading ? (
+                {(createMutation.isLoading || updateMutation.isLoading) ? (
                   <>
                     <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     <span className="hidden xs:inline">Guardando...</span>
@@ -376,8 +409,12 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                 ) : (
                   <>
                     <Save className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="hidden xs:inline">Guardar Paciente</span>
-                    <span className="xs:hidden">Guardar</span>
+                    <span className="hidden xs:inline">
+                      {editingPatientId ? 'Actualizar Paciente' : 'Guardar Paciente'}
+                    </span>
+                    <span className="xs:hidden">
+                      {editingPatientId ? 'Actualizar' : 'Guardar'}
+                    </span>
                   </>
                 )}
               </button>

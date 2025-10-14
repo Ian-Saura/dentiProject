@@ -13,8 +13,10 @@ from app.schemas.turnos import (
     SlotDisponible,
     DisponibilidadResponse,
     LinkTurnoResponse,
+    LinkTurnoCreate,
 )
 from app.repositories import turnos as turnos_repo
+from app.repositories import link_turnos as link_turnos_repo
 
 
 class TurnosService:
@@ -153,10 +155,11 @@ class TurnosService:
         db: Session,
         usuario_id: int,
         duracion_minutos: int,
-        base_url: str
+        base_url: str,
+        mensaje_personalizado: Optional[str] = None
     ) -> LinkTurnoResponse:
         """
-        Genera un link público para que pacientes reserven turnos
+        Genera un link público con token único para que pacientes reserven turnos
         """
         # Verificar que el profesional tenga configuración activa
         config = turnos_repo.get_or_create_configuracion_turnos(db, usuario_id)
@@ -173,14 +176,45 @@ class TurnosService:
                 detail=f"Duración no permitida. Duraciones disponibles: {config.duraciones_permitidas}"
             )
         
-        # Generar URL
-        url = f"{base_url}/reservar-turno/{usuario_id}?duracion={duracion_minutos}"
+        # Crear o buscar link existente para esta duración
+        links_existentes = link_turnos_repo.get_links_by_usuario(db, usuario_id)
+        link_existente = next(
+            (l for l in links_existentes if l.duracion_minutos == duracion_minutos and l.activo),
+            None
+        )
+        
+        if link_existente:
+            # Retornar link existente
+            url = f"{base_url}/reservar-turno/{link_existente.token}"
+            return LinkTurnoResponse(
+                id=link_existente.id,
+                token=link_existente.token,
+                url=url,
+                duracion_minutos=link_existente.duracion_minutos,
+                activo=link_existente.activo,
+                mensaje_personalizado=link_existente.mensaje_personalizado,
+                usos_totales=link_existente.usos_totales,
+                fecha_creacion=link_existente.fecha_creacion
+            )
+        
+        # Crear nuevo link con token único
+        link_data = LinkTurnoCreate(
+            duracion_minutos=duracion_minutos,
+            mensaje_personalizado=mensaje_personalizado or config.mensaje_bienvenida
+        )
+        
+        nuevo_link = link_turnos_repo.create_link_turno(db, usuario_id, link_data)
+        url = f"{base_url}/reservar-turno/{nuevo_link.token}"
         
         return LinkTurnoResponse(
+            id=nuevo_link.id,
+            token=nuevo_link.token,
             url=url,
-            duracion_minutos=duracion_minutos,
-            activo=config.activo,
-            mensaje_bienvenida=config.mensaje_bienvenida
+            duracion_minutos=nuevo_link.duracion_minutos,
+            activo=nuevo_link.activo,
+            mensaje_personalizado=nuevo_link.mensaje_personalizado,
+            usos_totales=nuevo_link.usos_totales,
+            fecha_creacion=nuevo_link.fecha_creacion
         )
 
     @staticmethod

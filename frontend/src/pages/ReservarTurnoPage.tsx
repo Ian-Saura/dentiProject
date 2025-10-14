@@ -6,11 +6,11 @@ import { SlotDisponible } from '../types/turnos';
 import * as turnosService from '../services/turnos';
 
 export default function ReservarTurnoPage() {
-  const { usuario_id } = useParams<{ usuario_id: string }>();
+  const { token } = useParams<{ token: string }>();
   const [searchParams] = useSearchParams();
-  const duracionParam = searchParams.get('duracion');
 
-  const [duracion, setDuracion] = useState<number>(parseInt(duracionParam || '30'));
+  const [duracion, setDuracion] = useState<number>(30);
+  const [profesionalNombre, setProfesionalNombre] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [slots, setSlots] = useState<SlotDisponible[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<SlotDisponible | null>(null);
@@ -21,9 +21,17 @@ export default function ReservarTurnoPage() {
   // Datos del formulario
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
+  const [dni, setDni] = useState('');
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
   const [motivo, setMotivo] = useState('');
+
+  // Cargar información del link al montar el componente
+  useEffect(() => {
+    if (token) {
+      loadLinkInfo();
+    }
+  }, [token]);
 
   useEffect(() => {
     if (step === 'hora' && selectedDate) {
@@ -31,24 +39,43 @@ export default function ReservarTurnoPage() {
     }
   }, [selectedDate, duracion, step]);
 
+  const loadLinkInfo = async () => {
+    if (!token) return;
+
+    try {
+      setLoading(true);
+      const linkInfo = await turnosService.getLinkInfo(token);
+      setDuracion(linkInfo.duracion_minutos);
+      setProfesionalNombre(linkInfo.nombre_profesional);
+      
+      if (linkInfo.mensaje_personalizado) {
+        toast.success(linkInfo.mensaje_personalizado);
+      }
+    } catch (error: any) {
+      console.error('Error loading link info:', error);
+      toast.error(error.response?.data?.detail || 'Link inválido o expirado');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadSlots = async () => {
-    if (!usuario_id) return;
+    if (!token) return;
 
     try {
       setLoading(true);
       const dateStr = selectedDate.toISOString().split('T')[0];
       
-      const response = await turnosService.getDisponibilidadPublica(
-        parseInt(usuario_id),
+      const response = await turnosService.getDisponibilidadPorToken(
+        token,
         dateStr,
-        dateStr,
-        duracion
+        dateStr
       );
       
-      setSlots(response.slots);
-    } catch (error) {
+      setSlots(response.slots || []);
+    } catch (error: any) {
       console.error('Error loading slots:', error);
-      toast.error('Error al cargar horarios disponibles');
+      toast.error(error.response?.data?.detail || 'Error al cargar horarios disponibles');
       setSlots([]);
     } finally {
       setLoading(false);
@@ -56,16 +83,18 @@ export default function ReservarTurnoPage() {
   };
 
   const handleReservar = async () => {
-    if (!selectedSlot || !usuario_id) return;
+    if (!selectedSlot || !token) return;
 
     try {
       setLoading(true);
-      const turno = await turnosService.reservarTurnoPublico(parseInt(usuario_id), {
+      
+      const turno = await turnosService.reservarTurnoConToken(token, {
         fecha: selectedSlot.fecha,
         hora_inicio: selectedSlot.hora_inicio,
         duracion_minutos: duracion,
         nombre_paciente: nombre,
         apellido_paciente: apellido,
+        dni_paciente: dni,
         telefono_paciente: telefono,
         email_paciente: email,
         motivo_consulta: motivo,
@@ -95,17 +124,16 @@ export default function ReservarTurnoPage() {
         </div>
 
         <div className="max-w-md mx-auto">
-          <label className="block text-sm font-medium mb-2">Duración del turno</label>
-          <select
-            value={duracion}
-            onChange={(e) => setDuracion(Number(e.target.value))}
-            className="w-full border rounded-lg px-4 py-3 mb-4"
-          >
-            <option value={15}>15 minutos</option>
-            <option value={30}>30 minutos</option>
-            <option value={45}>45 minutos</option>
-            <option value={60}>60 minutos</option>
-          </select>
+          {/* Mostrar duración (solo informativo, no editable) */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 text-blue-800">
+              <Clock className="w-5 h-5" />
+              <div>
+                <p className="text-sm font-medium">Duración del turno</p>
+                <p className="text-lg font-bold">{duracion} minutos</p>
+              </div>
+            </div>
+          </div>
 
           <label className="block text-sm font-medium mb-2">Fecha</label>
           <input
@@ -233,6 +261,23 @@ export default function ReservarTurnoPage() {
 
           <div>
             <label className="block text-sm font-medium mb-1">
+              <User className="w-4 h-4 inline mr-1" />
+              DNI / Documento *
+            </label>
+            <input
+              type="text"
+              value={dni}
+              onChange={(e) => setDni(e.target.value)}
+              className="w-full border rounded-lg px-4 py-2"
+              placeholder="Ej: 12345678"
+              minLength={7}
+              maxLength={20}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
               <Phone className="w-4 h-4 inline mr-1" />
               Teléfono *
             </label>
@@ -354,6 +399,9 @@ export default function ReservarTurnoPage() {
         <div className="text-center mb-8">
           <Calendar className="w-12 h-12 mx-auto mb-3 text-blue-500" />
           <h1 className="text-3xl font-bold mb-2">Reservar Turno</h1>
+          {profesionalNombre && (
+            <p className="text-lg font-medium text-blue-600 mb-1">{profesionalNombre}</p>
+          )}
           <p className="text-gray-600">Complete los siguientes pasos para agendar su turno</p>
         </div>
 
