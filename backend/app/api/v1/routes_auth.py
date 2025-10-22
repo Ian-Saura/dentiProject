@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 
 from app.core.security import create_access_token, verify_password
 from app.db.session import get_db
@@ -39,8 +40,11 @@ async def login(
     db: Session = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
-    """Login con username y password"""
-    user = db.query(Usuario).filter(Usuario.username == form_data.username).first()
+    """Login con username/email y password"""
+    # Allow login with either username or email
+    user = db.query(Usuario).filter(
+        or_(Usuario.username == form_data.username, Usuario.email == form_data.username)
+    ).first()
     
     if not user or not user.password_hash:
         # Log failed login

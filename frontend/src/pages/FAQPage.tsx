@@ -425,3 +425,6 @@ const FAQPage: React.FC = () => {
 
 export default FAQPage;
 
+
+
+

@@ -61,7 +61,21 @@ def get_gasto_fijo(db: Session, gasto_id: int, usuario_id: int) -> Optional[Gast
 
 
 def create_gasto_fijo(db: Session, dto: GastoCreate, usuario_id: int) -> GastoFijo:
-    gasto = GastoFijo(**dto.model_dump(), usuario_id=usuario_id)
+    data = dto.model_dump()
+    
+    # Calculate monto_mensual_ars based on moneda
+    if data.get('moneda') == 'USD':
+        # Get tipo_cambio from config
+        from app.models import ConfiguracionUsuario
+        config = db.query(ConfiguracionUsuario).filter(
+            ConfiguracionUsuario.usuario_id == usuario_id
+        ).first()
+        tipo_cambio = float(config.tipo_cambio_usd_ars) if config and config.tipo_cambio_usd_ars else 1335.0
+        data['monto_mensual_ars'] = data['monto_mensual'] * tipo_cambio
+    else:
+        data['monto_mensual_ars'] = data['monto_mensual']
+    
+    gasto = GastoFijo(**data, usuario_id=usuario_id)
     db.add(gasto)
     db.commit()
     db.refresh(gasto)
@@ -76,6 +90,25 @@ def update_gasto_fijo(
         return None
 
     update_data = dto.model_dump(exclude_unset=True)
+    
+    # Recalculate monto_mensual_ars if monto_mensual or moneda changed
+    if 'monto_mensual' in update_data or 'moneda' in update_data:
+        # Get tipo_cambio from config
+        from app.models import ConfiguracionUsuario
+        config = db.query(ConfiguracionUsuario).filter(
+            ConfiguracionUsuario.usuario_id == usuario_id
+        ).first()
+        tipo_cambio = float(config.tipo_cambio_usd_ars) if config and config.tipo_cambio_usd_ars else 1335.0
+        
+        # Use updated or existing values
+        monto = update_data.get('monto_mensual', gasto.monto_mensual)
+        moneda = update_data.get('moneda', gasto.moneda)
+        
+        if moneda == 'USD':
+            update_data['monto_mensual_ars'] = monto * tipo_cambio
+        else:
+            update_data['monto_mensual_ars'] = monto
+    
     for field, value in update_data.items():
         setattr(gasto, field, value)
 

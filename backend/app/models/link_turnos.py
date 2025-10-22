@@ -28,3 +28,6 @@ class LinkTurno(Base):
     # Relationship
     usuario = relationship("Usuario", back_populates="link_turnos")
 
+
+
+

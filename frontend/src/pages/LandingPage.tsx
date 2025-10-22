@@ -203,6 +203,63 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Demo Video Section */}
+      <section id="demo" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="container mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center space-x-2 bg-white/10 px-4 py-2 rounded-full mb-4">
+              <Play className="h-4 w-4 text-cyan-400" />
+              <span className="text-sm font-bold text-cyan-400">Video Demo</span>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">
+              Mirá cómo funciona Manny
+            </h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Descubrí en 3 minutos cómo Manny puede transformar la gestión de tu consultorio
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="max-w-5xl mx-auto"
+          >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10">
+              <div className="aspect-video">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src="https://www.youtube.com/embed/yqEvcj3KfW8"
+                  title="Manny App - Demo"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="w-full h-full"
+                ></iframe>
+              </div>
+            </div>
+            
+            <div className="mt-8 text-center">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/register')}
+                className="px-10 py-5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-2xl hover:shadow-3xl transition-all inline-flex items-center justify-center space-x-2"
+              >
+                <span>Comenzar Gratis Ahora</span>
+                <ArrowRight className="h-6 w-6" />
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Problem Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="container mx-auto">
@@ -489,14 +546,14 @@ const LandingPage: React.FC = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
+              { icon: Calculator, title: "Calculadora de Costos", description: "Precios y costos precisos" },
+              { icon: TrendingUp, title: "Análisis Financiero", description: "Rentabilidad en tiempo real" },
+              { icon: PieChart, title: "Control de Gastos", description: "Gestión total de egresos" },
+              { icon: BarChart3, title: "Dashboard Analítico", description: "Métricas e insights" },
               { icon: Calendar, title: "Agenda Inteligente", description: "Gestión de turnos automatizada" },
-              { icon: Users, title: "Pacientes", description: "Historial completo con odontograma" },
-              { icon: FileText, title: "Consultas", description: "Registro rápido y completo" },
-              { icon: BarChart3, title: "Dashboard", description: "Métricas en tiempo real" },
-              { icon: Calculator, title: "Calculadora", description: "Precios y costos precisos" },
-              { icon: TrendingUp, title: "Reportes", description: "Análisis de rentabilidad" },
-              { icon: PieChart, title: "Gastos", description: "Control total de egresos" },
-              { icon: Zap, title: "Importación", description: "Cargá datos masivamente" },
+              { icon: Users, title: "Gestión de Pacientes", description: "Historial completo con odontograma" },
+              { icon: FileText, title: "Registro de Consultas", description: "Prestaciones rápidas y completas" },
+              { icon: Zap, title: "Importación Masiva", description: "Cargá datos rápidamente" },
             ].map((feature, index) => (
               <motion.div
                 key={index}
@@ -648,7 +705,7 @@ const LandingPage: React.FC = () => {
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
               Comenzá gratis hoy. Sin tarjeta de crédito. Configuración en minutos.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -657,6 +714,15 @@ const LandingPage: React.FC = () => {
               >
                 <span>Probar Gratis 30 Días</span>
                 <ChevronRight className="h-6 w-6" />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => scrollToSection('demo')}
+                className="px-10 py-5 bg-white/20 backdrop-blur-lg border-2 border-white text-white rounded-2xl font-bold text-lg hover:bg-white/30 transition-all inline-flex items-center justify-center space-x-2"
+              >
+                <Play className="h-6 w-6" />
+                <span>Ver Video Demo</span>
               </motion.button>
               <motion.a
                 href="https://instagram.com/manny.app"

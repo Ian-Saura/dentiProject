@@ -4,6 +4,7 @@ import { X, User, Mail, Phone, Calendar, CreditCard, Building2, Save } from 'luc
 import { useMutation, useQueryClient } from 'react-query';
 import { pacientesService } from '../services';
 import toast from 'react-hot-toast';
+import { dateInputToISO } from '../utils/dateUtils';
 
 interface PacienteForm {
   nombre: string;
@@ -135,7 +136,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
       ...formData,
       email: formData.email?.trim() === '' ? undefined : formData.email,
       telefono: formData.telefono?.trim() === '' ? undefined : formData.telefono,
-      fecha_nacimiento: formData.fecha_nacimiento === '' ? undefined : formData.fecha_nacimiento,
+      fecha_nacimiento: dateInputToISO(formData.fecha_nacimiento),
       obra_social: formData.obra_social?.trim() === '' ? undefined : formData.obra_social,
       alergias: formData.alergias?.trim() === '' ? undefined : formData.alergias,
       medicamentos_actuales: formData.medicamentos_actuales?.trim() === '' ? undefined : formData.medicamentos_actuales,

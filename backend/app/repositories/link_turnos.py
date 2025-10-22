@@ -91,3 +91,6 @@ def increment_usage(db: Session, link_id: int) -> None:
         link.usos_totales += 1
         db.commit()
 
+
+
+

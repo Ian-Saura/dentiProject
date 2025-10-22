@@ -12,12 +12,25 @@ interface Paciente {
   email?: string;
 }
 
+interface Turno {
+  id: number;
+  fecha: string;
+  hora_inicio: string;
+  duracion_minutos: number;
+  nombre_paciente: string;
+  apellido_paciente: string;
+  dni_paciente?: string;
+  telefono_paciente?: string;
+  paciente_id?: number;
+}
+
 interface QuickTurnoModalProps {
   isOpen: boolean;
   onClose: () => void;
   fecha: string;
   hora: string;
   onSuccess: () => void;
+  editingTurno?: Turno;
 }
 
 export default function QuickTurnoModal({
@@ -26,6 +39,7 @@ export default function QuickTurnoModal({
   fecha,
   hora,
   onSuccess,
+  editingTurno,
 }: QuickTurnoModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [nombre, setNombre] = useState('');
@@ -33,6 +47,8 @@ export default function QuickTurnoModal({
   const [dni, setDni] = useState('');
   const [telefono, setTelefono] = useState('');
   const [duracion, setDuracion] = useState(30);
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(fecha);
+  const [horaSeleccionada, setHoraSeleccionada] = useState(hora);
   const [loading, setLoading] = useState(false);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -40,6 +56,21 @@ export default function QuickTurnoModal({
   const [pacienteId, setPacienteId] = useState<number | null>(null);
   const [searching, setSearching] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Inicializar valores si estamos editando
+  useEffect(() => {
+    if (editingTurno) {
+      setNombre(editingTurno.nombre_paciente);
+      setApellido(editingTurno.apellido_paciente);
+      setDni(editingTurno.dni_paciente || '');
+      setTelefono(editingTurno.telefono_paciente || '');
+      setDuracion(editingTurno.duracion_minutos);
+      setPacienteId(editingTurno.paciente_id || null);
+      if (editingTurno.nombre_paciente && editingTurno.apellido_paciente) {
+        setSearchTerm(`${editingTurno.nombre_paciente} ${editingTurno.apellido_paciente}${editingTurno.dni_paciente ? ' - DNI: ' + editingTurno.dni_paciente : ''}`);
+      }
+    }
+  }, [editingTurno]);
 
   // Buscar pacientes mientras escribe
   useEffect(() => {
@@ -114,15 +145,18 @@ export default function QuickTurnoModal({
 
     setLoading(true);
     try {
-      const response = await fetch('/v1/turnos/', {
-        method: 'POST',
+      const url = editingTurno ? `/v1/turnos/${editingTurno.id}` : '/v1/turnos/';
+      const method = editingTurno ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: JSON.stringify({
-          fecha,
-          hora_inicio: hora,
+          fecha: fechaSeleccionada,
+          hora_inicio: horaSeleccionada,
           duracion_minutos: duracion,
           paciente_id: pacienteId, // Si seleccionó un paciente existente
           nombre_paciente: nombre,
@@ -132,14 +166,14 @@ export default function QuickTurnoModal({
         }),
       });
 
-      if (!response.ok) throw new Error('Error al crear turno');
+      if (!response.ok) throw new Error(editingTurno ? 'Error al actualizar turno' : 'Error al crear turno');
 
-      toast.success('✅ Turno creado exitosamente');
+      toast.success(editingTurno ? '✅ Turno actualizado exitosamente' : '✅ Turno creado exitosamente');
       onSuccess();
       handleClose();
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error al crear el turno');
+      toast.error(editingTurno ? 'Error al actualizar el turno' : 'Error al crear el turno');
     } finally {
       setLoading(false);
     }
@@ -175,17 +209,11 @@ export default function QuickTurnoModal({
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <div>
+            <div className="flex-1">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-blue-500" />
-                Nuevo Turno Rápido
+                {editingTurno ? 'Editar Turno' : 'Nuevo Turno Rápido'}
               </h3>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1 capitalize">
-                {fechaFormateada}
-              </p>
-              <p className="text-sm font-medium text-blue-600">
-                Hora: {hora}
-              </p>
             </div>
             <button
               onClick={handleClose}
@@ -194,6 +222,34 @@ export default function QuickTurnoModal({
             >
               <X className="w-5 h-5" />
             </button>
+          </div>
+
+          {/* Fecha y Hora Editables */}
+          <div className="mb-4 grid grid-cols-2 gap-3 bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Fecha *
+              </label>
+              <input
+                type="date"
+                value={fechaSeleccionada}
+                onChange={(e) => setFechaSeleccionada(e.target.value)}
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Hora *
+              </label>
+              <input
+                type="time"
+                value={horaSeleccionada}
+                onChange={(e) => setHoraSeleccionada(e.target.value)}
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                required
+              />
+            </div>
           </div>
 
           {/* Form */}

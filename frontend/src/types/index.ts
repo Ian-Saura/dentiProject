@@ -141,7 +141,9 @@ export interface CostoEquipoCreate {
 export interface GastoFijo {
   id: number;
   concepto: string;
-  monto_mensual_ars: number;
+  monto_mensual: number;
+  moneda: 'ARS' | 'USD';
+  monto_mensual_ars?: number;  // Calculated field
   observaciones?: string;
   activo: boolean;
   fecha_creacion: string;
@@ -149,7 +151,8 @@ export interface GastoFijo {
 
 export interface GastoFijoCreate {
   concepto: string;
-  monto_mensual_ars: number;
+  monto_mensual: number;
+  moneda: 'ARS' | 'USD';
   observaciones?: string;
 }
 

@@ -36,8 +36,8 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
     { name: 'Dashboard', href: '/analytical/dashboard', icon: Home },
     { name: 'Reportes', href: '/analytical/reportes', icon: TrendingUp },
-    { name: 'Calculadora', href: '/analytical/calculadora', icon: Calculator },
     { name: 'Configuración', href: '/analytical/configuracion', icon: Settings },
+    { name: 'Calculadora', href: '/analytical/calculadora', icon: Calculator },
     { name: 'Importar', href: '/analytical/import', icon: Upload },
     ...(isAdmin ? [{ name: 'Admin', href: '/analytical/admin', icon: Shield }] : []),
   ];
@@ -81,7 +81,11 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
               className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col glass-dark shadow-2xl lg:hidden"
             >
               <div className="flex h-16 items-center justify-between px-6 border-b border-white/10">
-                <div className="flex items-center space-x-2">
+                <Link 
+                  to="/analytical/dashboard" 
+                  className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                  onClick={() => setSidebarOpen(false)}
+                >
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-dental rounded-lg blur opacity-50"></div>
                     <div className="relative bg-white rounded-lg p-1.5">
@@ -89,7 +93,7 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                   </div>
                   <span className="text-xl font-bold text-white">Análisis</span>
-                </div>
+                </Link>
                 <button onClick={() => setSidebarOpen(false)} className="text-white/70 hover:text-white transition-colors">
                   <X className="h-6 w-6" />
                 </button>
@@ -156,7 +160,10 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white/80 backdrop-blur-xl border-r border-gray-200/50 shadow-soft">
           <div className="flex h-16 items-center px-6 border-b border-gray-200/50">
-            <div className="flex items-center space-x-2">
+            <Link 
+              to="/analytical/dashboard" 
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-dental rounded-lg blur opacity-50 animate-pulse-slow"></div>
                 <div className="relative bg-white rounded-lg p-1.5 shadow-lg">
@@ -164,7 +171,7 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               </div>
               <span className="text-xl font-bold gradient-text">Análisis</span>
-            </div>
+            </Link>
           </div>
 
           {/* User info */}

@@ -31,8 +31,8 @@ const OperationalLayout: React.FC<LayoutProps> = ({ children }) => {
   // Simple navigation for operational mode - only essential items
   const navigation = [
     { name: 'Turnos', href: '/operational/turnos', icon: Clock, emoji: '📅', color: 'from-blue-500 to-cyan-500' },
-    { name: 'Prestaciones', href: '/operational/prestaciones', icon: FileText, emoji: '📋', color: 'from-green-500 to-emerald-500' },
     { name: 'Pacientes', href: '/operational/pacientes', icon: Users, emoji: '👥', color: 'from-purple-500 to-pink-500' },
+    { name: 'Prestaciones', href: '/operational/prestaciones', icon: FileText, emoji: '📋', color: 'from-green-500 to-emerald-500' },
   ];
 
   const switchToAnalytical = () => {
@@ -74,14 +74,18 @@ const OperationalLayout: React.FC<LayoutProps> = ({ children }) => {
               className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 shadow-2xl lg:hidden"
             >
               <div className="flex h-16 items-center justify-between px-6 border-b border-white/10">
-                <div className="flex items-center space-x-2">
+                <Link 
+                  to="/operational/turnos" 
+                  className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                  onClick={() => setSidebarOpen(false)}
+                >
                   <div className="relative">
                     <div className="bg-white rounded-lg p-1.5">
                       <Zap className="h-6 w-6 text-cyan-600" />
                     </div>
                   </div>
                   <span className="text-xl font-bold text-white">Operativo</span>
-                </div>
+                </Link>
                 <button onClick={() => setSidebarOpen(false)} className="text-white/70 hover:text-white transition-colors">
                   <X className="h-6 w-6" />
                 </button>
@@ -144,12 +148,15 @@ const OperationalLayout: React.FC<LayoutProps> = ({ children }) => {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
         <div className="flex flex-col flex-grow bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600 shadow-2xl">
           <div className="flex h-16 items-center px-6 border-b border-white/10">
-            <div className="flex items-center space-x-2">
+            <Link 
+              to="/operational/turnos" 
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <div className="bg-white rounded-lg p-1.5 shadow-lg">
                 <Zap className="h-6 w-6 text-cyan-600" />
               </div>
               <span className="text-xl font-bold text-white">Operativo</span>
-            </div>
+            </Link>
           </div>
 
           {/* User info */}

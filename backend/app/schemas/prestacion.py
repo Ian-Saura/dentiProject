@@ -36,6 +36,7 @@ class PrestacionOut(BaseModel):
     requiere_anestesia: bool
     requiere_radiografia: bool
     es_multisesion: bool
+    observaciones: Optional[str]
     activo: bool
     fecha_creacion: datetime
 

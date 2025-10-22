@@ -116,13 +116,52 @@ def create_turno(db: Session, dto: TurnoCreate, usuario_id: int) -> Turno:
 
 def create_turno_publico(db: Session, dto: TurnoCreatePublic, usuario_id: int, token: str) -> Turno:
     """Crea una reserva de turno desde el formulario público"""
+    from app.models import Paciente
+    
     # Calcular hora_fin
     hora_inicio_dt = datetime.combine(date.today(), dto.hora_inicio)
     hora_fin_dt = hora_inicio_dt + timedelta(minutes=dto.duracion_minutos)
     hora_fin = hora_fin_dt.time()
 
+    # Buscar o crear paciente por DNI
+    paciente_id = None
+    if dto.dni_paciente:
+        # Buscar paciente existente
+        query = select(Paciente).where(
+            Paciente.dni == dto.dni_paciente,
+            Paciente.usuario_id == usuario_id
+        )
+        paciente_existente = db.execute(query).scalar_one_or_none()
+        
+        if paciente_existente:
+            # Actualizar datos del paciente si es necesario
+            paciente_existente.nombre = dto.nombre_paciente
+            paciente_existente.apellido = dto.apellido_paciente
+            if dto.telefono_paciente:
+                paciente_existente.telefono = dto.telefono_paciente
+            if dto.email_paciente:
+                paciente_existente.email = dto.email_paciente
+            db.commit()
+            paciente_id = paciente_existente.id
+        else:
+            # Crear nuevo paciente
+            nuevo_paciente = Paciente(
+                usuario_id=usuario_id,
+                nombre=dto.nombre_paciente,
+                apellido=dto.apellido_paciente,
+                dni=dto.dni_paciente,
+                telefono=dto.telefono_paciente or '',
+                email=dto.email_paciente,
+                activo=True,
+                fecha_registro=datetime.now()
+            )
+            db.add(nuevo_paciente)
+            db.flush()  # Flush para obtener el ID
+            paciente_id = nuevo_paciente.id
+
     turno = Turno(
         usuario_id=usuario_id,
+        paciente_id=paciente_id,
         fecha=dto.fecha,
         hora_inicio=dto.hora_inicio,
         hora_fin=hora_fin,

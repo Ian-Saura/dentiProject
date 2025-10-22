@@ -41,6 +41,7 @@ class Prestacion(Base):
     requiere_anestesia: Mapped[bool] = mapped_column(Boolean, default=False)
     requiere_radiografia: Mapped[bool] = mapped_column(Boolean, default=False)
     es_multisesion: Mapped[bool] = mapped_column(Boolean, default=False)
+    observaciones: Mapped[Optional[str]] = mapped_column(String(500))
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

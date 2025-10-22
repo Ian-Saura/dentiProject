@@ -6,6 +6,9 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
 
+// Components
+import OnboardingWrapper from '@/components/OnboardingWrapper';
+
 // Pages
 import LandingPage from '@/pages/LandingPage';
 import FAQPage from '@/pages/FAQPage';
@@ -24,6 +27,8 @@ import TrialExpiredPage from '@/pages/TrialExpiredPage';
 import TurnosPage from '@/pages/TurnosPage';
 import ReservarTurnoPage from '@/pages/ReservarTurnoPage';
 import OperationalDashboard from '@/pages/OperationalDashboard';
+import TerminosPage from '@/pages/TerminosPage';
+import PrivacidadPage from '@/pages/PrivacidadPage';
 
 // Google OAuth Client ID
 const GOOGLE_CLIENT_ID = '814453800673-39hb3apvtc1d5bdo68k9cq83isn75n2j.apps.googleusercontent.com';
@@ -55,7 +60,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <OnboardingWrapper>
+      {children}
+    </OnboardingWrapper>
+  );
 };
 
 // Mode Router Component
@@ -101,6 +110,14 @@ const AppRoutes: React.FC = () => {
       <Route 
         path="/register" 
         element={isAuthenticated ? <ModeRouter /> : <RegisterPage />} 
+      />
+      <Route 
+        path="/terminos" 
+        element={<TerminosPage />} 
+      />
+      <Route 
+        path="/privacidad" 
+        element={<PrivacidadPage />} 
       />
       <Route 
         path="/trial-expired" 

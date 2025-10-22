@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Plus, Settings, Link as LinkIcon, Clock, Sliders, X, Menu, User } from 'lucide-react';
+import { Calendar, Plus, Settings, Link as LinkIcon, Clock, Sliders, X, Menu, User, Edit } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppMode } from '../contexts/AppModeContext';
@@ -21,6 +21,7 @@ export default function TurnosPage() {
   const [configuracion, setConfiguracion] = useState<ConfiguracionTurnos | null>(null);
   const [turnoSeleccionado, setTurnoSeleccionado] = useState<Turno | null>(null);
   const [quickTurnoData, setQuickTurnoData] = useState<{ fecha: string; hora: string } | null>(null);
+  const [editingTurno, setEditingTurno] = useState<Turno | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
@@ -94,6 +95,12 @@ export default function TurnosPage() {
     if (turnoSeleccionado) {
       const fullName = `${turnoSeleccionado.nombre_paciente} ${turnoSeleccionado.apellido_paciente}`;
       navigate(`/${mode}/pacientes/${encodeURIComponent(fullName)}/dashboard`);
+    }
+  };
+
+  const handleEditarTurno = () => {
+    if (turnoSeleccionado) {
+      setEditingTurno(turnoSeleccionado);
     }
   };
 
@@ -227,6 +234,7 @@ export default function TurnosPage() {
                 onSlotClick={(fecha, hora) => setQuickTurnoData({ fecha, hora })}
                 horaInicio={configuracion?.hora_inicio_dia || "08:00"}
                 horaFin={configuracion?.hora_fin_dia || "20:00"}
+                diasBloqueados={configuracion?.dias_bloqueados || []}
               />
             </motion.div>
           </div>
@@ -307,29 +315,40 @@ export default function TurnosPage() {
                     )}
                   </div>
 
-                  <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                    {turnoSeleccionado.estado === 'reservado' && (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <button
-                        onClick={() => handleCompletarTurno(turnoSeleccionado.id)}
-                        className="flex-1 px-4 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm font-medium transition-colors"
+                        onClick={handleEditarTurno}
+                        className="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors flex items-center justify-center gap-2"
                       >
-                        ✓ Completar
+                        <Edit className="w-4 h-4" />
+                        Editar
                       </button>
-                    )}
-                    {turnoSeleccionado.estado !== 'cancelado' && turnoSeleccionado.estado !== 'completado' && (
+                      {turnoSeleccionado.estado === 'reservado' && (
+                        <button
+                          onClick={() => handleCompletarTurno(turnoSeleccionado.id)}
+                          className="flex-1 px-4 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm font-medium transition-colors"
+                        >
+                          ✓ Completar
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {turnoSeleccionado.estado !== 'cancelado' && turnoSeleccionado.estado !== 'completado' && (
+                        <button
+                          onClick={() => handleCancelarTurno(turnoSeleccionado.id)}
+                          className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium transition-colors"
+                        >
+                          ✕ Cancelar
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleCancelarTurno(turnoSeleccionado.id)}
-                        className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium transition-colors"
+                        onClick={() => setTurnoSeleccionado(null)}
+                        className="flex-1 lg:flex-none px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium transition-colors"
                       >
-                        ✕ Cancelar
+                        Cerrar
                       </button>
-                    )}
-                    <button
-                      onClick={() => setTurnoSeleccionado(null)}
-                      className="hidden lg:block px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium transition-colors"
-                    >
-                      Cerrar
-                    </button>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -429,6 +448,25 @@ export default function TurnosPage() {
           onSuccess={() => {
             loadTurnos();
             setQuickTurnoData(null);
+          }}
+        />
+      )}
+
+      {/* Edit Turno Modal */}
+      {editingTurno && (
+        <QuickTurnoModal
+          isOpen={true}
+          onClose={() => {
+            setEditingTurno(null);
+            setTurnoSeleccionado(null);
+          }}
+          fecha={editingTurno.fecha}
+          hora={editingTurno.hora_inicio}
+          editingTurno={editingTurno}
+          onSuccess={() => {
+            loadTurnos();
+            setEditingTurno(null);
+            setTurnoSeleccionado(null);
           }}
         />
       )}

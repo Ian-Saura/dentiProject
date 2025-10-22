@@ -51,7 +51,7 @@ export default function RegisterPage() {
         especialidad: data.especialidad,
       });
 
-      toast.success('¡Registro exitoso! Bienvenido a DentiProject 🎉');
+      toast.success('¡Registro exitoso! Bienvenido a Manny 🎉');
       
       // Redirect to onboarding or dashboard
       navigate('/');
@@ -81,7 +81,7 @@ export default function RegisterPage() {
           <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-12 text-white flex flex-col justify-center">
             <div className="mb-8">
               <UserPlus className="w-16 h-16 mb-4" />
-              <h2 className="text-4xl font-bold mb-2">Únete a DentiProject</h2>
+              <h2 className="text-4xl font-bold mb-2">Únete a Manny</h2>
               <p className="text-blue-100">
                 La plataforma profesional para gestión de consultorios médicos
               </p>
@@ -349,14 +349,27 @@ export default function RegisterPage() {
 
             <p className="mt-6 text-xs text-gray-500 text-center">
               Al registrarte, aceptas nuestros{' '}
-              <a href="#" className="text-blue-600 hover:underline">
+              <Link to="/terminos" className="text-blue-600 hover:underline">
                 Términos de Servicio
-              </a>{' '}
+              </Link>{' '}
               y{' '}
-              <a href="#" className="text-blue-600 hover:underline">
+              <Link to="/privacidad" className="text-blue-600 hover:underline">
                 Política de Privacidad
-              </a>
+              </Link>
             </p>
+            
+            {/* MercadoPago Subscription */}
+            <div className="mt-6 text-center">
+              <a 
+                href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=e3cbe4338d4d424abb2b4b3da6d229e1" 
+                className="inline-block bg-[#3483FA] text-white py-3 px-6 rounded-lg font-medium hover:bg-[#2a68c8] transition-colors shadow-md"
+              >
+                Comenzar Trial de 14 días
+              </a>
+              <p className="mt-2 text-xs text-gray-500">
+                Prueba gratis por 14 días, sin compromiso
+              </p>
+            </div>
           </div>
         </div>
       </div>

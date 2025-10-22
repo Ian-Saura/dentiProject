@@ -122,15 +122,16 @@ class AnalyticsService:
         # Match exact app.py logic including persistence updates
         config = get_config_by_usuario(db, usuario_id)
         horas_anuales = config.horas_anuales_trabajadas if config else 1100
-        tipo_cambio = 1335.0  # Default from app.py
+        # Use the tipo_cambio from config (dólar oficial venta) - convert to float
+        tipo_cambio = float(config.tipo_cambio_usd_ars) if config and config.tipo_cambio_usd_ars else 1335.0
 
-        # 1. Costos de equipos (amortización con inflación 4% anual) - exact app.py logic
+        # 1. Costos de equipos (amortización con inflación 4% anual) - always in USD
         equipos = db.query(CostoEquipo).filter(
             CostoEquipo.usuario_id == usuario_id,
             CostoEquipo.activo == True
         ).all()
 
-        costo_equipos_anual_usd = 0
+        costo_equipos_anual_usd = 0.0
         for equipo in equipos:
             if equipo.activo and equipo.monto_compra_usd and equipo.anios_vida_util and equipo.anios_vida_util > 0:
                 # Amortización con inflación - exact app.py calculation
@@ -139,22 +140,27 @@ class AnalyticsService:
                 amortizacion_anual = costo_reposicion / equipo.anios_vida_util
                 costo_equipos_anual_usd += amortizacion_anual
 
-        # Convertir USD a ARS
+        # Convertir equipos USD a ARS usando dólar oficial venta
         costo_equipos_anual_ars = costo_equipos_anual_usd * tipo_cambio
 
-        # 2. Gastos fijos anuales (ARS) - exact app.py logic
+        # 2. Gastos fijos anuales - convertir según moneda
         gastos = db.query(GastoFijo).filter(
             GastoFijo.usuario_id == usuario_id,
             GastoFijo.activo == True
         ).all()
 
-        costo_gastos_anual_ars = sum(
-            float(g.monto_mensual_ars) * 12 
-            for g in gastos 
-            if g.activo
-        )
+        costo_gastos_anual_ars = 0.0
+        for g in gastos:
+            if g.activo:
+                monto_mensual = float(g.monto_mensual)
+                # Convertir según moneda usando dólar oficial venta
+                if g.moneda == 'USD':
+                    monto_ars = monto_mensual * tipo_cambio
+                else:  # ARS
+                    monto_ars = monto_mensual
+                costo_gastos_anual_ars += monto_ars * 12
 
-        # 3. Cálculo final - exact app.py logic
+        # 3. Cálculo final - TODO EN ARS
         costo_total_anual = costo_equipos_anual_ars + costo_gastos_anual_ars
         costo_hora = costo_total_anual / horas_anuales if horas_anuales > 0 else 0
 

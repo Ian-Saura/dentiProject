@@ -22,7 +22,7 @@ export const pacientesService = {
   },
 
   async updatePaciente(id: number, paciente: Partial<PacienteCreate>): Promise<Paciente> {
-    const response = await api.put<Paciente>(`/pacientes/${id}`, paciente);
+    const response = await api.patch<Paciente>(`/pacientes/${id}`, paciente);
     return response.data;
   },
 

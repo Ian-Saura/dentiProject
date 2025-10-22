@@ -11,6 +11,7 @@ import ClinicalNotesModal from '@/components/ClinicalNotesModal';
 import AddConsultaModal from '@/components/AddConsultaModal';
 import AddPacienteModal from '@/components/AddPacienteModal';
 import QuickAppointmentModal from '@/components/QuickAppointmentModal';
+import toast from 'react-hot-toast';
 
 const PatientDashboardPage: React.FC = () => {
   const { patientName: encodedPatientName } = useParams<{ patientName: string }>();
@@ -44,7 +45,7 @@ const PatientDashboardPage: React.FC = () => {
   );
 
   // Fetch patient details to get ID and full patient info
-  const { data: pacientesData, refetch: refetchPatients } = useQuery(
+  const { data: pacientesData, refetch: refetchPatients, isLoading: loadingPatients } = useQuery(
     'pacientes',
     () => pacientesService.getPacientes(),
     {
@@ -60,8 +61,55 @@ const PatientDashboardPage: React.FC = () => {
     }
   );
 
-  // Get full patient data
-  const currentPatient = pacientesData?.find(p => `${p.nombre} ${p.apellido}` === patientName);
+  // Get full patient data - Try exact match first, then partial match
+  const currentPatient = React.useMemo(() => {
+    if (!pacientesData || !patientName) return undefined;
+    
+    // Try exact match first (nombre + apellido)
+    let patient = pacientesData.find(p => `${p.nombre} ${p.apellido}` === patientName);
+    
+    // If not found, try matching just nombre or apellido
+    if (!patient) {
+      patient = pacientesData.find(p => 
+        p.nombre === patientName || 
+        p.apellido === patientName ||
+        `${p.apellido} ${p.nombre}` === patientName
+      );
+    }
+    
+    // If still not found, try case-insensitive partial match
+    if (!patient) {
+      const lowerName = patientName.toLowerCase();
+      patient = pacientesData.find(p => 
+        p.nombre.toLowerCase().includes(lowerName) ||
+        p.apellido.toLowerCase().includes(lowerName) ||
+        `${p.nombre} ${p.apellido}`.toLowerCase() === lowerName
+      );
+    }
+    
+    return patient;
+  }, [pacientesData, patientName]);
+  
+  // Update patientId when currentPatient is found
+  React.useEffect(() => {
+    if (currentPatient && currentPatient.id !== patientId) {
+      setPatientId(currentPatient.id);
+    }
+  }, [currentPatient, patientId]);
+  
+  // Debug: Log para verificar el estado de carga
+  React.useEffect(() => {
+    console.log('Debug PatientDashboard:', {
+      patientName,
+      loadingPatients,
+      loadingConsultas,
+      hasPacientesData: !!pacientesData,
+      pacientesCount: pacientesData?.length,
+      currentPatient: currentPatient ? `${currentPatient.nombre} ${currentPatient.apellido}` : null,
+      patientId,
+      allPatientNames: pacientesData?.map(p => `${p.nombre} ${p.apellido}`).slice(0, 5)
+    });
+  }, [patientName, loadingPatients, loadingConsultas, pacientesData, currentPatient, patientId]);
 
   // Get next upcoming appointment
   const nextAppointment = consultas
@@ -232,7 +280,13 @@ const PatientDashboardPage: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setShowEditPacienteModal(true)}
+                onClick={() => {
+                  if (!currentPatient) {
+                    toast.error('Esperando datos del paciente...');
+                    return;
+                  }
+                  setShowEditPacienteModal(true);
+                }}
                 className="text-blue-600 hover:text-blue-700 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
                 title="Editar información del paciente"
               >
@@ -473,8 +527,8 @@ const PatientDashboardPage: React.FC = () => {
                                 🦷 {consulta.dientes_tratados.sort((a, b) => a - b).join(', ')}
                               </span>
                             )}
-                            <span className="flex items-center gap-1 font-bold">
-                              ${(consulta.monto_ars / 1000).toFixed(0)}K
+                            <span className="flex items-center gap-1 font-bold text-sm">
+                              ${consulta.monto_ars.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </span>
                             <span className="text-xs">
                               {consulta.medio_pago}

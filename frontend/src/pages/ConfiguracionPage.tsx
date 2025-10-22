@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Wrench, Building2, Sliders, Sparkles, Plus, X, Clock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDateToDDMMYYYY } from '../utils/dateFormat';
+import type { GastoFijo } from '@/types';
 
 interface Equipo {
   id: number;
@@ -37,7 +38,8 @@ interface EquipoForm {
 
 interface GastoForm {
   concepto: string;
-  monto_mensual_ars: number;
+  monto_mensual: number;
+  moneda: 'ARS' | 'USD';
   observaciones?: string;
 }
 
@@ -46,11 +48,13 @@ const ConfiguracionPage: React.FC = () => {
   const [showEquipoForm, setShowEquipoForm] = useState(false);
   const [showGastoForm, setShowGastoForm] = useState(false);
   const [editingEquipo, setEditingEquipo] = useState<Equipo | null>(null);
-  const [editingGasto, setEditingGasto] = useState<Gasto | null>(null);
+  const [editingGasto, setEditingGasto] = useState<GastoFijo | null>(null);
   
   // Estados para parámetros
   const [dolarBlue, setDolarBlue] = useState<number | null>(null);
+  const [dolarOficialVenta, setDolarOficialVenta] = useState<number | null>(null);
   const [usarCostoManual, setUsarCostoManual] = useState(false);
+  const [verEnMoneda, setVerEnMoneda] = useState<'ARS' | 'USD'>('ARS'); // Toggle para visualización
 
   const [equipoForm, setEquipoForm] = useState<EquipoForm>({
     nombre_equipo: '',
@@ -62,7 +66,8 @@ const ConfiguracionPage: React.FC = () => {
 
   const [gastoForm, setGastoForm] = useState<GastoForm>({
     concepto: '',
-    monto_mensual_ars: 0
+    monto_mensual: 0,
+    moneda: 'ARS'
   });
 
   const queryClient = useQueryClient();
@@ -78,7 +83,7 @@ const ConfiguracionPage: React.FC = () => {
     }
   );
   
-  const { data: gastos, isLoading: loadingGastos } = useQuery<Gasto[]>(
+  const { data: gastos, isLoading: loadingGastos } = useQuery<GastoFijo[]>(
     'gastos', 
     gastosService.getGastos,
     {
@@ -105,18 +110,23 @@ const ConfiguracionPage: React.FC = () => {
     analyticsService.getCostosAnalisis
   );
 
-  // Fetch dólar blue from API
+  // Fetch dólar oficial venta from API (for conversions)
   useEffect(() => {
-    const fetchDolarBlue = async () => {
+    const fetchDolar = async () => {
       try {
-        const response = await fetch('https://dolarapi.com/v1/dolares/blue');
-        const data = await response.json();
-        setDolarBlue(data.venta); // Precio de venta del dólar blue
+        const [oficialRes, blueRes] = await Promise.all([
+          fetch('https://dolarapi.com/v1/dolares/oficial'),
+          fetch('https://dolarapi.com/v1/dolares/blue')
+        ]);
+        const oficialData = await oficialRes.json();
+        const blueData = await blueRes.json();
+        setDolarOficialVenta(oficialData.venta);
+        setDolarBlue(blueData.venta);
       } catch (error) {
-        console.error('Error fetching dólar blue:', error);
+        console.error('Error fetching dolar:', error);
       }
     };
-    fetchDolarBlue();
+    fetchDolar();
   }, []);
 
   // Initialize usarCostoManual from config
@@ -209,7 +219,8 @@ const ConfiguracionPage: React.FC = () => {
   const resetGastoForm = () => {
     setGastoForm({
       concepto: '',
-      monto_mensual_ars: 0
+      monto_mensual: 0,
+      moneda: 'ARS'
     });
   };
 
@@ -243,11 +254,12 @@ const ConfiguracionPage: React.FC = () => {
     setShowEquipoForm(true);
   };
 
-  const handleEditGasto = (gasto: Gasto) => {
+  const handleEditGasto = (gasto: GastoFijo) => {
     setEditingGasto(gasto);
     setGastoForm({
       concepto: gasto.concepto,
-      monto_mensual_ars: gasto.monto_mensual_ars
+      monto_mensual: gasto.monto_mensual,
+      moneda: gasto.moneda
     });
     setShowGastoForm(true);
   };
@@ -303,6 +315,49 @@ const ConfiguracionPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Currency Toggle - Only show on equipos and gastos tabs */}
+      {(activeTab === 'equipos' || activeTab === 'gastos') && (
+        <AnimatedCard delay={0.05}>
+          <div className="glass rounded-2xl p-4 shadow-soft border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-gray-900">Visualización de Montos</h3>
+                <p className="text-sm text-gray-600">Los cálculos siempre se realizan en pesos (usando dólar oficial venta)</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`text-sm font-medium ${verEnMoneda === 'ARS' ? 'text-dental-600' : 'text-gray-500'}`}>
+                  🇦🇷 ARS
+                </span>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setVerEnMoneda(verEnMoneda === 'ARS' ? 'USD' : 'ARS')}
+                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                    verEnMoneda === 'USD' ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <motion.div
+                    layout
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md"
+                    style={{
+                      x: verEnMoneda === 'USD' ? 28 : 0
+                    }}
+                  />
+                </motion.button>
+                <span className={`text-sm font-medium ${verEnMoneda === 'USD' ? 'text-green-600' : 'text-gray-500'}`}>
+                  💵 USD
+                </span>
+              </div>
+            </div>
+            {dolarOficialVenta && (
+              <div className="mt-2 text-xs text-gray-500">
+                Tipo de cambio: 1 USD = ${dolarOficialVenta.toLocaleString('es-AR', { minimumFractionDigits: 2 })} ARS (Oficial Venta)
+              </div>
+            )}
+          </div>
+        </AnimatedCard>
+      )}
 
       {/* Premium Tabs */}
       <AnimatedCard delay={0.1}>
@@ -539,10 +594,21 @@ const ConfiguracionPage: React.FC = () => {
                     <div className="p-5">
                       {/* Monto destacado */}
                       <div className="mb-4 text-center py-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                        <div className="text-3xl font-black text-green-600">
-                          ${equipo.monto_compra_usd.toLocaleString('es-AR')}
-                        </div>
-                        <div className="text-xs text-green-700 font-medium uppercase tracking-wide">USD</div>
+                        {verEnMoneda === 'USD' ? (
+                          <>
+                            <div className="text-3xl font-black text-green-600">
+                              ${equipo.monto_compra_usd.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            <div className="text-xs text-green-700 font-medium uppercase tracking-wide">💵 USD</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-3xl font-black text-green-600">
+                              ${(equipo.monto_compra_usd * (dolarOficialVenta || 1335)).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            </div>
+                            <div className="text-xs text-green-700 font-medium uppercase tracking-wide">🇦🇷 ARS</div>
+                          </>
+                        )}
                       </div>
 
                       {/* Información */}
@@ -658,14 +724,30 @@ const ConfiguracionPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Monto mensual (ARS) *
+                      Moneda *
+                    </label>
+                    <select
+                      value={gastoForm.moneda}
+                      onChange={(e) => setGastoForm({ ...gastoForm, moneda: e.target.value as 'ARS' | 'USD' })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="ARS">🇦🇷 Pesos Argentinos (ARS)</option>
+                      <option value="USD">💵 Dólares (USD)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Monto mensual ({gastoForm.moneda}) *
                     </label>
                     <input
                       type="number"
-                      value={gastoForm.monto_mensual_ars}
-                      onChange={(e) => setGastoForm({ ...gastoForm, monto_mensual_ars: Number(e.target.value) })}
+                      value={gastoForm.monto_mensual}
+                      onChange={(e) => setGastoForm({ ...gastoForm, monto_mensual: Number(e.target.value) })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       min="0"
+                      step="0.01"
                       required
                     />
                   </div>
@@ -702,52 +784,89 @@ const ConfiguracionPage: React.FC = () => {
             </div>
             
             <div className="divide-y divide-gray-200">
-              {gastos?.map((gasto) => (
-                <div key={gasto.id} className="p-6 hover:bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <h4 className="text-lg font-medium text-gray-900">{gasto.concepto}</h4>
-                      <div className="mt-1 text-2xl font-bold text-blue-600">
-                        ${gasto.monto_mensual_ars.toLocaleString('es-AR')} ARS/mes
+              {gastos?.map((gasto) => {
+                // Calculate amount in desired display currency
+                let montoEnMonedaSeleccionada: number;
+                if (verEnMoneda === gasto.moneda) {
+                  // Already in the desired currency
+                  montoEnMonedaSeleccionada = gasto.monto_mensual;
+                } else if (verEnMoneda === 'USD' && gasto.moneda === 'ARS') {
+                  // Convert ARS to USD
+                  montoEnMonedaSeleccionada = gasto.monto_mensual / (dolarOficialVenta || 1335);
+                } else {
+                  // Convert USD to ARS
+                  montoEnMonedaSeleccionada = gasto.monto_mensual * (dolarOficialVenta || 1335);
+                }
+                const monedaSimbolo = verEnMoneda === 'USD' ? '💵 USD' : '🇦🇷 ARS';
+                const monedaOriginal = gasto.moneda === 'USD' ? '💵' : '🇦🇷';
+                
+                return (
+                  <div key={gasto.id} className="p-6 hover:bg-gray-50">
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1">
+                        <h4 className="text-lg font-medium text-gray-900">
+                          {gasto.concepto} {monedaOriginal}
+                        </h4>
+                        <div className="mt-1 text-2xl font-bold text-blue-600">
+                          ${montoEnMonedaSeleccionada.toLocaleString('es-AR', { 
+                            minimumFractionDigits: verEnMoneda === 'USD' ? 2 : 0,
+                            maximumFractionDigits: verEnMoneda === 'USD' ? 2 : 0
+                          })} {monedaSimbolo}/mes
+                        </div>
+                        <div className="mt-1 text-sm text-gray-500">
+                          Anual: ${(montoEnMonedaSeleccionada * 12).toLocaleString('es-AR', { 
+                            minimumFractionDigits: verEnMoneda === 'USD' ? 2 : 0,
+                            maximumFractionDigits: verEnMoneda === 'USD' ? 2 : 0
+                          })} {monedaSimbolo}
+                        </div>
                       </div>
-                      <div className="mt-1 text-sm text-gray-500">
-                        Anual: ${(gasto.monto_mensual_ars * 12).toLocaleString('es-AR')} ARS
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          onClick={() => handleEditGasto(gasto)}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteGasto(gasto.id)}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          🗑️ Eliminar
+                        </button>
                       </div>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <button
-                        onClick={() => handleEditGasto(gasto)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        onClick={() => handleDeleteGasto(gasto.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        🗑️ Eliminar
-                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            {gastos && gastos.length > 0 && (
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">Total Gastos Fijos:</span>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600">
-                      ${gastos.reduce((sum, gasto) => sum + gasto.monto_mensual_ars, 0).toLocaleString('es-AR')} ARS/mes
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      ${(gastos.reduce((sum, gasto) => sum + gasto.monto_mensual_ars, 0) * 12).toLocaleString('es-AR')} ARS/año
+            {gastos && gastos.length > 0 && (() => {
+              const totalARS = gastos.reduce((sum, gasto) => sum + gasto.monto_mensual_ars, 0);
+              const totalEnMoneda = verEnMoneda === 'USD' ? totalARS / (dolarOficialVenta || 1335) : totalARS;
+              const monedaSimbolo = verEnMoneda === 'USD' ? '💵 USD' : '🇦🇷 ARS';
+              
+              return (
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold text-gray-900">Total Gastos Fijos:</span>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-blue-600">
+                        ${totalEnMoneda.toLocaleString('es-AR', { 
+                          minimumFractionDigits: verEnMoneda === 'USD' ? 2 : 0,
+                          maximumFractionDigits: verEnMoneda === 'USD' ? 2 : 0
+                        })} {monedaSimbolo}/mes
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        ${(totalEnMoneda * 12).toLocaleString('es-AR', { 
+                          minimumFractionDigits: verEnMoneda === 'USD' ? 2 : 0,
+                          maximumFractionDigits: verEnMoneda === 'USD' ? 2 : 0
+                        })} {monedaSimbolo}/año
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {gastos?.length === 0 && (
               <AnimatedCard delay={0.3}>

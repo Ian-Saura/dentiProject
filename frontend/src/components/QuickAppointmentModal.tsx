@@ -254,3 +254,6 @@ const QuickAppointmentModal: React.FC<QuickAppointmentModalProps> = ({
 
 export default QuickAppointmentModal;
 
+
+
+

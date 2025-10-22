@@ -25,6 +25,7 @@ interface ConsultaForm {
   monto_ars: number;
   medio_pago: 'efectivo' | 'transferencia' | 'debito' | 'credito' | 'mercadopago' | 'otro';
   fecha_consulta: string;
+  observaciones?: string;
 }
 
 const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
@@ -53,7 +54,8 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
     tratamiento: 'Consulta',
     monto_ars: 30000,
     medio_pago: 'efectivo',
-    fecha_consulta: new Date().toISOString().split('T')[0]
+    fecha_consulta: new Date().toISOString().split('T')[0],
+    observaciones: ''
   });
 
   const handleToothClick = (toothNumber: number) => {
@@ -267,16 +269,21 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         );
         if (existingPrestacion) {
           prestacionUsuarioId = existingPrestacion.id;
+          console.log('✅ Prestación existente encontrada:', prestacionUsuarioId);
         } else {
           // Create new prestacion_usuario if not found
           try {
+            console.log('🔍 Buscando prestación base para:', formData.tratamiento);
             // Find the base prestacion from catalog by name
             const basePrestacionesResponse = await prestacionesService.getPrestaciones();
+            console.log('📋 Prestaciones del catálogo:', basePrestacionesResponse.length);
+            
             const basePrestacion = basePrestacionesResponse.find(p => 
               p.nombre.toLowerCase() === formData.tratamiento.toLowerCase()
             );
             
             if (basePrestacion) {
+              console.log('✅ Prestación base encontrada:', basePrestacion.id);
               // Create user's custom prestacion
               const newPrestacion = await prestacionesService.createPrestacionUsuario({
                 prestacion_id: basePrestacion.id,
@@ -284,9 +291,11 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                 margen_ganancia_porcentaje: 50 // Default margin
               });
               prestacionUsuarioId = newPrestacion.id;
+              console.log('✅ Nueva prestación de usuario creada:', prestacionUsuarioId);
               // Invalidate cache to refresh prestaciones list
               queryClient.invalidateQueries('prestaciones-usuario');
             } else {
+              console.log('⚠️ Prestación no encontrada en catálogo, usando genérica');
               // If not in catalog, create a generic one (use first available)
               const genericPrestacion = basePrestacionesResponse[0];
               if (genericPrestacion) {
@@ -296,21 +305,30 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                   margen_ganancia_porcentaje: 50
                 });
                 prestacionUsuarioId = newPrestacion.id;
+                console.log('✅ Nueva prestación genérica creada:', prestacionUsuarioId);
                 queryClient.invalidateQueries('prestaciones-usuario');
+              } else {
+                console.error('❌ No hay prestaciones en el catálogo');
+                toast.error('Error: No hay prestaciones en el catálogo. Contacta al soporte.');
+                return;
               }
             }
-          } catch (error) {
-            console.error('Error creating prestacion:', error);
-            toast.error('Error al crear la prestación. Por favor intenta nuevamente.');
+          } catch (error: any) {
+            console.error('❌ Error creating prestacion:', error);
+            console.error('Error details:', error.response?.data);
+            toast.error(`Error al crear la prestación: ${error.response?.data?.detail || error.message}`);
             return;
           }
         }
       }
 
       if (!prestacionUsuarioId) {
+        console.error('❌ No se pudo obtener prestacion_usuario_id');
         toast.error('No se pudo crear la prestación. Por favor contacta al soporte.');
         return;
       }
+
+      console.log('📝 Creando consulta con prestacion_usuario_id:', prestacionUsuarioId);
 
       // Step 2: Create or update consulta
       const consultaData = {
@@ -647,6 +665,23 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Observaciones */}
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                📝 Observaciones del Tratamiento (Opcional)
+              </label>
+              <textarea
+                value={formData.observaciones || ''}
+                onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent resize-none"
+                rows={3}
+                placeholder="Ej: Material utilizado, procedimiento específico, indicaciones al paciente..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Describe características específicas del tratamiento por diente
+              </p>
             </div>
 
             {/* Buttons */}

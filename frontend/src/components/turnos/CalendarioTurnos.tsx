@@ -10,6 +10,7 @@ interface CalendarioTurnosProps {
   onSlotClick?: (date: string, hora: string) => void;
   horaInicio?: string;
   horaFin?: string;
+  diasBloqueados?: string[];
 }
 
 const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -37,6 +38,7 @@ export default function CalendarioTurnos({
   onDateChange,
   horaInicio = "08:00",
   horaFin = "20:00",
+  diasBloqueados = [],
 }: CalendarioTurnosProps) {
   const [viewMode, setViewMode] = useState<'calendar' | 'agenda'>('agenda');
 
@@ -92,6 +94,11 @@ export default function CalendarioTurnos({
     return turnos.filter(t => t.fecha === dateStr);
   };
 
+  const isDayBlocked = (day: number): boolean => {
+    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return diasBloqueados.includes(dateStr);
+  };
+
   const renderCalendarView = () => {
     const days = [];
     for (let i = 0; i < startingDayOfWeek; i++) {
@@ -101,36 +108,50 @@ export default function CalendarioTurnos({
     for (let day = 1; day <= daysInMonth; day++) {
       const turnosDay = getTurnosForDay(day);
       const isCurrentDay = isToday(day);
+      const isBlocked = isDayBlocked(day);
 
       days.push(
         <div
           key={day}
-          className={`h-24 border border-gray-200 p-1 cursor-pointer hover:bg-gray-50 ${
-            isCurrentDay ? 'bg-blue-50 border-blue-300' : ''
+          className={`h-24 border border-gray-200 p-1 relative ${
+            isBlocked 
+              ? 'bg-red-50 border-red-300 cursor-not-allowed opacity-75' 
+              : isCurrentDay 
+                ? 'bg-blue-50 border-blue-300 cursor-pointer hover:bg-gray-50' 
+                : 'cursor-pointer hover:bg-gray-50'
           }`}
           onClick={() => {
+            if (isBlocked) return;
             const newDate = new Date(selectedDate);
             newDate.setDate(day);
             onDateChange(newDate);
             setViewMode('agenda');
           }}
         >
-          <div className={`text-sm font-medium ${isCurrentDay ? 'text-blue-600' : ''}`}>
+          <div className={`text-sm font-medium ${isCurrentDay ? 'text-blue-600' : isBlocked ? 'text-red-600' : ''}`}>
             {day}
           </div>
-          <div className="mt-1 space-y-0.5">
-            {turnosDay.slice(0, 3).map(turno => (
-              <div
-                key={turno.id}
-                className={`text-xs px-1 py-0.5 rounded border ${estadoConfig[turno.estado].color}`}
-              >
-                {turno.hora_inicio.substring(0, 5)}
+          {isBlocked ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-red-100 border border-red-300 rounded-lg px-2 py-1">
+                <span className="text-xs font-semibold text-red-700">🚫 Bloqueado</span>
               </div>
-            ))}
-            {turnosDay.length > 3 && (
-              <div className="text-xs text-gray-500">+{turnosDay.length - 3}</div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="mt-1 space-y-0.5">
+              {turnosDay.slice(0, 3).map(turno => (
+                <div
+                  key={turno.id}
+                  className={`text-xs px-1 py-0.5 rounded border ${estadoConfig[turno.estado].color}`}
+                >
+                  {turno.hora_inicio.substring(0, 5)}
+                </div>
+              ))}
+              {turnosDay.length > 3 && (
+                <div className="text-xs text-gray-500">+{turnosDay.length - 3}</div>
+              )}
+            </div>
+          )}
         </div>
       );
     }
@@ -142,6 +163,10 @@ export default function CalendarioTurnos({
     const turnosDelDia = getTurnosForDate(selectedDate).sort((a, b) => 
       a.hora_inicio.localeCompare(b.hora_inicio)
     );
+
+    // Check if the selected day is blocked
+    const selectedDateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    const isDayBlockedInAgenda = diasBloqueados.includes(selectedDateStr);
 
     // Generar slots de tiempo cada 30 minutos usando el rango configurado
     const timeSlots = [];
@@ -160,6 +185,17 @@ export default function CalendarioTurnos({
 
     return (
       <div className="space-y-1">
+        {isDayBlockedInAgenda && (
+          <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="text-3xl">🚫</div>
+              <div>
+                <h3 className="font-bold text-red-900 text-lg">Día Bloqueado</h3>
+                <p className="text-red-700 text-sm">Este día está marcado como no disponible para turnos.</p>
+              </div>
+            </div>
+          </div>
+        )}
         {timeSlots.map((timeSlot) => {
           // Buscar si hay un turno en este slot
           const turnoEnSlot = turnosDelDia.find(t => t.hora_inicio.substring(0, 5) === timeSlot);
@@ -216,15 +252,21 @@ export default function CalendarioTurnos({
             );
           }
 
-          // Slot vacío - clickeable para crear turno
+          // Slot vacío - clickeable para crear turno (excepto si el día está bloqueado)
           return (
             <button
               key={timeSlot}
               onClick={() => {
+                if (isDayBlockedInAgenda) return;
                 const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
                 onSlotClick?.(dateStr, timeSlot);
               }}
-              className="w-full p-2 sm:p-3 rounded-lg border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all text-left group"
+              disabled={isDayBlockedInAgenda}
+              className={`w-full p-2 sm:p-3 rounded-lg border-2 border-dashed text-left ${
+                isDayBlockedInAgenda 
+                  ? 'border-red-200 bg-red-50 cursor-not-allowed opacity-50' 
+                  : 'border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all group'
+              }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-gray-500 group-hover:text-blue-600">

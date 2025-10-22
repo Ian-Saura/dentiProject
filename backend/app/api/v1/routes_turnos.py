@@ -531,6 +531,6 @@ def reservar_turno_con_token(
     )
     
     # Incrementar contador de usos del link
-    link_turnos_repo.increment_link_usage(db, link.id)
+    link_turnos_repo.increment_usage(db, link.id)
     
     return turno_creado

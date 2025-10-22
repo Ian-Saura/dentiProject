@@ -130,7 +130,9 @@ const DashboardPage: React.FC = () => {
                 <DollarSign className="h-5 w-5" />
               </div>
               <p className="text-white/90 text-xs font-medium mb-1">Ingresos Totales</p>
-              <p className="text-3xl font-black mb-1">${(resumen?.ingreso_total / 1000 || 0).toFixed(1)}K</p>
+              <p className="text-2xl font-black mb-1">
+                ${(resumen?.ingreso_total || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
               <div className="flex items-center gap-1 text-white/80 text-xs">
                 <TrendingUp className="h-3 w-3" />
                 <span>+{kpis?.crecimiento_mensual || 0}% este mes</span>
@@ -167,7 +169,9 @@ const DashboardPage: React.FC = () => {
                 <TrendingUp className="h-5 w-5" />
               </div>
               <p className="text-white/90 text-xs font-medium mb-1">Promedio/Prestación</p>
-              <p className="text-3xl font-black mb-1">${(resumen?.promedio_consulta / 1000 || 0).toFixed(1)}K</p>
+              <p className="text-2xl font-black mb-1">
+                ${(resumen?.promedio_consulta || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
               <p className="text-white/80 text-xs font-medium">valor promedio</p>
             </div>
           </motion.div>

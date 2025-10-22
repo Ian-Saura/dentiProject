@@ -76,40 +76,63 @@ const ImportPage: React.FC = () => {
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === 'text/csv') {
+    if (!file) return;
+    
+    // Check file extension
+    const fileName = file.name.toLowerCase();
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      toast.error('❌ Archivo Excel detectado. Por favor convierte tu archivo a CSV primero.');
+      toast('💡 En Excel: Archivo → Guardar como → CSV (delimitado por comas)', { duration: 5000 });
+      return;
+    }
+    
+    if (file.type === 'text/csv' || fileName.endsWith('.csv')) {
       setSelectedFile(file);
       setImportResult(null);
       
       // Read CSV to extract columns
       const reader = new FileReader();
       reader.onload = (e) => {
-        const text = e.target?.result as string;
-        const lines = text.split('\n');
-        if (lines.length > 0) {
-          const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-          setCsvColumns(headers);
-          
-          // Set default mappings if columns match common patterns
-          const mapping: ColumnMapping = {
-            col_paciente: findColumn(headers, ['paciente', 'patient', 'nombre', 'name']),
-            col_tratamiento: findColumn(headers, ['tratamiento', 'treatment', 'servicio', 'service']),
-            col_monto: findColumn(headers, ['monto', 'amount', 'precio', 'price', 'total']),
-            col_fecha: findColumn(headers, ['fecha', 'date']),
-            col_medio_pago: findColumn(headers, ['medio', 'pago', 'payment', 'metodo'])
-          };
-          setColumnMapping(mapping);
-          
-          // Generate preview
-          const previewLines = lines.slice(0, 6); // Header + 5 rows
-          const preview = previewLines.map(line => 
-            line.split(',').map(cell => cell.trim().replace(/"/g, ''))
-          );
-          setCsvPreview(preview);
+        try {
+          const text = e.target?.result as string;
+          const lines = text.split('\n');
+          if (lines.length > 0) {
+            // Handle both comma and semicolon delimiters
+            const firstLine = lines[0];
+            const delimiter = firstLine.includes(';') ? ';' : ',';
+            const headers = firstLine.split(delimiter).map(h => h.trim().replace(/"/g, ''));
+            setCsvColumns(headers);
+            
+            // Set default mappings if columns match common patterns
+            const mapping: ColumnMapping = {
+              col_paciente: findColumn(headers, ['paciente', 'patient', 'nombre', 'name']),
+              col_tratamiento: findColumn(headers, ['tratamiento', 'treatment', 'servicio', 'service', 'prestacion']),
+              col_monto: findColumn(headers, ['monto', 'amount', 'precio', 'price', 'total', 'importe']),
+              col_fecha: findColumn(headers, ['fecha', 'date']),
+              col_medio_pago: findColumn(headers, ['medio', 'pago', 'payment', 'metodo', 'forma_pago'])
+            };
+            setColumnMapping(mapping);
+            
+            // Generate preview
+            const previewLines = lines.slice(0, 6); // Header + 5 rows
+            const preview = previewLines.map(line => 
+              line.split(delimiter).map(cell => cell.trim().replace(/"/g, ''))
+            );
+            setCsvPreview(preview);
+            
+            toast.success(`✅ Archivo cargado: ${headers.length} columnas detectadas`);
+          }
+        } catch (error) {
+          console.error('Error al leer CSV:', error);
+          toast.error('Error al leer el archivo. Verifica que sea un CSV válido.');
         }
       };
-      reader.readAsText(file);
+      reader.onerror = () => {
+        toast.error('Error al leer el archivo');
+      };
+      reader.readAsText(file, 'UTF-8');
     } else {
-      toast.error('Por favor selecciona un archivo CSV válido');
+      toast.error('Por favor selecciona un archivo CSV válido (.csv)');
     }
   };
 
@@ -615,7 +638,7 @@ const ImportPage: React.FC = () => {
                 <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
                 <div className="relative z-10">
                   <div className="text-xs font-medium text-white/80 mb-1">Total ARS Importado</div>
-                  <div className="text-3xl font-black">${(importResult.total_ars / 1000).toFixed(1)}K</div>
+                  <div className="text-2xl font-black">${importResult.total_ars.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
                 </div>
               </motion.div>
             </div>

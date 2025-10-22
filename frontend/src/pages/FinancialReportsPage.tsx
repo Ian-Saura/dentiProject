@@ -446,8 +446,8 @@ const FinancialReportsPage: React.FC = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Ingresos Totales</div>
-                <div className="text-3xl font-black">
-                  ${(monthlyPL.reduce((sum, m) => sum + m.ingresos, 0) / 1000).toFixed(1)}K
+                <div className="text-2xl font-black">
+                  ${monthlyPL.reduce((sum, m) => sum + m.ingresos, 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
               </div>
             </motion.div>
@@ -458,8 +458,8 @@ const FinancialReportsPage: React.FC = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Gastos Totales</div>
-                <div className="text-3xl font-black">
-                  ${(monthlyPL.reduce((sum, m) => sum + m.gastos_fijos + m.gastos_equipos, 0) / 1000).toFixed(1)}K
+                <div className="text-2xl font-black">
+                  ${monthlyPL.reduce((sum, m) => sum + m.gastos_fijos + m.gastos_equipos, 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
               </div>
             </motion.div>
@@ -470,8 +470,8 @@ const FinancialReportsPage: React.FC = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Utilidad Total</div>
-                <div className="text-3xl font-black">
-                  ${(monthlyPL.reduce((sum, m) => sum + m.utilidad_bruta, 0) / 1000).toFixed(1)}K
+                <div className="text-2xl font-black">
+                  ${monthlyPL.reduce((sum, m) => sum + m.utilidad_bruta, 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
               </div>
             </motion.div>

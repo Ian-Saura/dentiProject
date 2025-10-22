@@ -136,8 +136,8 @@ const ConsultasPage: React.FC = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Ingresos Total</div>
-                <div className="text-3xl font-black">
-                  ${(consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0) / 1000).toFixed(1)}K
+                <div className="text-2xl font-black">
+                  ${consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
               </div>
             </motion.div>
@@ -151,8 +151,8 @@ const ConsultasPage: React.FC = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Promedio</div>
-                <div className="text-3xl font-black">
-                  ${(consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0) / consultasData.data.length / 1000).toFixed(1)}K
+                <div className="text-2xl font-black">
+                  ${(consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0) / consultasData.data.length).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
               </div>
             </motion.div>
@@ -234,7 +234,7 @@ const ConsultasPage: React.FC = () => {
           <div className="flex items-center justify-between p-6 border-b border-gray-200/50">
             <h3 className="text-xl font-bold gradient-text flex items-center gap-2">
               <Calendar className="h-6 w-6 text-dental-500" />
-              Consultas ({consultasData?.total || 0})
+              Prestaciones ({consultasData?.total || 0})
             </h3>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Filter className="h-5 w-5 text-primary-500" />
@@ -401,9 +401,9 @@ const ConsultasPage: React.FC = () => {
               <div className="w-20 h-20 mx-auto mb-4 bg-gradient-dental rounded-full flex items-center justify-center shadow-glow-dental">
                 <Calendar className="h-10 w-10 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">No hay consultas</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No hay prestaciones</h3>
               <p className="text-gray-600 mb-6 max-w-sm mx-auto">
-                {searchTerm ? 'No se encontraron consultas con ese criterio' : 'Aún no hay consultas registradas'}
+                {searchTerm ? 'No se encontraron prestaciones con ese criterio' : 'Aún no hay prestaciones registradas'}
               </p>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -412,7 +412,7 @@ const ConsultasPage: React.FC = () => {
                 className="btn-premium inline-flex items-center gap-2"
               >
                 <Plus className="h-5 w-5" />
-                Registrar Primera Consulta
+                Registrar Primera Prestación
               </motion.button>
             </motion.div>
           </div>

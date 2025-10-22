@@ -12,8 +12,10 @@ const CalculadoraPage: React.FC = () => {
   const [formData, setFormData] = useState({
     tiempo_horas: 1.0,
     costo_materiales_ars: 5000,
-    usar_costo_real: true,
+    usar_costo_real: true,  // Always true - always use cost from parameters
   });
+  const [showPersonalizado, setShowPersonalizado] = useState(false);
+  const [tratamientoPersonalizado, setTratamientoPersonalizado] = useState('');
 
   // Get cost analysis for real-time cost
   const { data: costos } = useQuery(
@@ -95,7 +97,7 @@ const CalculadoraPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-green-900 font-semibold text-lg">
-                  ✅ Usando su costo real calculado
+                  ✅ Usando el costo configurado en Parámetros
                 </p>
                 <p className="text-green-700 text-2xl font-bold">
                   ${formatCurrency(costos.costo_hora_ars, 2)} ARS/hora
@@ -129,6 +131,13 @@ const CalculadoraPage: React.FC = () => {
                     const selected = tratamientos.find(t => t.name === e.target.value);
                     if (selected) {
                       setFormData({ ...formData, tiempo_horas: selected.tiempo });
+                      setShowPersonalizado(false);
+                      setTratamientoPersonalizado('');
+                    } else if (e.target.value === 'personalizado') {
+                      setShowPersonalizado(true);
+                      setTratamientoPersonalizado('');
+                    } else {
+                      setShowPersonalizado(false);
                     }
                   }}
                 >
@@ -147,6 +156,28 @@ const CalculadoraPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Campo de tratamiento personalizado */}
+            {showPersonalizado && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <label className="form-label flex items-center gap-2 text-base font-semibold">
+                  ⚙️ Nombre del Tratamiento Personalizado
+                </label>
+                <input
+                  type="text"
+                  value={tratamientoPersonalizado}
+                  onChange={(e) => setTratamientoPersonalizado(e.target.value)}
+                  className="form-input pl-4 py-3 text-base font-medium bg-gradient-to-r from-white to-gray-50 border-2 border-gray-200 focus:border-dental-500 focus:ring-2 focus:ring-dental-500/20 rounded-xl shadow-sm hover:shadow-md transition-all"
+                  placeholder="Ej: Implante dental, Ortodoncia..."
+                  autoFocus
+                />
+              </motion.div>
+            )}
 
             {/* Time Input */}
             <div>
@@ -180,21 +211,7 @@ const CalculadoraPage: React.FC = () => {
               />
             </div>
 
-            {/* Use Real Cost Toggle */}
-            {costos && costos.costo_total_anual > 0 && (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="usar_costo_real"
-                  checked={formData.usar_costo_real}
-                  onChange={(e) => setFormData({ ...formData, usar_costo_real: e.target.checked })}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label htmlFor="usar_costo_real" className="text-sm text-gray-700">
-                  Usar costo real calculado (${costos.costo_hora_ars.toLocaleString('es-AR')} ARS/hora)
-                </label>
-              </div>
-            )}
+            {/* Note: Always uses the cost from parameters (either calculated or manual) */}
 
             <motion.button
               whileHover={{ scale: 1.02 }}
