@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Wrench, Building2, Sliders, Sparkles, Plus, X, Clock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDateToDDMMYYYY } from '../utils/dateFormat';
+import { dateInputToISO, isoToDateInput } from '../utils/dateUtils';
 import type { GastoFijo } from '@/types';
 
 interface Equipo {
@@ -226,10 +227,16 @@ const ConfiguracionPage: React.FC = () => {
 
   const handleEquipoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Fix date timezone issue
+    const dataToSubmit = {
+      ...equipoForm,
+      fecha_compra: dateInputToISO(equipoForm.fecha_compra) || equipoForm.fecha_compra
+    };
+    
     if (editingEquipo) {
-      updateEquipoMutation.mutate({ id: editingEquipo.id, data: equipoForm });
+      updateEquipoMutation.mutate({ id: editingEquipo.id, data: dataToSubmit });
     } else {
-      createEquipoMutation.mutate(equipoForm);
+      createEquipoMutation.mutate(dataToSubmit);
     }
   };
 
@@ -248,7 +255,7 @@ const ConfiguracionPage: React.FC = () => {
       nombre_equipo: equipo.nombre_equipo,
       monto_compra_usd: equipo.monto_compra_usd,
       anios_vida_util: equipo.anios_vida_util,
-      fecha_compra: equipo.fecha_compra || '',
+      fecha_compra: isoToDateInput(equipo.fecha_compra),
       observaciones: equipo.observaciones || ''
     });
     setShowEquipoForm(true);
@@ -604,7 +611,7 @@ const ConfiguracionPage: React.FC = () => {
                         ) : (
                           <>
                             <div className="text-3xl font-black text-green-600">
-                              ${(equipo.monto_compra_usd * (dolarOficialVenta || 1335)).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                              ${(equipo.monto_compra_usd * (dolarOficialVenta || 1335)).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <div className="text-xs text-green-700 font-medium uppercase tracking-wide">🇦🇷 ARS</div>
                           </>
@@ -654,6 +661,42 @@ const ConfiguracionPage: React.FC = () => {
                 </AnimatedCard>
               ))}
             </div>
+
+            {/* Total de Equipos */}
+            {equipos && equipos.length > 0 && (() => {
+              // Calculate total by summing each equipment in the display currency
+              const totalEnMoneda = equipos.reduce((sum, equipo) => {
+                const montoEnMonedaSeleccionada = verEnMoneda === 'USD' 
+                  ? equipo.monto_compra_usd 
+                  : equipo.monto_compra_usd * (dolarOficialVenta || 1335);
+                return sum + montoEnMonedaSeleccionada;
+              }, 0);
+              const monedaSimbolo = verEnMoneda === 'USD' ? '💵 USD' : '🇦🇷 ARS';
+              
+              return (
+                <div className="mt-8 bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-dental-400">
+                  <div className="px-6 py-5 bg-gradient-dental">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-bold text-white flex items-center gap-2">
+                        <Wrench className="h-6 w-6" />
+                        Inversión Total en Equipamiento
+                      </span>
+                      <div className="text-right">
+                        <div className="text-3xl font-black text-white">
+                          ${totalEnMoneda.toLocaleString('es-AR', { 
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })} {monedaSimbolo}
+                        </div>
+                        <div className="text-sm text-white/80 mt-1">
+                          {equipos.length} equipo{equipos.length !== 1 ? 's' : ''} registrado{equipos.length !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {equipos?.length === 0 && (
               <AnimatedCard delay={0.3}>
@@ -809,14 +852,14 @@ const ConfiguracionPage: React.FC = () => {
                         </h4>
                         <div className="mt-1 text-2xl font-bold text-blue-600">
                           ${montoEnMonedaSeleccionada.toLocaleString('es-AR', { 
-                            minimumFractionDigits: verEnMoneda === 'USD' ? 2 : 0,
-                            maximumFractionDigits: verEnMoneda === 'USD' ? 2 : 0
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
                           })} {monedaSimbolo}/mes
                         </div>
                         <div className="mt-1 text-sm text-gray-500">
                           Anual: ${(montoEnMonedaSeleccionada * 12).toLocaleString('es-AR', { 
-                            minimumFractionDigits: verEnMoneda === 'USD' ? 2 : 0,
-                            maximumFractionDigits: verEnMoneda === 'USD' ? 2 : 0
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
                           })} {monedaSimbolo}
                         </div>
                       </div>
@@ -841,8 +884,21 @@ const ConfiguracionPage: React.FC = () => {
             </div>
 
             {gastos && gastos.length > 0 && (() => {
-              const totalARS = gastos.reduce((sum, gasto) => sum + gasto.monto_mensual_ars, 0);
-              const totalEnMoneda = verEnMoneda === 'USD' ? totalARS / (dolarOficialVenta || 1335) : totalARS;
+              // Calculate total by summing each expense in the display currency
+              const totalEnMoneda = gastos.reduce((sum, gasto) => {
+                let montoEnMonedaSeleccionada: number;
+                if (verEnMoneda === gasto.moneda) {
+                  // Already in the desired currency
+                  montoEnMonedaSeleccionada = gasto.monto_mensual;
+                } else if (verEnMoneda === 'USD' && gasto.moneda === 'ARS') {
+                  // Convert ARS to USD
+                  montoEnMonedaSeleccionada = gasto.monto_mensual / (dolarOficialVenta || 1335);
+                } else {
+                  // Convert USD to ARS
+                  montoEnMonedaSeleccionada = gasto.monto_mensual * (dolarOficialVenta || 1335);
+                }
+                return sum + montoEnMonedaSeleccionada;
+              }, 0);
               const monedaSimbolo = verEnMoneda === 'USD' ? '💵 USD' : '🇦🇷 ARS';
               
               return (
@@ -852,14 +908,14 @@ const ConfiguracionPage: React.FC = () => {
                     <div className="text-right">
                       <div className="text-2xl font-bold text-blue-600">
                         ${totalEnMoneda.toLocaleString('es-AR', { 
-                          minimumFractionDigits: verEnMoneda === 'USD' ? 2 : 0,
-                          maximumFractionDigits: verEnMoneda === 'USD' ? 2 : 0
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
                         })} {monedaSimbolo}/mes
                       </div>
                       <div className="text-sm text-gray-500">
                         ${(totalEnMoneda * 12).toLocaleString('es-AR', { 
-                          minimumFractionDigits: verEnMoneda === 'USD' ? 2 : 0,
-                          maximumFractionDigits: verEnMoneda === 'USD' ? 2 : 0
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
                         })} {monedaSimbolo}/año
                       </div>
                     </div>

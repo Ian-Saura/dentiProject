@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Plus, Settings, Link as LinkIcon, Clock, Sliders, X, Menu, User, Edit } from 'lucide-react';
+import { Calendar, Plus, Settings, Link as LinkIcon, Clock, Sliders, X, Menu, User, Edit, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppMode } from '../contexts/AppModeContext';
@@ -311,6 +311,24 @@ export default function TurnosPage() {
                         <p className="text-sm text-blue-800 font-medium">
                           📲 Reservado por el paciente
                         </p>
+                      </div>
+                    )}
+                    
+                    {/* DNI Temporal Warning */}
+                    {turnoSeleccionado.dni_paciente && turnoSeleccionado.dni_paciente.startsWith('CSV-') && (
+                      <div className="bg-amber-50 border border-amber-500 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs font-bold text-amber-900 mb-1">DNI Temporal Detectado</p>
+                            <p className="text-xs text-amber-700 mb-2">
+                              Este paciente fue importado sin DNI (<code className="bg-amber-100 px-1 py-0.5 rounded text-xs">{turnoSeleccionado.dni_paciente}</code>).
+                            </p>
+                            <p className="text-xs text-amber-700">
+                              <strong>Recomendación:</strong> Actualiza el DNI real visitando el dashboard del paciente.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>

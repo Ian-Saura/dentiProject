@@ -638,7 +638,7 @@ const ImportPage: React.FC = () => {
                 <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
                 <div className="relative z-10">
                   <div className="text-xs font-medium text-white/80 mb-1">Total ARS Importado</div>
-                  <div className="text-2xl font-black">${importResult.total_ars.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+                  <div className="text-2xl font-black">${importResult.total_ars.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                 </div>
               </motion.div>
             </div>

@@ -117,6 +117,7 @@ class TurnoResponse(TurnoBase):
     estado: EstadoTurno
     nombre_paciente: Optional[str] = None
     apellido_paciente: Optional[str] = None
+    dni_paciente: Optional[str] = None
     telefono_paciente: Optional[str] = None
     email_paciente: Optional[str] = None
     notas_profesional: Optional[str] = None

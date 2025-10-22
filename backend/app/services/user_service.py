@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -14,6 +14,17 @@ from app.services.role_service import RoleService
 
 class UserService:
     """Servicio para gestión de usuarios"""
+    
+    @staticmethod
+    def is_trial_expired(user: Usuario) -> bool:
+        """Verifica si el trial del usuario ha expirado"""
+        if user.plan != "trial":
+            return False  # No es trial, no puede expirar
+        
+        if not user.fecha_vencimiento:
+            return False  # No tiene fecha de vencimiento configurada
+        
+        return datetime.utcnow().date() > user.fecha_vencimiento
     
     @staticmethod
     def create_user(db: Session, user_data: UserRegister) -> Usuario:
@@ -34,6 +45,8 @@ class UserService:
             telefono=user_data.telefono,
             especialidad=user_data.especialidad,
             plan="trial",  # Plan inicial
+            fecha_inicio_plan=datetime.utcnow().date(),
+            fecha_vencimiento=datetime.utcnow().date() + timedelta(days=14),  # Trial de 14 días
             provider="local",
             email_verificado=False,
             onboarding_completado=False,
@@ -122,6 +135,8 @@ class UserService:
             onboarding_completado=False,
             especialidad="odontologia",  # Default, cambiar en onboarding
             plan="trial",
+            fecha_inicio_plan=datetime.utcnow().date(),
+            fecha_vencimiento=datetime.utcnow().date() + timedelta(days=14),  # Trial de 14 días
             activo=True,
             role_id=user_role.id if user_role else None,  # Asignar rol "user" por defecto
         )

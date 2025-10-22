@@ -1,19 +1,20 @@
 /**
  * Format number with Spanish locale (. for thousands, , for decimals)
+ * Always shows exactly 2 decimal places
  */
-export const formatCurrency = (value: number, decimals: number = 2): string => {
-  return value.toLocaleString('es-ES', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
+export const formatCurrency = (value: number): string => {
+  return value.toLocaleString('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
 };
 
 /**
- * Format number without decimals
+ * Format number with 2 decimals (for consistency across the app)
  */
 export const formatNumber = (value: number): string => {
-  return value.toLocaleString('es-ES', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+  return value.toLocaleString('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
 };

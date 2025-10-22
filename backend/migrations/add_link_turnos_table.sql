@@ -45,3 +45,7 @@ COMMENT ON COLUMN link_turnos.duracion_minutos IS 'Pre-configured duration for a
 COMMENT ON COLUMN link_turnos.activo IS 'Whether this link is currently active';
 COMMENT ON COLUMN link_turnos.usos_totales IS 'Total number of appointments booked via this link';
 
+
+
+
+

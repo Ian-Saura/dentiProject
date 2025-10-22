@@ -5,7 +5,7 @@ import { pacientesService } from '../services';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AnimatedCard from '../components/AnimatedCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, Search, Edit, Trash2, Users, Sparkles, X, BarChart3, ArrowUpDown, Plus } from 'lucide-react';
+import { UserPlus, Search, Edit, Trash2, Users, Sparkles, X, BarChart3, ArrowUpDown, Plus, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDateToDDMMYYYY, calculateAge } from '../utils/dateFormat';
 import { useAppMode } from '../contexts/AppModeContext';
@@ -463,6 +463,17 @@ const PacientesPage: React.FC = () => {
 
                   {/* Content */}
                   <div className="p-5">
+                    {/* DNI Temporal Warning */}
+                    {paciente.dni && paciente.dni.startsWith('CSV-') && (
+                      <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-amber-900">DNI Temporal</p>
+                          <p className="text-xs text-amber-700 truncate">{paciente.dni}</p>
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Contact Info */}
                     <div className="space-y-2 mb-4">
                       {paciente.email && (

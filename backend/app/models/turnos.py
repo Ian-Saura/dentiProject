@@ -78,6 +78,11 @@ class Turno(Base):
     # Relationships
     usuario: Mapped["Usuario"] = relationship(back_populates="turnos")
     paciente: Mapped[Optional["Paciente"]] = relationship(back_populates="turnos")
+    
+    @property
+    def dni_paciente(self) -> Optional[str]:
+        """Obtiene el DNI del paciente relacionado si existe"""
+        return self.paciente.dni if self.paciente else None
 
 
 class ConfiguracionTurnos(Base):

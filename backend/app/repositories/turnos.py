@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 from datetime import date, time, datetime, timedelta
 
 from sqlalchemy import and_, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
@@ -32,7 +32,7 @@ def list_turnos(
     paciente_id: Optional[int] = None,
 ) -> List[Turno]:
     """Lista turnos del profesional con filtros opcionales"""
-    query = select(Turno).where(Turno.usuario_id == usuario_id)
+    query = select(Turno).where(Turno.usuario_id == usuario_id).options(joinedload(Turno.paciente))
 
     if fecha_desde:
         query = query.where(Turno.fecha >= fecha_desde)

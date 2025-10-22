@@ -137,7 +137,7 @@ const ConsultasPage: React.FC = () => {
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Ingresos Total</div>
                 <div className="text-2xl font-black">
-                  ${consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  ${consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </div>
             </motion.div>
@@ -152,7 +152,7 @@ const ConsultasPage: React.FC = () => {
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Promedio</div>
                 <div className="text-2xl font-black">
-                  ${(consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0) / consultasData.data.length).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  ${(consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0) / consultasData.data.length).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </div>
             </motion.div>

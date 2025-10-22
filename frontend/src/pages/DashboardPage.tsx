@@ -131,7 +131,7 @@ const DashboardPage: React.FC = () => {
               </div>
               <p className="text-white/90 text-xs font-medium mb-1">Ingresos Totales</p>
               <p className="text-2xl font-black mb-1">
-                ${(resumen?.ingreso_total || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                ${(resumen?.ingreso_total || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
               <div className="flex items-center gap-1 text-white/80 text-xs">
                 <TrendingUp className="h-3 w-3" />
@@ -170,7 +170,7 @@ const DashboardPage: React.FC = () => {
               </div>
               <p className="text-white/90 text-xs font-medium mb-1">Promedio/Prestación</p>
               <p className="text-2xl font-black mb-1">
-                ${(resumen?.promedio_consulta || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                ${(resumen?.promedio_consulta || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
               <p className="text-white/80 text-xs font-medium">valor promedio</p>
             </div>

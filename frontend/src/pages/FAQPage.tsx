@@ -381,7 +381,7 @@ const FAQPage: React.FC = () => {
               onClick={() => navigate('/register')}
               className="px-10 py-5 bg-white text-blue-600 rounded-2xl font-black text-lg shadow-2xl hover:shadow-3xl transition-all inline-flex items-center justify-center space-x-2"
             >
-              <span>Probar Gratis 30 Días</span>
+              <span>Probar Gratis 14 Días</span>
               <ArrowLeft className="h-6 w-6 rotate-180" />
             </motion.button>
           </motion.div>

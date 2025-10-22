@@ -23,14 +23,23 @@ export default function OnboardingWrapper({ children }: OnboardingWrapperProps) 
                              window.location.pathname === '/login' || 
                              window.location.pathname === '/register';
       
+      console.log('OnboardingWrapper check:', {
+        isAuthenticated,
+        hasUser: !!user,
+        splashShown,
+        isOnPublicPage,
+        currentPath: window.location.pathname
+      });
+      
       if (!splashShown && !isOnPublicPage) {
+        console.log('Showing splash screen!');
         // Mark as shown in sessionStorage (clears on browser close/tab close)
         sessionStorage.setItem('splash_shown', 'true');
         
-        // Small delay to ensure smooth transition after login
+        // Longer delay to ensure smooth transition after login redirect
         const timer = setTimeout(() => {
           setShowSplash(true);
-        }, 100);
+        }, 500);
         
         return () => clearTimeout(timer);
       }

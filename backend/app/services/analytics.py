@@ -132,13 +132,33 @@ class AnalyticsService:
         ).all()
 
         costo_equipos_anual_usd = 0.0
+        fecha_actual = datetime.now()
+        
         for equipo in equipos:
             if equipo.activo and equipo.monto_compra_usd and equipo.anios_vida_util and equipo.anios_vida_util > 0:
-                # Amortización con inflación - exact app.py calculation
                 monto_usd = float(equipo.monto_compra_usd)
-                costo_reposicion = monto_usd * (1.04 ** equipo.anios_vida_util)
-                amortizacion_anual = costo_reposicion / equipo.anios_vida_util
-                costo_equipos_anual_usd += amortizacion_anual
+                
+                # Calcular vida útil restante basado en fecha de compra
+                if equipo.fecha_compra:
+                    # Calcular meses y años transcurridos
+                    meses_transcurridos = (fecha_actual.year - equipo.fecha_compra.year) * 12 + \
+                                         (fecha_actual.month - equipo.fecha_compra.month)
+                    anios_transcurridos = meses_transcurridos / 12
+                    
+                    # Vida útil restante
+                    vida_util_restante = equipo.anios_vida_util - anios_transcurridos
+                    
+                    # Solo si aún tiene vida útil
+                    if vida_util_restante > 0:
+                        # Costo de reposición con inflación sobre vida restante
+                        costo_reposicion = monto_usd * (1.04 ** vida_util_restante)
+                        amortizacion_anual = costo_reposicion / vida_util_restante
+                        costo_equipos_anual_usd += amortizacion_anual
+                else:
+                    # Si no hay fecha de compra, usar cálculo original (toda la vida útil)
+                    costo_reposicion = monto_usd * (1.04 ** equipo.anios_vida_util)
+                    amortizacion_anual = costo_reposicion / equipo.anios_vida_util
+                    costo_equipos_anual_usd += amortizacion_anual
 
         # Convertir equipos USD a ARS usando dólar oficial venta
         costo_equipos_anual_ars = costo_equipos_anual_usd * tipo_cambio

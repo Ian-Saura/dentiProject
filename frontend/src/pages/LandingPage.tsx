@@ -49,14 +49,17 @@ const LandingPage: React.FC = () => {
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => scrollToSection('caracteristicas')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Características
+              <button onClick={() => scrollToSection('demo')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                Demo
               </button>
               <button onClick={() => scrollToSection('modulos')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Módulos
               </button>
               <button onClick={() => scrollToSection('beneficios')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Beneficios
+              </button>
+              <button onClick={() => scrollToSection('caracteristicas')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                Características
               </button>
               <button onClick={() => scrollToSection('planes')} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Planes
@@ -597,10 +600,10 @@ const LandingPage: React.FC = () => {
               {
                 name: "Trial",
                 price: "Gratis",
-                period: "30 días",
+                period: "14 días",
                 description: "Perfecto para probar el sistema",
                 features: [
-                  "Acceso completo 30 días",
+                  "Acceso completo 14 días",
                   "Ambos módulos incluidos",
                   "Hasta 50 pacientes",
                   "Soporte por email",
@@ -712,7 +715,7 @@ const LandingPage: React.FC = () => {
                 onClick={() => navigate('/register')}
                 className="px-10 py-5 bg-white text-blue-600 rounded-2xl font-black text-lg shadow-2xl hover:shadow-3xl transition-all inline-flex items-center justify-center space-x-2"
               >
-                <span>Probar Gratis 30 Días</span>
+                <span>Probar Gratis 14 Días</span>
                 <ChevronRight className="h-6 w-6" />
               </motion.button>
               <motion.button

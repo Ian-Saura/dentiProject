@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
 import Odontograma from '@/components/Odontograma';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus, Sparkles, User, Edit, Phone, Mail, MessageCircle, MapPin, Hash, CalendarPlus, CalendarCheck } from 'lucide-react';
+import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus, Sparkles, User, Edit, Phone, Mail, MessageCircle, MapPin, Hash, CalendarPlus, CalendarCheck, AlertTriangle } from 'lucide-react';
 import ClinicalNotesModal from '@/components/ClinicalNotesModal';
 import AddConsultaModal from '@/components/AddConsultaModal';
 import AddPacienteModal from '@/components/AddPacienteModal';
@@ -266,6 +266,41 @@ const PatientDashboardPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* DNI Temporal Alert */}
+      {currentPatient && currentPatient.dni && currentPatient.dni.startsWith('CSV-') && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 shadow-sm"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-amber-900 mb-1">
+                DNI Temporal Detectado
+              </h4>
+              <p className="text-sm text-amber-800 mb-3">
+                Este paciente fue importado desde un archivo CSV sin DNI. 
+                Se generó un DNI temporal (<code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs">{currentPatient.dni}</code>) para identificarlo.
+              </p>
+              <p className="text-sm text-amber-800 mb-3">
+                <strong>Recomendación:</strong> Actualiza el DNI real del paciente para mantener registros precisos y evitar duplicados.
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowEditPacienteModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+              >
+                <Edit className="h-4 w-4" />
+                Actualizar DNI Ahora
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Quick Info & Actions Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -528,7 +563,7 @@ const PatientDashboardPage: React.FC = () => {
                               </span>
                             )}
                             <span className="flex items-center gap-1 font-bold text-sm">
-                              ${consulta.monto_ars.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                              ${consulta.monto_ars.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                             <span className="text-xs">
                               {consulta.medio_pago}

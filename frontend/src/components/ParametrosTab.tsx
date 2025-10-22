@@ -37,6 +37,18 @@ const ParametrosTab: React.FC<ParametrosTabProps> = ({
     usar_costo_manual: false
   };
 
+  // Load saved work hours when config is available
+  useEffect(() => {
+    if (config?.horas_anuales_trabajadas) {
+      // Reverse calculate days and hours from saved annual hours
+      // Default to 5 hours per day, calculate days
+      const savedHoras = config.horas_anuales_trabajadas;
+      const calculatedDays = Math.round(savedHoras / 5);
+      setDiasTrabajo(calculatedDays);
+      setHorasPorDia(5);
+    }
+  }, [config]);
+
   // Fetch dólar oficial venta from API
   useEffect(() => {
     const fetchDolarOficial = async () => {
