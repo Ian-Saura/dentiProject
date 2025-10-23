@@ -10,9 +10,10 @@ from app.db.session import get_db
 from app.deps.permissions import is_admin
 from app.models.usuarios import Usuario
 from app.models.roles import Role, RoleType
-from app.schemas.auth import UserResponse
+from app.schemas.auth import UserResponse, AdminResetPasswordRequest
 from app.services.role_service import RoleService
 from app.services.auditoria import AuditoriaService
+from app.services.password_reset import PasswordResetService
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(is_admin)])
 
@@ -40,6 +41,13 @@ class UserWithRole(BaseModel):
     apellido: str | None
     especialidad: str
     plan: str
+    fecha_inicio_plan: str | None
+    fecha_vencimiento: str | None
+    dias_restantes: int | None
+    trial_expirado: bool
+    ultima_verificacion_pago: str | None
+    pago_verificado: bool
+    necesita_verificacion: bool  # True si pasaron más de 30 días desde última verificación
     activo: bool
     fecha_registro: str
     role_name: str | None
@@ -70,15 +78,38 @@ async def list_all_users(
     db: Session = Depends(get_db),
 ):
     """Lista todos los usuarios del sistema (Admin only)"""
+    from datetime import date, timedelta
+    
     query = db.query(Usuario)
     
     if activo is not None:
         query = query.filter(Usuario.activo == activo)
     
     users = query.offset(skip).limit(limit).all()
+    today = date.today()
     
-    return [
-        UserWithRole(
+    result = []
+    for user in users:
+        # Calcular días restantes y si el trial expiró
+        dias_restantes = None
+        trial_expirado = False
+        
+        if user.fecha_vencimiento:
+            dias_restantes = (user.fecha_vencimiento - today).days
+            if user.plan.value == 'trial' and dias_restantes < 0:
+                trial_expirado = True
+        
+        # Verificar si necesita verificación de pago (más de 30 días desde última verificación)
+        necesita_verificacion = False
+        if user.plan.value != 'trial':  # Solo para planes de pago
+            if user.ultima_verificacion_pago:
+                dias_desde_verificacion = (today - user.ultima_verificacion_pago).days
+                necesita_verificacion = dias_desde_verificacion >= 30
+            else:
+                # Si nunca se verificó y el plan no es trial, necesita verificación
+                necesita_verificacion = True
+        
+        result.append(UserWithRole(
             id=user.id,
             username=user.username,
             email=user.email,
@@ -86,13 +117,20 @@ async def list_all_users(
             apellido=user.apellido,
             especialidad=user.especialidad.value,
             plan=user.plan.value,
+            fecha_inicio_plan=user.fecha_inicio_plan.isoformat() if user.fecha_inicio_plan else None,
+            fecha_vencimiento=user.fecha_vencimiento.isoformat() if user.fecha_vencimiento else None,
+            dias_restantes=dias_restantes,
+            trial_expirado=trial_expirado,
+            ultima_verificacion_pago=user.ultima_verificacion_pago.isoformat() if user.ultima_verificacion_pago else None,
+            pago_verificado=user.pago_verificado,
+            necesita_verificacion=necesita_verificacion,
             activo=user.activo,
             fecha_registro=user.fecha_registro.isoformat(),
             role_name=user.role.name.value if user.role else None,
             role_display_name=user.role.display_name if user.role else None,
-        )
-        for user in users
-    ]
+        ))
+    
+    return result
 
 
 @router.get("/users/{user_id}", response_model=UserResponse)
@@ -325,7 +363,8 @@ async def get_admin_stats(
 @router.post("/users/{user_id}/assign-plan")
 def assign_user_plan(
     user_id: int,
-    plan_request: "AssignPlanRequest",
+    plan_request: dict,
+    current_user: Usuario = Depends(is_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -333,6 +372,13 @@ def assign_user_plan(
     """
     from app.schemas.auth import AssignPlanRequest
     from app.services.plan_service import PlanService
+    from datetime import timedelta, date as date_type
+    
+    # Validar el request
+    try:
+        validated_request = AssignPlanRequest(**plan_request)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
     # Get user
     user = db.query(Usuario).filter(Usuario.id == user_id).first()
@@ -343,19 +389,19 @@ def assign_user_plan(
     updated_user = PlanService.assign_plan(
         db=db,
         user=user,
-        plan=plan_request.plan,
-        dias_duracion=plan_request.dias_duracion
+        plan=validated_request.plan,
+        dias_duracion=validated_request.dias_duracion
     )
     
-    # Log action
+    # Log action (usando actualizar en lugar de asignar_plan por ahora)
     AuditoriaService.log_action(
         db=db,
-        usuario_id=user_id,
-        accion="asignar_plan",
+        usuario_id=current_user.id,
+        accion="actualizar",
         entidad_tipo="usuario",
         entidad_id=user_id,
-        descripcion=f"Plan asignado: {plan_request.plan}",
-        metadata={"plan": plan_request.plan, "dias_duracion": plan_request.dias_duracion},
+        descripcion=f"Plan asignado: {validated_request.plan}",
+        metadata={"plan": validated_request.plan, "dias_duracion": validated_request.dias_duracion},
         exitoso=True
     )
     
@@ -363,7 +409,7 @@ def assign_user_plan(
     
     return {
         "success": True,
-        "message": f"Plan {plan_request.plan} asignado correctamente",
+        "message": f"Plan {validated_request.plan} asignado correctamente",
         "user": {
             "id": updated_user.id,
             "username": updated_user.username,
@@ -389,3 +435,197 @@ def get_user_plan_status(
         raise HTTPException(status_code=404, detail="User not found")
     
     return PlanService.get_plan_status(user)
+
+
+@router.post("/users/{user_id}/verify-payment")
+def verify_user_payment(
+    user_id: int,
+    current_user: Usuario = Depends(is_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Marcar el pago de un usuario como verificado (solo admin)
+    Esto resetea el contador de 30 días para la próxima verificación
+    """
+    from datetime import date
+    
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Actualizar campos de verificación
+    user.pago_verificado = True
+    user.ultima_verificacion_pago = date.today()
+    db.commit()
+    
+    # Log de auditoría (usando actualizar temporalmente hasta que se agregue verificar_pago al enum)
+    AuditoriaService.log_action(
+        db=db,
+        usuario_id=current_user.id,
+        accion="actualizar",
+        entidad_tipo="usuario",
+        entidad_id=user_id,
+        descripcion=f"Pago verificado para {user.username}",
+        metadata={"fecha_verificacion": date.today().isoformat()},
+        exitoso=True
+    )
+    
+    return {
+        "success": True,
+        "message": f"Pago verificado para {user.username}",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "ultima_verificacion_pago": user.ultima_verificacion_pago.isoformat(),
+            "pago_verificado": user.pago_verificado
+        }
+    }
+
+
+# ============================================================================
+# ADMIN USER MANAGEMENT TOOLS
+# ============================================================================
+
+@router.post("/users/{user_id}/reset-password")
+def admin_reset_user_password(
+    user_id: int,
+    password_data: AdminResetPasswordRequest,
+    current_user: Usuario = Depends(is_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Admin puede resetear la contraseña de cualquier usuario
+    """
+    # Buscar usuario
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Prevenir que se resetee la contraseña del propio admin sin confirmación
+    if user.id == current_user.id:
+        raise HTTPException(
+            status_code=400,
+            detail="No puedes resetear tu propia contraseña desde aquí. Usa 'Cambiar Contraseña' en tu perfil."
+        )
+    
+    # Resetear contraseña
+    success = PasswordResetService.admin_reset_password(db, user_id, password_data.new_password)
+    
+    if not success:
+        raise HTTPException(status_code=500, detail="Error al resetear contraseña")
+    
+    # Log de auditoría
+    AuditoriaService.log_action(
+        db=db,
+        usuario_id=current_user.id,
+        accion="actualizar",
+        entidad_tipo="usuario",
+        entidad_id=user_id,
+        descripcion=f"Admin reseteó contraseña de {user.username}",
+        exitoso=True
+    )
+    
+    return {
+        "success": True,
+        "message": f"Contraseña reseteada exitosamente para {user.username}",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email
+        }
+    }
+
+
+@router.get("/users/{user_id}/stats")
+def get_user_stats(
+    user_id: int,
+    current_user: Usuario = Depends(is_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Obtener estadísticas de un usuario (para admin)
+    """
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Contar pacientes, consultas, etc
+    from app.models import Paciente, Consulta
+    
+    total_pacientes = db.query(Paciente).filter(Paciente.usuario_id == user_id).count()
+    total_consultas = db.query(Consulta).filter(Consulta.usuario_id == user_id).count()
+    
+    return {
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "nombre": user.nombre,
+            "apellido": user.apellido,
+            "email": user.email,
+            "especialidad": user.especialidad,
+            "activo": user.activo,
+            "plan": user.plan.value if user.plan else None,
+            "fecha_registro": user.fecha_registro.isoformat() if user.fecha_registro else None
+        },
+        "stats": {
+            "total_pacientes": total_pacientes,
+            "total_consultas": total_consultas,
+        }
+    }
+
+
+@router.post("/users/{user_id}/impersonate")
+def impersonate_user(
+    user_id: int,
+    current_user: Usuario = Depends(is_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Permite al admin autenticarse como otro usuario (impersonación)
+    """
+    # Buscar usuario
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # No permitir impersonar a otro admin
+    if user.role and user.role.name == RoleType.admin:
+        raise HTTPException(
+            status_code=403,
+            detail="No se puede impersonar a otro administrador"
+        )
+    
+    # Crear token para el usuario impersonado
+    from app.core.security import create_access_token
+    from datetime import timedelta
+    
+    access_token_expires = timedelta(minutes=60 * 24)  # 24 horas
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    
+    # Log de auditoría
+    AuditoriaService.log_action(
+        db=db,
+        usuario_id=current_user.id,
+        accion="leer",
+        entidad_tipo="usuario",
+        entidad_id=user_id,
+        descripcion=f"Admin {current_user.username} impersonó a {user.username}",
+        exitoso=True
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "nombre": user.nombre,
+            "apellido": user.apellido,
+            "especialidad": user.especialidad,
+            "plan": user.plan.value if user.plan else None,
+            "activo": user.activo
+        }
+    }

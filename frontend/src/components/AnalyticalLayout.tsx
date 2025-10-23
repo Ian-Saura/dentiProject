@@ -138,6 +138,21 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
                   <ChevronRight className="h-4 w-4 ml-auto" />
                 </motion.button>
 
+                <Link
+                  to="/profile"
+                  onClick={() => setSidebarOpen(false)}
+                  className="block"
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:bg-white/20 hover:text-white w-full transition-all"
+                  >
+                    <User className="h-5 w-5" />
+                    <span>Mi Perfil</span>
+                  </motion.div>
+                </Link>
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -232,6 +247,17 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
               <span>Modo Operativo</span>
               <ChevronRight className="h-4 w-4 ml-auto" />
             </motion.button>
+
+            <Link to="/profile">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 w-full transition-all"
+              >
+                <User className="h-5 w-5" />
+                <span>Mi Perfil</span>
+              </motion.div>
+            </Link>
 
             <motion.button
               whileHover={{ scale: 1.02 }}

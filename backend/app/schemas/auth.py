@@ -45,31 +45,35 @@ class UserResponse(BaseModel):
     """Respuesta con datos del usuario"""
     id: int
     username: str
-    email: Optional[str]
+    email: Optional[str] = None
     nombre: str
-    apellido: Optional[str]
-    telefono: Optional[str]
+    apellido: Optional[str] = None
+    telefono: Optional[str] = None
     especialidad: str
-    plan: str
-    fecha_registro: datetime
-    ultimo_acceso: Optional[datetime]
-    activo: bool
-    avatar_url: Optional[str]
-    provider: Optional[str]
-    onboarding_completado: bool
-    email_verificado: bool
+    activo: bool = True
     role_name: Optional[str] = None
+    role_display_name: Optional[str] = None
+    plan: Optional[str] = None
+    onboarding_completado: bool = False
     
     class Config:
         from_attributes = True
 
 
 class UserUpdate(BaseModel):
-    """Actualizar perfil de usuario"""
+    """Schema para actualizar perfil de usuario"""
     nombre: Optional[str] = Field(None, min_length=1, max_length=100)
     apellido: Optional[str] = Field(None, max_length=100)
     telefono: Optional[str] = Field(None, max_length=20)
-    email: Optional[EmailStr] = None
+    especialidad: Optional[str] = None
+    
+    @validator('especialidad')
+    def validate_especialidad(cls, v):
+        if v is not None:
+            allowed = ['odontologia', 'dermatologia', 'kinesiologia']
+            if v not in allowed:
+                raise ValueError(f'Especialidad must be one of: {", ".join(allowed)}')
+        return v
 
 
 # ============================================================================
@@ -77,19 +81,8 @@ class UserUpdate(BaseModel):
 # ============================================================================
 
 class GoogleAuthRequest(BaseModel):
-    """Request con token de Google"""
-    credential: str = Field(..., description="Google ID token or credential")
-    token: Optional[str] = Field(None, description="Alternative field name")
-
-
-class GoogleUserInfo(BaseModel):
-    """Información del usuario de Google"""
-    google_id: str
-    email: str
-    nombre: str
-    apellido: Optional[str]
-    avatar_url: Optional[str]
-    email_verified: bool
+    """Request para autenticación con Google"""
+    token: str  # ID token de Google
 
 
 # ============================================================================
@@ -129,6 +122,51 @@ class LoginResponse(BaseModel):
 class ChangePassword(BaseModel):
     """Cambiar contraseña"""
     current_password: str
+    new_password: str = Field(..., min_length=8, max_length=100)
+    
+    @validator('new_password')
+    def validate_new_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        if not any(c.isupper() for c in v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not any(c.islower() for c in v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain at least one number')
+        return v
+
+
+# ============================================================================
+# PASSWORD RESET
+# ============================================================================
+
+class ForgotPasswordRequest(BaseModel):
+    """Request para solicitar reset de contraseña"""
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Request para resetear contraseña con código"""
+    email: EmailStr
+    reset_code: str = Field(..., min_length=6, max_length=6)
+    new_password: str = Field(..., min_length=8, max_length=100)
+    
+    @validator('new_password')
+    def validate_new_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        if not any(c.isupper() for c in v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not any(c.islower() for c in v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain at least one number')
+        return v
+
+
+class AdminResetPasswordRequest(BaseModel):
+    """Admin puede resetear password de cualquier usuario"""
     new_password: str = Field(..., min_length=8, max_length=100)
     
     @validator('new_password')

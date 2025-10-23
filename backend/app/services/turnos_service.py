@@ -73,12 +73,20 @@ class TurnosService:
             # Obtener día de la semana (0 = lunes, 6 = domingo)
             dia_semana = str(current_date.weekday())
             
-            # Verificar si hay horarios configurados para este día
-            if dia_semana not in config.horarios_atencion:
+            # Obtener horarios para este día
+            # Si hay horarios específicos configurados, usarlos. Sino, usar el rango general
+            if dia_semana in config.horarios_atencion and config.horarios_atencion[dia_semana]:
+                horarios_dia = config.horarios_atencion[dia_semana]
+            elif config.hora_inicio_dia and config.hora_fin_dia:
+                # Usar rango general como fallback
+                horarios_dia = [{
+                    'inicio': config.hora_inicio_dia,
+                    'fin': config.hora_fin_dia
+                }]
+            else:
+                # No hay horarios configurados para este día
                 current_date += timedelta(days=1)
                 continue
-            
-            horarios_dia = config.horarios_atencion[dia_semana]
             
             # Para cada bloque horario del día
             for horario in horarios_dia:
@@ -270,7 +278,18 @@ class TurnosService:
         
         # Verificar horario de atención
         dia_semana = str(fecha.weekday())
-        if dia_semana not in config.horarios_atencion:
+        
+        # Obtener horarios para este día (con fallback a configuración general)
+        if dia_semana in config.horarios_atencion and config.horarios_atencion[dia_semana]:
+            horarios_dia = config.horarios_atencion[dia_semana]
+        elif config.hora_inicio_dia and config.hora_fin_dia:
+            # Usar configuración general como fallback
+            horarios_dia = [{
+                'inicio': config.hora_inicio_dia,
+                'fin': config.hora_fin_dia
+            }]
+        else:
+            # No hay horarios configurados
             raise HTTPException(
                 status_code=400,
                 detail="No hay atención en el día seleccionado"
@@ -281,7 +300,6 @@ class TurnosService:
         hora_fin_dt = hora_inicio_dt + timedelta(minutes=duracion_minutos)
         hora_fin = hora_fin_dt.time()
         
-        horarios_dia = config.horarios_atencion[dia_semana]
         horario_valido = False
         
         for horario in horarios_dia:

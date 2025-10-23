@@ -48,9 +48,9 @@ export default function TrialExpiredPage() {
           {/* Plan Details */}
           <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 mb-8 border-2 border-blue-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-bold text-gray-900">Plan Mensual</h3>
+              <h3 className="text-2xl font-bold text-gray-900">Plan Premium</h3>
               <div className="text-right">
-                <div className="text-4xl font-black text-blue-600">$9.990</div>
+                <div className="text-4xl font-black text-blue-600">$39.999</div>
                 <div className="text-sm text-gray-600">por mes</div>
               </div>
             </div>

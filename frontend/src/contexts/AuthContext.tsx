@@ -51,11 +51,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const storedUser = authService.getUserInfo();
           if (storedUser) {
             setUser(storedUser);
+            // Check if user is active
+            if (!storedUser.activo) {
+              console.log('User is inactive, will redirect to suspended page');
+            }
           } else {
             // If no stored user info, try to fetch from backend
             try {
               const currentUser = await authService.getCurrentUser();
               setUser(currentUser);
+              // Check if user is active
+              if (!currentUser.activo) {
+                console.log('User is inactive, will redirect to suspended page');
+              }
             } catch (error) {
               // If fetch fails, clear auth
               authService.logout();
@@ -139,6 +147,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     authService.logout();
     setUser(null);
+    // Clear splash screen flag so it shows again on next login
+    sessionStorage.removeItem('splash_shown');
     toast.success('Sesión cerrada');
   };
 

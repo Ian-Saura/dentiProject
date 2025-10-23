@@ -11,9 +11,32 @@ export const formatDateToDDMMYYYY = (date: string | Date | null | undefined): st
   if (!date) return '-';
   
   try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    // Si es un string en formato YYYY-MM-DD, parsearlo directamente sin timezone
+    if (typeof date === 'string') {
+      // Si es formato simple YYYY-MM-DD, parsear directamente
+      const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+      const match = date.match(datePattern);
+      
+      if (match) {
+        const [, year, month, day] = match;
+        return `${day}/${month}/${year}`;
+      }
+      
+      // Si tiene timestamp, usar UTC para evitar timezone shift
+      if (date.includes('T') || date.includes(' ')) {
+        const dateObj = new Date(date);
+        if (isNaN(dateObj.getTime())) return '-';
+        
+        const day = String(dateObj.getUTCDate()).padStart(2, '0');
+        const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+        const year = dateObj.getUTCFullYear();
+        
+        return `${day}/${month}/${year}`;
+      }
+    }
     
-    // Verificar que sea una fecha válida
+    // Si es un Date object
+    const dateObj = date as Date;
     if (isNaN(dateObj.getTime())) return '-';
     
     const day = String(dateObj.getDate()).padStart(2, '0');
@@ -79,15 +102,39 @@ export const calculateAge = (birthDate: string | Date | null | undefined): numbe
   if (!birthDate) return null;
   
   try {
-    const dateObj = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
+    let year: number, month: number, day: number;
     
-    if (isNaN(dateObj.getTime())) return null;
+    // Si es un string en formato YYYY-MM-DD, parsearlo directamente sin timezone
+    if (typeof birthDate === 'string') {
+      const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+      const match = birthDate.match(datePattern);
+      
+      if (match) {
+        [, year, month, day] = match.map(Number);
+      } else {
+        // Si tiene timestamp, usar UTC
+        const dateObj = new Date(birthDate);
+        if (isNaN(dateObj.getTime())) return null;
+        
+        year = dateObj.getUTCFullYear();
+        month = dateObj.getUTCMonth() + 1;
+        day = dateObj.getUTCDate();
+      }
+    } else {
+      // Si es un Date object
+      const dateObj = birthDate;
+      if (isNaN(dateObj.getTime())) return null;
+      
+      year = dateObj.getFullYear();
+      month = dateObj.getMonth() + 1;
+      day = dateObj.getDate();
+    }
     
     const today = new Date();
-    let age = today.getFullYear() - dateObj.getFullYear();
-    const monthDiff = today.getMonth() - dateObj.getMonth();
+    let age = today.getFullYear() - year;
+    const monthDiff = (today.getMonth() + 1) - month;
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateObj.getDate())) {
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) {
       age--;
     }
     

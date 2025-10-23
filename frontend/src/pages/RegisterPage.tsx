@@ -358,16 +358,13 @@ export default function RegisterPage() {
               </Link>
             </p>
             
-            {/* MercadoPago Subscription */}
-            <div className="mt-6 text-center">
-              <a 
-                href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=e3cbe4338d4d424abb2b4b3da6d229e1" 
-                className="inline-block bg-[#3483FA] text-white py-3 px-6 rounded-lg font-medium hover:bg-[#2a68c8] transition-colors shadow-md"
-              >
-                Comenzar Trial de 14 días
-              </a>
-              <p className="mt-2 text-xs text-gray-500">
-                Prueba gratis por 14 días, sin compromiso
+            {/* Trial info */}
+            <div className="mt-6 bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl p-4 text-center">
+              <p className="text-sm font-semibold text-cyan-900">
+                ✨ Acceso completo por 14 días gratis
+              </p>
+              <p className="text-xs text-cyan-700 mt-1">
+                Sin tarjeta de crédito. Empieza a usar Manny inmediatamente.
               </p>
             </div>
           </div>

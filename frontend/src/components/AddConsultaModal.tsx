@@ -6,6 +6,7 @@ import { consultasService, pacientesService, prestacionesService } from '@/servi
 import toast from 'react-hot-toast';
 import AddPacienteModal from './AddPacienteModal';
 import Odontograma from './Odontograma';
+import { dateInputToISO } from '../utils/dateUtils';
 
 interface AddConsultaModalProps {
   isOpen: boolean;
@@ -334,7 +335,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
       const consultaData = {
         paciente_id: pacienteId,
         prestacion_usuario_id: prestacionUsuarioId,
-        fecha_consulta: formData.fecha_consulta,
+        fecha_consulta: dateInputToISO(formData.fecha_consulta) || formData.fecha_consulta,
         monto_ars: formData.monto_ars,
         medio_pago: formData.medio_pago,
         dientes_tratados: selectedTeeth

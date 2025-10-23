@@ -22,10 +22,13 @@ from app.schemas.auth import (
     GoogleAuthRequest,
     OnboardingComplete,
     ChangePassword,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.services.user_service import UserService
 from app.services.google_auth import GoogleAuthService
 from app.services.auditoria import AuditoriaService
+from app.services.password_reset import PasswordResetService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -293,6 +296,74 @@ async def change_password(
     )
     
     return {"message": "Password changed successfully"}
+
+
+# ============================================================================
+# PASSWORD RESET
+# ============================================================================
+
+@router.post("/forgot-password")
+async def forgot_password(
+    request_data: ForgotPasswordRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Solicitar reset de contraseña. Genera un código de 6 dígitos.
+    Por seguridad, siempre retorna éxito aunque el email no exista.
+    """
+    reset_code = PasswordResetService.create_reset_token(db, request_data.email)
+    
+    if reset_code:
+        # TODO: Aquí enviar el código por email
+        # Por ahora, en desarrollo, lo retornamos (SOLO PARA TESTING)
+        # En producción, solo enviar por email y retornar success
+        return {
+            "message": "Si el email existe, recibirás un código de verificación",
+            "reset_code": reset_code  # REMOVER EN PRODUCCIÓN
+        }
+    
+    # Siempre retornar éxito para no revelar si el email existe
+    return {
+        "message": "Si el email existe, recibirás un código de verificación"
+    }
+
+
+@router.post("/reset-password")
+async def reset_password(
+    reset_data: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+):
+    """Resetear contraseña usando código de verificación"""
+    success = PasswordResetService.reset_password_with_code(
+        db,
+        reset_data.email,
+        reset_data.reset_code,
+        reset_data.new_password
+    )
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Código inválido o expirado"
+        )
+    
+    # Log reset de contraseña
+    from sqlalchemy import select
+    stmt = select(Usuario).where(Usuario.email == reset_data.email)
+    user = db.execute(stmt).scalar_one_or_none()
+    
+    if user:
+        AuditoriaService.log_action(
+            db=db,
+            usuario_id=user.id,
+            accion="cambio_password",
+            entidad_tipo="usuario",
+            entidad_id=user.id,
+            descripcion="Reset de contraseña con código",
+            exitoso=True
+        )
+    
+    return {"message": "Contraseña restablecida exitosamente"}
 
 
 # ============================================================================

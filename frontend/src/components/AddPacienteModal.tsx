@@ -4,7 +4,7 @@ import { X, User, Mail, Phone, Calendar, CreditCard, Building2, Save } from 'luc
 import { useMutation, useQueryClient } from 'react-query';
 import { pacientesService } from '../services';
 import toast from 'react-hot-toast';
-import { dateInputToISO } from '../utils/dateUtils';
+import { dateInputToISO, isoToDateInput } from '../utils/dateUtils';
 
 interface PacienteForm {
   nombre: string;
@@ -58,7 +58,9 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
     if (initialData) {
       setFormData(prev => ({
         ...prev,
-        ...initialData
+        ...initialData,
+        // Convertir fecha ISO a formato del input date
+        fecha_nacimiento: isoToDateInput(initialData.fecha_nacimiento) || initialData.fecha_nacimiento || ''
       }));
     }
   }, [initialData]);
@@ -324,8 +326,12 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                   type="date"
                   value={formData.fecha_nacimiento}
                   onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
+                  min="1900-01-01"
+                  max={new Date().toISOString().split('T')[0]}
+                  lang="es-AR"
                   className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-1">Formato: dd/mm/aaaa</p>
               </div>
 
               <div>

@@ -4,6 +4,7 @@ import { Calendar, Clock, User, Phone, Mail, CheckCircle, AlertCircle } from 'lu
 import { toast } from 'react-hot-toast';
 import { SlotDisponible } from '../types/turnos';
 import * as turnosService from '../services/turnos';
+import { dateInputToISO } from '../utils/dateUtils';
 
 export default function ReservarTurnoPage() {
   const { token } = useParams<{ token: string }>();
@@ -89,7 +90,7 @@ export default function ReservarTurnoPage() {
       setLoading(true);
       
       const turno = await turnosService.reservarTurnoConToken(token, {
-        fecha: selectedSlot.fecha,
+        fecha: dateInputToISO(selectedSlot.fecha) || selectedSlot.fecha,
         hora_inicio: selectedSlot.hora_inicio,
         duracion_minutos: duracion,
         nombre_paciente: nombre,
@@ -141,7 +142,10 @@ export default function ReservarTurnoPage() {
             min={today.toISOString().split('T')[0]}
             max={maxDate.toISOString().split('T')[0]}
             value={selectedDate.toISOString().split('T')[0]}
-            onChange={(e) => setSelectedDate(new Date(e.target.value + 'T00:00:00'))}
+            onChange={(e) => {
+              const [year, month, day] = e.target.value.split('-').map(Number);
+              setSelectedDate(new Date(year, month - 1, day, 12, 0, 0));
+            }}
             className="w-full border rounded-lg px-4 py-3"
           />
 

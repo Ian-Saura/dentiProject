@@ -4,6 +4,7 @@ import { X, Calendar, Clock, User, Save } from 'lucide-react';
 import { useMutation, useQueryClient } from 'react-query';
 import { consultasService } from '../services';
 import toast from 'react-hot-toast';
+import { dateInputToISO } from '../utils/dateUtils';
 
 interface QuickAppointmentModalProps {
   isOpen: boolean;
@@ -61,7 +62,8 @@ const QuickAppointmentModal: React.FC<QuickAppointmentModalProps> = ({
     }
 
     // Combine date and time
-    const fechaHora = `${formData.fecha}T${formData.hora}`;
+    const fechaCorregida = dateInputToISO(formData.fecha) || formData.fecha;
+    const fechaHora = `${fechaCorregida}T${formData.hora}`;
     
     const dataToSend = {
       paciente_id: patientId,
@@ -253,6 +255,7 @@ const QuickAppointmentModal: React.FC<QuickAppointmentModalProps> = ({
 };
 
 export default QuickAppointmentModal;
+
 
 
 

@@ -29,3 +29,4 @@ async def check_trial_status(
     return current_user
 
 
+

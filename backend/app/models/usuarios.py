@@ -36,6 +36,8 @@ class Usuario(Base):
     plan: Mapped[Plan] = mapped_column(Enum(Plan), default=Plan.trial)
     fecha_inicio_plan: Mapped[Optional[date]] = mapped_column(Date)  # Fecha de inicio del plan actual
     fecha_vencimiento: Mapped[Optional[date]] = mapped_column(Date)  # Fecha de vencimiento (para trial)
+    ultima_verificacion_pago: Mapped[Optional[date]] = mapped_column(Date)  # Última verificación de pago por admin
+    pago_verificado: Mapped[bool] = mapped_column(Boolean, default=False)  # Pago verificado en los últimos 30 días
     fecha_registro: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     ultimo_acceso: Mapped[Optional[datetime]] = mapped_column(DateTime)
     activo: Mapped[bool] = mapped_column(Boolean, default=True)

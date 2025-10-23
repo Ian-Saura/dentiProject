@@ -8,6 +8,13 @@ export interface UserWithRole {
   apellido: string | null;
   especialidad: string;
   plan: string;
+  fecha_inicio_plan: string | null;
+  fecha_vencimiento: string | null;
+  dias_restantes: number | null;
+  trial_expirado: boolean;
+  ultima_verificacion_pago: string | null;
+  pago_verificado: boolean;
+  necesita_verificacion: boolean;
   activo: boolean;
   fecha_registro: string;
   role_name: string | null;
@@ -67,6 +74,28 @@ export const adminService = {
 
   async deleteUser(userId: number) {
     const response = await api.delete(`/admin/users/${userId}`);
+    return response.data;
+  },
+
+  async verifyPayment(userId: number) {
+    const response = await api.post(`/admin/users/${userId}/verify-payment`);
+    return response.data;
+  },
+
+  async resetUserPassword(userId: number, newPassword: string) {
+    const response = await api.post(`/admin/users/${userId}/reset-password`, {
+      new_password: newPassword
+    });
+    return response.data;
+  },
+
+  async getUserStats(userId: number) {
+    const response = await api.get(`/admin/users/${userId}/stats`);
+    return response.data;
+  },
+
+  async impersonateUser(userId: number): Promise<{ access_token: string; user: any }> {
+    const response = await api.post(`/admin/users/${userId}/impersonate`);
     return response.data;
   },
 

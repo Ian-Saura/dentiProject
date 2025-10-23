@@ -194,6 +194,15 @@ const LoginPage: React.FC = () => {
             </motion.div>
           </form>
 
+          <div className="mt-4 text-center">
+            <Link 
+              to="/forgot-password" 
+              className="text-sm text-blue-600 hover:text-blue-700 font-semibold hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-700">
               ¿No tienes cuenta?{' '}

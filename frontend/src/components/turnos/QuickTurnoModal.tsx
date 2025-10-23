@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Phone, Clock, Save, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { dateInputToISO } from '../../utils/dateUtils';
 
 interface Paciente {
   id: number;
@@ -155,7 +156,7 @@ export default function QuickTurnoModal({
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: JSON.stringify({
-          fecha: fechaSeleccionada,
+          fecha: dateInputToISO(fechaSeleccionada) || fechaSeleccionada,
           hora_inicio: horaSeleccionada,
           duracion_minutos: duracion,
           paciente_id: pacienteId, // Si seleccionó un paciente existente

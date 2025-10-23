@@ -238,10 +238,11 @@ const LandingPage: React.FC = () => {
                 <iframe
                   width="100%"
                   height="100%"
-                  src="https://www.youtube.com/embed/yqEvcj3KfW8"
-                  title="Manny App - Demo"
+                  src="https://www.youtube.com/embed/yqEvcj3KfW8?si=qKE3VjgxnxLLRViV"
+                  title="YouTube video player"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
                   allowFullScreen
                   className="w-full h-full"
                 ></iframe>
@@ -595,30 +596,15 @@ const LandingPage: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
               {
-                name: "Trial",
-                price: "Gratis",
-                period: "14 días",
-                description: "Perfecto para probar el sistema",
-                features: [
-                  "Acceso completo 14 días",
-                  "Ambos módulos incluidos",
-                  "Hasta 50 pacientes",
-                  "Soporte por email",
-                  "Sin tarjeta de crédito"
-                ],
-                cta: "Comenzar Trial",
-                popular: false,
-                color: "from-gray-500 to-gray-600"
-              },
-              {
                 name: "Premium",
-                price: "$29.900",
+                price: "$39.999",
                 period: "/mes",
                 description: "Para consultorios profesionales",
                 features: [
+                  "✨ 14 días de prueba gratis",
                   "Módulo Operativo completo",
                   "Módulo Analítico completo",
                   "Pacientes ilimitados",
@@ -636,6 +622,7 @@ const LandingPage: React.FC = () => {
                 period: "",
                 description: "Para múltiples consultorios",
                 features: [
+                  "✨ 14 días de prueba gratis",
                   "Todo de Premium",
                   "Múltiples sucursales",
                   "API personalizada",

@@ -40,8 +40,26 @@ def import_csv(
         Diccionario con resultado de la importación
     """
     try:
-        tenant = TenantContext(current_user)
+        # Validar tipo de archivo
+        if not file.filename.endswith('.csv'):
+            return {
+                "migrados": 0,
+                "errores": 1,
+                "total_ars": 0,
+                "error": "Solo se permiten archivos CSV"
+            }
+        
+        # Validar tamaño de archivo (máximo 10MB)
+        MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
         content = file.file.read()
+        
+        if len(content) > MAX_FILE_SIZE:
+            return {
+                "migrados": 0,
+                "errores": 1,
+                "total_ars": 0,
+                "error": "El archivo excede el tamaño máximo permitido (10MB)"
+            }
         
         if not content:
             return {
@@ -51,6 +69,7 @@ def import_csv(
                 "error": "El archivo está vacío"
             }
         
+        tenant = TenantContext(current_user)
         result = ImportCsvService.importar_csv(
             db, tenant.user_id, content, col_paciente, col_tratamiento, col_monto, col_fecha, col_medio_pago
         )

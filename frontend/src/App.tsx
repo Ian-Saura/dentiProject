@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -8,6 +8,7 @@ import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
 
 // Components
 import OnboardingWrapper from '@/components/OnboardingWrapper';
+import ImpersonationBanner from '@/components/ImpersonationBanner';
 
 // Pages
 import LandingPage from '@/pages/LandingPage';
@@ -24,11 +25,15 @@ import ConfiguracionPage from '@/pages/ConfiguracionPage';
 import ImportPage from '@/pages/ImportPage';
 import FinancialReportsPage from '@/pages/FinancialReportsPage';
 import TrialExpiredPage from '@/pages/TrialExpiredPage';
+import AccountSuspendedPage from '@/pages/AccountSuspendedPage';
 import TurnosPage from '@/pages/TurnosPage';
 import ReservarTurnoPage from '@/pages/ReservarTurnoPage';
 import OperationalDashboard from '@/pages/OperationalDashboard';
 import TerminosPage from '@/pages/TerminosPage';
 import PrivacidadPage from '@/pages/PrivacidadPage';
+import ProfilePage from '@/pages/ProfilePage';
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
 
 // Google OAuth Client ID
 const GOOGLE_CLIENT_ID = '814453800673-39hb3apvtc1d5bdo68k9cq83isn75n2j.apps.googleusercontent.com';
@@ -50,7 +55,8 @@ const queryClient = new QueryClient({
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -58,6 +64,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check if user is inactive and not already on account-suspended page
+  if (user && !user.activo && location.pathname !== '/account-suspended') {
+    return <Navigate to="/account-suspended" replace />;
   }
 
   return (
@@ -126,6 +137,34 @@ const AppRoutes: React.FC = () => {
             <TrialExpiredPage />
           </ProtectedRoute>
         } 
+      />
+      
+      <Route 
+        path="/account-suspended" 
+        element={
+          <ProtectedRoute>
+            <AccountSuspendedPage />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/forgot-password" 
+        element={<ForgotPasswordPage />} 
+      />
+      
+      <Route 
+        path="/reset-password" 
+        element={<ResetPasswordPage />} 
       />
 
       {/* Root redirect based on mode */}
@@ -302,6 +341,7 @@ const App: React.FC = () => {
           <AppModeProvider>
             <Router>
               <div className="min-h-screen bg-gray-50">
+                <ImpersonationBanner />
                 <AppRoutes />
                 <Toaster
                   position="top-right"

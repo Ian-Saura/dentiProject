@@ -12,6 +12,7 @@ import AddConsultaModal from '@/components/AddConsultaModal';
 import AddPacienteModal from '@/components/AddPacienteModal';
 import QuickAppointmentModal from '@/components/QuickAppointmentModal';
 import toast from 'react-hot-toast';
+import { formatDateToDDMMYYYY, calculateAge } from '@/utils/dateFormat';
 
 const PatientDashboardPage: React.FC = () => {
   const { patientName: encodedPatientName } = useParams<{ patientName: string }>();
@@ -340,6 +341,36 @@ const PatientDashboardPage: React.FC = () => {
                     </div>
                   </div>
                 )}
+                {currentPatient.fecha_nacimiento && (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <Calendar className="h-4 w-4 text-gray-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">Nacimiento</p>
+                      <p className="text-sm font-bold text-gray-900">
+                        {formatDateToDDMMYYYY(currentPatient.fecha_nacimiento)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {calculateAge(currentPatient.fecha_nacimiento)} años
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {currentPatient.obra_social && (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg col-span-2">
+                    <CreditCard className="h-4 w-4 text-gray-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">Obra Social</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">
+                        {currentPatient.obra_social}
+                        {currentPatient.numero_afiliado && (
+                          <span className="text-xs text-gray-500 ml-2">
+                            N° {currentPatient.numero_afiliado}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {currentPatient.telefono && (
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                     <Phone className="h-4 w-4 text-gray-600" />
@@ -364,6 +395,42 @@ const PatientDashboardPage: React.FC = () => {
                     <div className="min-w-0">
                       <p className="text-xs text-gray-500">Dirección</p>
                       <p className="text-sm font-bold text-gray-900 truncate">{currentPatient.direccion}</p>
+                    </div>
+                  </div>
+                )}
+                {currentPatient.contacto_emergencia && (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg col-span-2">
+                    <Phone className="h-4 w-4 text-red-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-red-500">Contacto de Emergencia</p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{currentPatient.contacto_emergencia}</p>
+                    </div>
+                  </div>
+                )}
+                {currentPatient.alergias && (
+                  <div className="flex items-center gap-2 p-2 bg-red-50 rounded-lg col-span-2">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-red-600 font-semibold">Alergias</p>
+                      <p className="text-sm font-bold text-red-900">{currentPatient.alergias}</p>
+                    </div>
+                  </div>
+                )}
+                {currentPatient.medicamentos_actuales && (
+                  <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg col-span-2">
+                    <Activity className="h-4 w-4 text-blue-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-blue-600 font-semibold">Medicamentos Actuales</p>
+                      <p className="text-sm font-bold text-blue-900">{currentPatient.medicamentos_actuales}</p>
+                    </div>
+                  </div>
+                )}
+                {currentPatient.observaciones_medicas && (
+                  <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg col-span-2">
+                    <FileText className="h-4 w-4 text-yellow-600" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-yellow-600 font-semibold">Observaciones Médicas</p>
+                      <p className="text-sm text-yellow-900">{currentPatient.observaciones_medicas}</p>
                     </div>
                   </div>
                 )}

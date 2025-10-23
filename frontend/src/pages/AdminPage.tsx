@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Shield, Activity, Trash2, Ban, Check, Info, CreditCard, Crown, Clock, Sparkles } from 'lucide-react';
+import { Users, Shield, Activity, Trash2, Ban, Check, Info, CreditCard, Crown, Clock, Sparkles, Calendar, AlertTriangle, CheckCircle, Settings, Key, FileDown, UserCog, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService, UserWithRole, Role, AdminStats } from '../services/admin';
 import { plansService } from '../services/plans';
+import { formatDateToDDMMYYYY } from '../utils/dateFormat';
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function AdminPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'needs_verification'>('all');
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState('');
@@ -22,6 +23,9 @@ export default function AdminPage() {
   const [selectedPlan, setSelectedPlan] = useState('');
   const [planDuration, setPlanDuration] = useState<number | undefined>(undefined);
   const [hasExpiration, setHasExpiration] = useState(false);
+  const [showToolsMenu, setShowToolsMenu] = useState<number | null>(null);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     if (!isAdmin) {
@@ -99,6 +103,16 @@ export default function AdminPage() {
     }
   };
 
+  const handleVerifyPayment = async (user: UserWithRole) => {
+    try {
+      await adminService.verifyPayment(user.id);
+      toast.success(`Pago verificado para ${user.username}`);
+      loadData();
+    } catch (error: any) {
+      toast.error('Error al verificar pago: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const handleAssignPlan = async () => {
     if (!selectedUser || !selectedPlan) return;
     
@@ -121,11 +135,67 @@ export default function AdminPage() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!selectedUser || !newPassword) return;
+    
+    if (newPassword.length < 8) {
+      toast.error('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+
+    try {
+      await adminService.resetUserPassword(selectedUser.id, newPassword);
+      toast.success(`Contraseña reseteada exitosamente para ${selectedUser.username}`);
+      setShowResetPasswordModal(false);
+      setSelectedUser(null);
+      setNewPassword('');
+    } catch (error: any) {
+      toast.error('Error al resetear contraseña: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleImpersonateUser = async (user: UserWithRole) => {
+    if (!window.confirm(`¿Estás seguro de que quieres acceder como ${user.username}?\n\nPodrás ver y usar la aplicación como si fueras este usuario. Para volver a tu cuenta de admin, cierra sesión.`)) {
+      return;
+    }
+
+    try {
+      // Guardar el token de admin actual
+      const adminToken = localStorage.getItem('token');
+      const adminUser = localStorage.getItem('user');
+      
+      if (adminToken && adminUser) {
+        sessionStorage.setItem('admin_token', adminToken);
+        sessionStorage.setItem('admin_user', adminUser);
+        sessionStorage.setItem('is_impersonating', 'true');
+        sessionStorage.setItem('impersonated_user_id', user.id.toString());
+      }
+
+      // Hacer login como el usuario
+      const response = await adminService.impersonateUser(user.id);
+      
+      // Guardar el token del usuario impersonado
+      localStorage.setItem('token', response.access_token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      toast.success(`Ahora estás viendo la aplicación como ${user.username}`);
+      
+      // Recargar para aplicar cambios
+      window.location.href = '/operational/turnos';
+    } catch (error: any) {
+      toast.error('Error al acceder como usuario: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const filteredUsers = users.filter(user => {
     if (filter === 'active') return user.activo;
     if (filter === 'inactive') return !user.activo;
+    if (filter === 'needs_verification') return user.necesita_verificacion && user.plan !== 'trial';
     return true;
   });
+
+  // Contar usuarios que necesitan verificación
+  const usersNeedingVerification = users.filter(u => u.necesita_verificacion && u.plan !== 'trial').length;
 
   if (loading) {
     return (
@@ -241,15 +311,17 @@ export default function AdminPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white"
+            className="bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl shadow-lg p-6 text-white cursor-pointer hover:scale-105 transition-transform"
+            onClick={() => setFilter('needs_verification')}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-yellow-100">Sin Rol</p>
-                <p className="text-3xl font-black mt-1">{stats.users_without_role}</p>
+                <p className="text-sm font-medium text-orange-100">Requieren Verificación</p>
+                <p className="text-3xl font-black mt-1">{usersNeedingVerification}</p>
+                <p className="text-xs text-orange-100 mt-1">Pagos pendientes de revisar</p>
               </div>
               <div className="bg-white/20 p-3 rounded-xl">
-                <Activity className="w-8 h-8" />
+                <AlertTriangle className="w-8 h-8 animate-pulse" />
               </div>
             </div>
           </motion.div>
@@ -258,36 +330,49 @@ export default function AdminPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
               filter === 'all'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-blue-600 text-white shadow-lg scale-105'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Todos ({users.length})
+            📋 Todos ({users.length})
           </button>
           <button
             onClick={() => setFilter('active')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
               filter === 'active'
-                ? 'bg-green-600 text-white'
+                ? 'bg-green-600 text-white shadow-lg scale-105'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Activos ({users.filter(u => u.activo).length})
+            ✅ Activos ({users.filter(u => u.activo).length})
           </button>
           <button
             onClick={() => setFilter('inactive')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
               filter === 'inactive'
-                ? 'bg-red-600 text-white'
+                ? 'bg-red-600 text-white shadow-lg scale-105'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Inactivos ({users.filter(u => !u.activo).length})
+            ⛔ Inactivos ({users.filter(u => !u.activo).length})
+          </button>
+          <button
+            onClick={() => setFilter('needs_verification')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all relative ${
+              filter === 'needs_verification'
+                ? 'bg-orange-600 text-white shadow-lg scale-105'
+                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+            }`}
+          >
+            ⚠️ Verificación Pendiente ({usersNeedingVerification})
+            {usersNeedingVerification > 0 && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+            )}
           </button>
         </div>
       </div>
@@ -308,7 +393,10 @@ export default function AdminPage() {
                   Rol
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Plan
+                  Plan / Información
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Verificación Pago
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Estado
@@ -347,16 +435,101 @@ export default function AdminPage() {
                       {user.role_display_name || 'Sin rol'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {(() => {
-                      const badge = getPlanBadge(user.plan || '');
-                      return (
-                        <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-bold rounded-full ${badge.bg} ${badge.text}`}>
-                          {badge.icon}
-                          {badge.label}
-                        </span>
-                      );
-                    })()}
+                  <td className="px-6 py-4">
+                    <div className="space-y-2">
+                      {/* Plan Badge */}
+                      {(() => {
+                        const badge = getPlanBadge(user.plan || '');
+                        return (
+                          <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-bold rounded-full ${badge.bg} ${badge.text}`}>
+                            {badge.icon}
+                            {badge.label}
+                          </span>
+                        );
+                      })()}
+                      
+                      {/* Información del Plan */}
+                      <div className="space-y-1">
+                        {user.fecha_inicio_plan && (
+                          <div className="text-xs text-gray-600 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <span className="font-medium">Inicio:</span> {formatDateToDDMMYYYY(user.fecha_inicio_plan)}
+                          </div>
+                        )}
+                        
+                        {user.plan === 'trial' && user.dias_restantes !== null && (
+                          <div className={`text-xs font-semibold ${user.trial_expirado ? 'text-red-600' : 'text-blue-600'}`}>
+                            {user.trial_expirado ? (
+                              <span className="flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" />
+                                Trial expirado
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                ⏱️ {user.dias_restantes} días restantes
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        
+                        {user.plan === 'trial' && user.fecha_vencimiento && (
+                          <div className="text-xs text-gray-500 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <span className="font-medium">Vence:</span> {formatDateToDDMMYYYY(user.fecha_vencimiento)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {user.plan !== 'trial' ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={user.pago_verificado && !user.necesita_verificacion}
+                            onChange={() => handleVerifyPayment(user)}
+                            className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            title="Marcar como verificado"
+                          />
+                          <div className="text-xs">
+                            {user.necesita_verificacion ? (
+                              <span className="text-red-600 font-bold flex items-center gap-1">
+                                <AlertTriangle className="w-4 h-4" />
+                                Requiere verificación
+                              </span>
+                            ) : user.pago_verificado ? (
+                              <span className="text-green-600 font-bold flex items-center gap-1">
+                                <CheckCircle className="w-4 h-4" />
+                                Pago verificado
+                              </span>
+                            ) : (
+                              <span className="text-gray-500 font-semibold">
+                                Sin verificar
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {user.ultima_verificacion_pago && (
+                          <div className="text-xs text-gray-600 flex items-center gap-1 pl-7">
+                            <Calendar className="w-3 h-3" />
+                            <span className="font-medium">Última verificación:</span>
+                            <span className="font-semibold">{formatDateToDDMMYYYY(user.ultima_verificacion_pago)}</span>
+                          </div>
+                        )}
+                        {!user.ultima_verificacion_pago && user.plan !== 'trial' && (
+                          <div className="text-xs text-orange-600 flex items-center gap-1 pl-7">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span className="font-semibold">Nunca verificado</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="text-xs text-gray-400 font-medium">N/A (Trial)</span>
+                        <span className="text-xs text-gray-500">No requiere verificación</span>
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {user.activo ? (
@@ -393,6 +566,45 @@ export default function AdminPage() {
                       >
                         <CreditCard className="w-4 h-4" />
                       </button>
+                      
+                      {/* Tools dropdown */}
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowToolsMenu(showToolsMenu === user.id ? null : user.id)}
+                          className="text-gray-600 hover:text-gray-900 p-1 hover:bg-gray-100 rounded"
+                          title="Herramientas"
+                        >
+                          <Settings className="w-4 h-4" />
+                        </button>
+                        {showToolsMenu === user.id && (
+                          <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-10">
+                            <div className="py-1">
+                              <button
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowResetPasswordModal(true);
+                                  setShowToolsMenu(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              >
+                                <Key className="w-4 h-4" />
+                                Resetear Contraseña
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleImpersonateUser(user);
+                                  setShowToolsMenu(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2"
+                              >
+                                <Eye className="w-4 h-4" />
+                                Acceder como Usuario
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
                       <button
                         onClick={() => handleToggleStatus(user)}
                         className={`${
@@ -617,6 +829,75 @@ export default function AdminPage() {
                 Asignar Plan
               </button>
             </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reset Password Modal */}
+      <AnimatePresence>
+        {showResetPasswordModal && selectedUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setShowResetPasswordModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-orange-100 p-3 rounded-xl">
+                  <Key className="w-6 h-6 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Resetear Contraseña
+                  </h3>
+                  <p className="text-sm text-gray-500">{selectedUser.username}</p>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nueva Contraseña
+                </label>
+                <input
+                  type="text"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mínimo 8 caracteres"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  La nueva contraseña debe tener al menos 8 caracteres
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowResetPasswordModal(false);
+                    setSelectedUser(null);
+                    setNewPassword('');
+                  }}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleResetPassword}
+                  className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 text-white px-4 py-3 rounded-xl font-bold hover:from-orange-700 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!newPassword || newPassword.length < 8}
+                >
+                  Resetear
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

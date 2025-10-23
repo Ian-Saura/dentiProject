@@ -1,10 +1,12 @@
 import React from 'react';
 import { useQuery } from 'react-query';
 import { analyticsService } from '@/services';
+import { plansService } from '../services/plans';
 import { useAuth } from '@/contexts/AuthContext';
 import MetricCard from '@/components/MetricCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
+import UpgradeBanner from '../components/UpgradeBanner';
 import { motion } from 'framer-motion';
 import { formatCurrency } from '@/utils/formatNumber';
 import {
@@ -49,7 +51,14 @@ const DashboardPage: React.FC = () => {
     { refetchInterval: 60000 }
   );
 
+  // Fetch plan status
+  const { data: planStatus } = useQuery('plan-status', plansService.getMyPlanStatus);
+
   const isLoading = resumenLoading || kpisLoading || costosLoading || equilibrioLoading;
+
+  const handleUpgrade = () => {
+    window.open('https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=e3cbe4338d4d424abb2b4b3da6d229e1', '_blank');
+  };
 
   const getEspecialidadEmoji = (especialidad: string) => {
     const emojis = {
@@ -70,6 +79,14 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Upgrade Banner - Only show if on trial */}
+      {planStatus?.plan === 'trial' && planStatus?.dias_restantes !== undefined && planStatus.dias_restantes >= 0 && (
+        <UpgradeBanner 
+          diasRestantes={planStatus.dias_restantes} 
+          onUpgrade={handleUpgrade}
+        />
+      )}
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -153,7 +170,7 @@ const DashboardPage: React.FC = () => {
               </div>
               <p className="text-white/90 text-xs font-medium mb-1">Prestaciones</p>
               <p className="text-4xl font-black mb-1">{resumen?.total_consultas || 0}</p>
-              <p className="text-white/80 text-xs font-medium">consultas registradas</p>
+              <p className="text-white/80 text-xs font-medium">prestaciones registradas</p>
             </div>
           </motion.div>
         </AnimatedCard>
@@ -208,7 +225,7 @@ const DashboardPage: React.FC = () => {
         <AnimatedCard delay={0.35} className="h-full">
           <MetricCard
             title="Esta Semana"
-            value={`${kpis?.consultas_ultima_semana || 0} consultas`}
+            value={`${kpis?.consultas_ultima_semana || 0} prestaciones`}
             icon={Users}
             color="blue"
           />
@@ -340,7 +357,7 @@ const DashboardPage: React.FC = () => {
                 Los datos se actualizan automáticamente desde la base de datos. 
                 {resumen?.total_consultas === 0 && (
                   <span className="block mt-2 font-semibold text-dental-600">
-                    ✨ Comienza agregando consultas para ver analytics detallados.
+                    ✨ Comienza agregando prestaciones para ver analytics detallados.
                   </span>
                 )}
               </p>

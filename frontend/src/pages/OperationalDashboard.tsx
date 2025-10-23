@@ -4,7 +4,9 @@ import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
 import { Calendar, Users, FileText, Clock, Plus, Zap, TrendingUp } from 'lucide-react';
 import { turnosService, consultasService, pacientesService } from '@/services';
+import { plansService } from '../services/plans';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import UpgradeBanner from '../components/UpgradeBanner';
 
 const OperationalDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +34,14 @@ const OperationalDashboard: React.FC = () => {
     pacientesService.getPacientes
   );
 
+  // Fetch plan status
+  const { data: planStatus } = useQuery('plan-status', plansService.getMyPlanStatus);
+
   const isLoading = loadingTurnos || loadingConsultas || loadingPacientes;
+
+  const handleUpgrade = () => {
+    window.open('https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=e3cbe4338d4d424abb2b4b3da6d229e1', '_blank');
+  };
 
   const quickActions = [
     {
@@ -76,6 +85,14 @@ const OperationalDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Upgrade Banner - Only show if on trial */}
+      {planStatus?.plan === 'trial' && planStatus?.dias_restantes !== undefined && planStatus.dias_restantes >= 0 && (
+        <UpgradeBanner 
+          diasRestantes={planStatus.dias_restantes} 
+          onUpgrade={handleUpgrade}
+        />
+      )}
+
       {/* Hero Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -292,6 +309,7 @@ const OperationalDashboard: React.FC = () => {
 };
 
 export default OperationalDashboard;
+
 
 
 
