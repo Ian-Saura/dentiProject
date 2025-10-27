@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, CreditCard, CheckCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, CreditCard, CheckCircle, ArrowRight, Mail } from 'lucide-react';
 
 export default function TrialExpiredPage() {
   const handlePayment = () => {
@@ -94,8 +94,48 @@ export default function TrialExpiredPage() {
           <p className="text-center text-sm text-gray-500 mt-4">
             Pago seguro procesado por MercadoPago
           </p>
+
+          {/* Contact Info */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <p className="text-center text-sm text-gray-600 mb-3">
+              ¿Necesitás ayuda o tenés alguna consulta?
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+              <a 
+                href="mailto:soporte@manny.com.ar" 
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                soporte@manny.com.ar
+              </a>
+              <span className="hidden sm:inline text-gray-300">•</span>
+              <a 
+                href="mailto:info@manny.com.ar" 
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                info@manny.com.ar
+              </a>
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

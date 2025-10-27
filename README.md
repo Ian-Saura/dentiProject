@@ -14,7 +14,7 @@ A comprehensive management system for dental practices with financial tracking, 
 ```
 URL: http://66.97.44.23
 Username: admin
-Password: EfHrx&0P1U3aFb
+Password: [CONTACT_ADMIN]
 ```
 
 ### Local Development

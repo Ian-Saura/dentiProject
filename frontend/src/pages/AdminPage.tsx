@@ -600,6 +600,21 @@ export default function AdminPage() {
                                 <Eye className="w-4 h-4" />
                                 Acceder como Usuario
                               </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const result = await adminService.clearImportHashes(user.id);
+                                    toast.success(`✅ ${result.message}`);
+                                    setShowToolsMenu(null);
+                                  } catch (error: any) {
+                                    toast.error(`Error: ${error.message}`);
+                                  }
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 flex items-center gap-2"
+                              >
+                                <FileText className="w-4 h-4" />
+                                Limpiar Hashes de Importación
+                              </button>
                             </div>
                           </div>
                         )}

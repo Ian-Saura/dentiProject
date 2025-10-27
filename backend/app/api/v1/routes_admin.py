@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.deps.permissions import is_admin
 from app.models.usuarios import Usuario
 from app.models.roles import Role, RoleType
+from app.models.consultas import Consulta
 from app.schemas.auth import UserResponse, AdminResetPasswordRequest
 from app.services.role_service import RoleService
 from app.services.auditoria import AuditoriaService
@@ -435,8 +436,6 @@ def get_user_plan_status(
         raise HTTPException(status_code=404, detail="User not found")
     
     return PlanService.get_plan_status(user)
-
-
 @router.post("/users/{user_id}/verify-payment")
 def verify_user_payment(
     user_id: int,
@@ -629,3 +628,45 @@ def impersonate_user(
             "activo": user.activo
         }
     }
+
+
+@router.post("/users/{user_id}/clear-import-hashes")
+def clear_user_import_hashes(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(is_admin)
+):
+    """
+    Limpiar los hashes de importación de un usuario.
+    Esto permite re-importar datos sin que sean detectados como duplicados.
+    """
+    # Verificar que el usuario exista
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Limpiar los hashes
+    result = db.query(Consulta).filter(
+        Consulta.usuario_id == user_id,
+        Consulta.import_hash.isnot(None)
+    ).update({"import_hash": None})
+    
+    db.commit()
+    
+    # Log de auditoría
+    AuditoriaService.log_action(
+        db=db,
+        usuario_id=current_user.id,
+        accion="actualizar",
+        entidad_tipo="consultas",
+        entidad_id=user_id,
+        descripcion=f"Admin {current_user.username} limpió {result} hashes de importación de {user.username}",
+        exitoso=True
+    )
+    
+    return {
+        "message": f"Se limpiaron {result} hashes de importación",
+        "cleared_count": result
+    }
+
+

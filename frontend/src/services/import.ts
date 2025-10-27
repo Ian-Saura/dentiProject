@@ -33,4 +33,9 @@ export const importService = {
     
     return response.data;
   },
+
+  async clearMyImportHashes(): Promise<{ message: string; cleared_count: number }> {
+    const response = await api.post('/import/clear-hashes');
+    return response.data;
+  },
 };

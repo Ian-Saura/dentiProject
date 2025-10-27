@@ -335,8 +335,8 @@ def get_or_create_configuracion_turnos(
         # Crear con valores por defecto
         default_config = ConfiguracionTurnosCreate(
             activo=False,  # Desactivado por defecto hasta que configure
-            duraciones_permitidas=[15, 30, 45, 60],
-            dias_anticipacion_min=1,
+            duraciones_permitidas=[30, 60],  # 30 min, 60 min, y custom en el frontend
+            dias_anticipacion_min=0,  # Permite reservas el mismo día
             dias_anticipacion_max=90,
             horarios_atencion={},
             dias_bloqueados=[],

@@ -30,12 +30,22 @@ __pycache__/
 .Python
 mi_entorno/
 venv/
+venv_*/
+.venv/
 env/
 ENV/
 *.egg-info/
 .pytest_cache/
 .coverage
 htmlcov/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Old/backup directories
+old_backends/
+old_*/
+backup_*/
 
 # Node
 node_modules/
@@ -85,3 +95,6 @@ Thumbs.db
 *.tmp
 *.bak
 *.backup
+
+
+.env

@@ -198,7 +198,6 @@ class AnalyticsService:
             'cantidad_equipos': len([e for e in equipos if e.activo]),
             'cantidad_gastos': len([g for g in gastos if g.activo])
         }
-
     @staticmethod
     def calcular_punto_equilibrio(db: Session, usuario_id: int) -> Dict[str, Any]:
         """
@@ -295,3 +294,4 @@ class AnalyticsService:
             'porcentaje_equilibrio': round(porcentaje_equilibrio, 1),
             'esta_en_equilibrio': consultas_ultimo_mes >= consultas_equilibrio_mes
         }
+

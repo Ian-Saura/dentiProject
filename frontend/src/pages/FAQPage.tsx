@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ArrowLeft,
   Home,
+  Mail,
 } from 'lucide-react';
 
 // FAQ Data
@@ -414,6 +415,28 @@ const FAQPage: React.FC = () => {
               Instagram
             </a>
           </div>
+          <div className="mt-6 pt-6 border-t border-gray-700">
+            <p className="text-gray-400 text-sm mb-3">
+              ¿Tenés alguna pregunta que no está aquí?
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-sm">
+              <a 
+                href="mailto:soporte@manny.com.ar" 
+                className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                soporte@manny.com.ar
+              </a>
+              <span className="hidden sm:inline text-gray-600">•</span>
+              <a 
+                href="mailto:info@manny.com.ar" 
+                className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                info@manny.com.ar
+              </a>
+            </div>
+          </div>
           <div className="mt-6 text-gray-500 text-xs">
             © 2025 Manny. Todos los derechos reservados.
           </div>
@@ -424,6 +447,20 @@ const FAQPage: React.FC = () => {
 };
 
 export default FAQPage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

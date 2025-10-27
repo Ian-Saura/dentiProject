@@ -9,6 +9,7 @@ import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
 // Components
 import OnboardingWrapper from '@/components/OnboardingWrapper';
 import ImpersonationBanner from '@/components/ImpersonationBanner';
+import HelpButton from '@/components/HelpButton';
 
 // Pages
 import LandingPage from '@/pages/LandingPage';
@@ -343,6 +344,7 @@ const App: React.FC = () => {
               <div className="min-h-screen bg-gray-50">
                 <ImpersonationBanner />
                 <AppRoutes />
+                <HelpButton />
                 <Toaster
                   position="top-right"
                   toastOptions={{

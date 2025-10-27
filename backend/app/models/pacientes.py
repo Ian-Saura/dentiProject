@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -11,12 +11,15 @@ from app.db.base import Base
 
 class Paciente(Base):
     __tablename__ = "pacientes"
+    __table_args__ = (
+        UniqueConstraint('usuario_id', 'dni', name='pacientes_usuario_dni_unique'),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     usuario_id: Mapped[int] = mapped_column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False)
     nombre: Mapped[str] = mapped_column(String(100), nullable=False)
     apellido: Mapped[str] = mapped_column(String(100), nullable=False)
-    dni: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
+    dni: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     fecha_nacimiento: Mapped[Optional[datetime]] = mapped_column(Date)
     telefono: Mapped[Optional[str]] = mapped_column(String(20))
     email: Mapped[Optional[str]] = mapped_column(String(150))
@@ -36,5 +39,8 @@ class Paciente(Base):
 
 
 from app.models.usuarios import Usuario  # noqa: E402
+from app.models.consultas import Consulta  # noqa: E402
+from app.models.turnos import Turno  # noqa: E402
+
 from app.models.consultas import Consulta  # noqa: E402
 from app.models.turnos import Turno  # noqa: E402

@@ -50,6 +50,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Try to get user info from localStorage first
           const storedUser = authService.getUserInfo();
           if (storedUser) {
+            console.log('🔍 DEBUG Stored User on init:', {
+              username: storedUser.username,
+              role_name: storedUser.role_name,
+              hasRoleName: !!storedUser.role_name
+            });
             setUser(storedUser);
             // Check if user is active
             if (!storedUser.activo) {
@@ -154,6 +159,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Check if user is admin based on username or role
   const isAdmin = user?.username === 'admin' || user?.role_name === 'admin';
+  
+  // DEBUG: Log user info for troubleshooting
+  React.useEffect(() => {
+    if (user) {
+      console.log('🔍 DEBUG AuthContext:', {
+        username: user.username,
+        role_name: user.role_name,
+        isAdmin,
+        fullUser: user
+      });
+    }
+  }, [user, isAdmin]);
 
   const value: AuthContextType = {
     user,

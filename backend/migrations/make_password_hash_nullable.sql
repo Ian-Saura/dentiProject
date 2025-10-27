@@ -8,3 +8,5 @@ ALTER TABLE usuarios ALTER COLUMN password_hash DROP NOT NULL;
 COMMENT ON COLUMN usuarios.password_hash IS 'Password hash for local authentication. NULL for OAuth users (Google, etc.)';
 
 
+
+

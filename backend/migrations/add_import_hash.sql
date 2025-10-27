@@ -21,3 +21,5 @@ COMMENT ON COLUMN consultas.import_hash IS 'SHA256 hash for CSV import duplicate
 
 
 
+
+

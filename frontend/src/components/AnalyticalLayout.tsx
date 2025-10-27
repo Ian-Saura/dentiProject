@@ -36,7 +36,7 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
     { name: 'Dashboard', href: '/analytical/dashboard', icon: Home },
     { name: 'Reportes', href: '/analytical/reportes', icon: TrendingUp },
-    { name: 'Configuración', href: '/analytical/configuracion', icon: Settings },
+    { name: 'Configuración de Costos', href: '/analytical/configuracion', icon: Settings },
     { name: 'Calculadora', href: '/analytical/calculadora', icon: Calculator },
     { name: 'Importar', href: '/analytical/import', icon: Upload },
     ...(isAdmin ? [{ name: 'Admin', href: '/analytical/admin', icon: Shield }] : []),
@@ -321,4 +321,16 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
 };
 
 export default AnalyticalLayout;
+
+
+
+
+
+
+
+
+
+
+
+
 

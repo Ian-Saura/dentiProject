@@ -153,10 +153,14 @@ async def register(
         # Crear token
         access_token = create_access_token(subject=user.username)
         
+        # Create user response with role_name
+        user_dict = UserResponse.model_validate(user).model_dump()
+        user_dict['role_name'] = user.role.name.value if user.role else None
+        
         return LoginResponse(
             access_token=access_token,
             token_type="bearer",
-            user=UserResponse.model_validate(user),
+            user=UserResponse(**user_dict),
             requires_onboarding=True  # Siempre true para nuevos usuarios
         )
         
@@ -221,10 +225,14 @@ async def google_auth(
     # Crear token
     access_token = create_access_token(subject=user.username)
     
+    # Create user response with role_name
+    user_dict = UserResponse.model_validate(user).model_dump()
+    user_dict['role_name'] = user.role.name.value if user.role else None
+    
     return LoginResponse(
         access_token=access_token,
         token_type="bearer",
-        user=UserResponse.model_validate(user),
+        user=UserResponse(**user_dict),
         requires_onboarding=not user.onboarding_completado
     )
 
@@ -238,7 +246,9 @@ async def get_current_user_info(
     current_user: Usuario = Depends(get_current_user),
 ):
     """Obtener información del usuario actual"""
-    return UserResponse.model_validate(current_user)
+    user_dict = UserResponse.model_validate(current_user).model_dump()
+    user_dict['role_name'] = current_user.role.name.value if current_user.role else None
+    return UserResponse(**user_dict)
 
 
 @router.patch("/me", response_model=UserResponse)
@@ -261,7 +271,9 @@ async def update_profile(
         exitoso=True
     )
     
-    return UserResponse.model_validate(user)
+    user_dict = UserResponse.model_validate(user).model_dump()
+    user_dict['role_name'] = user.role.name.value if user.role else None
+    return UserResponse(**user_dict)
 
 
 @router.post("/me/change-password")
@@ -396,9 +408,9 @@ async def complete_onboarding(
         exitoso=True
     )
     
-    return UserResponse.model_validate(user)
-
-
+    user_dict = UserResponse.model_validate(user).model_dump()
+    user_dict['role_name'] = user.role.name.value if user.role else None
+    return UserResponse(**user_dict)
 @router.get("/me/plan-status")
 def get_my_plan_status(
     current_user: Usuario = Depends(get_current_user)
@@ -408,3 +420,6 @@ def get_my_plan_status(
     """
     from app.services.plan_service import PlanService
     return PlanService.get_plan_status(current_user)
+
+
+

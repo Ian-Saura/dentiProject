@@ -52,7 +52,7 @@ class PacienteOut(BaseModel):
     dni: str
     fecha_nacimiento: Optional[date]
     telefono: Optional[str]
-    email: Optional[EmailStr]
+    email: Optional[str]  # Changed from EmailStr to str to allow empty strings
     direccion: Optional[str]
     obra_social: Optional[str]
     numero_afiliado: Optional[str]
@@ -62,6 +62,16 @@ class PacienteOut(BaseModel):
     observaciones_medicas: Optional[str]
     fecha_registro: datetime  # Changed from date to datetime to match model
     activo: bool
+
+    @validator('email')
+    def validate_email(cls, v):
+        """Allow empty strings or None for email"""
+        if v is None or v == '' or v.strip() == '':
+            return None
+        # If it has content, validate it's a proper email
+        if '@' not in v:
+            raise ValueError('Email debe contener @')
+        return v
 
     class Config:
         from_attributes = True

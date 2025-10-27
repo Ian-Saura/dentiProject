@@ -766,23 +766,40 @@ const LandingPage: React.FC = () => {
             </div>
 
             <div>
-              <h4 className="font-bold mb-4">Conectá con nosotros</h4>
-              <div className="flex space-x-4">
-                <a
-                  href="https://instagram.com/manny.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white/10 hover:bg-white/20 p-3 rounded-xl transition-all"
-                >
-                  <Instagram className="h-6 w-6" />
-                </a>
-                <a
-                  href="mailto:hola@manny.com.ar"
-                  className="bg-white/10 hover:bg-white/20 p-3 rounded-xl transition-all"
-                >
-                  <Mail className="h-6 w-6" />
-                </a>
-              </div>
+              <h4 className="font-bold mb-4">Contacto</h4>
+              <ul className="space-y-3 text-gray-400 text-sm">
+                <li>
+                  <a 
+                    href="mailto:soporte@manny.com.ar" 
+                    className="flex items-center gap-2 hover:text-white transition-colors"
+                  >
+                    <Mail className="h-4 w-4" />
+                    soporte@manny.com.ar
+                  </a>
+                  <p className="text-xs text-gray-500 ml-6">Para asistencia técnica</p>
+                </li>
+                <li>
+                  <a 
+                    href="mailto:info@manny.com.ar" 
+                    className="flex items-center gap-2 hover:text-white transition-colors"
+                  >
+                    <Mail className="h-4 w-4" />
+                    info@manny.com.ar
+                  </a>
+                  <p className="text-xs text-gray-500 ml-6">Para consultas generales</p>
+                </li>
+                <li className="pt-2">
+                  <a
+                    href="https://instagram.com/manny.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 hover:text-white transition-colors"
+                  >
+                    <Instagram className="h-4 w-4" />
+                    @manny.app
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -814,5 +831,19 @@ const LandingPage: React.FC = () => {
 };
 
 export default LandingPage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

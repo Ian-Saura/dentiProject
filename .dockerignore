@@ -1,81 +1,70 @@
-# DentiProject Docker Ignore
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+venv_*/
+mi_entorno/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
 
-# Development files
+# Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-
-# Virtual environments
-venv/
-venv_production/
-mi_entorno/
-.env
-.venv
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-Thumbs.db
+dist/
+build/
 
 # Git
 .git/
 .gitignore
 
-# Documentation
-*.md
-!DOCKER_DEPLOYMENT.md
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
-# Test files
-test_*.py
-*_test.py
-tests/
-
-# Old backend files
-old_backends/
-backend_simple_test.py
-backend_complete.py
-backend_standalone.py
-backend_with_real_data.py
-
-# Logs
+# Deployment
+deploy/
+deploy_package.tar.gz
 *.log
-logs/
 
-# Temporary files
-tmp/
-temp/
-*.tmp
+# Old/backup
+old_*/
+backup_*/
+old_backends/
 
-# Build artifacts
-dist/
-build/
-*.egg-info/
+# Frontend (for backend build)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
 
-# Database files (handled by Docker volumes)
+# Database
 *.db
 *.sqlite
 *.sqlite3
 
-# Uploads (handled by Docker volumes)
+# SSL
+ssl/
+
+# Uploads
 uploads/
 
-# SSL certificates (should be mounted)
-ssl/
-*.pem
-*.key
-*.crt
+# Docs
+*.md
+!README.md
+
+# Tests
+tests/
+*.test.py

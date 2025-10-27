@@ -41,6 +41,16 @@ class UserRegister(BaseModel):
         return v
 
 
+class GoogleUserInfo(BaseModel):
+    """Schema para información de usuario de Google OAuth"""
+    google_id: str
+    email: str
+    nombre: str
+    apellido: str
+    avatar_url: Optional[str] = None
+    email_verified: bool = False
+
+
 class UserResponse(BaseModel):
     """Respuesta con datos del usuario"""
     id: int
@@ -82,7 +92,8 @@ class UserUpdate(BaseModel):
 
 class GoogleAuthRequest(BaseModel):
     """Request para autenticación con Google"""
-    token: str  # ID token de Google
+    token: Optional[str] = None  # ID token de Google
+    credential: Optional[str] = None  # Credential from Google One Tap
 
 
 # ============================================================================
@@ -135,8 +146,6 @@ class ChangePassword(BaseModel):
         if not any(c.isdigit() for c in v):
             raise ValueError('Password must contain at least one number')
         return v
-
-
 # ============================================================================
 # PASSWORD RESET
 # ============================================================================
@@ -217,3 +226,5 @@ class PlanStatusResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+

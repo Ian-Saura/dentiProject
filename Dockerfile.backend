@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
+# This layer will be cached unless requirements.txt changes
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
@@ -29,26 +30,23 @@ RUN apt-get update && apt-get install -y \
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash denti
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /home/denti/.local
+# Copy Python packages from builder and set ownership in one step
+# This layer is cached unless requirements.txt changes
+COPY --from=builder --chown=denti:denti /root/.local /home/denti/.local
 
-# Bust cache for app copy to ensure latest code
+# Copy backend application (AFTER dependencies, so this layer rebuilds fast)
+# Use CACHEBUST only for code changes, not dependencies
 ARG CACHEBUST=1
+COPY --chown=denti:denti backend/app ./app
+COPY --chown=denti:denti backend/env.docker ./.env
 
-# Copy backend application
-COPY backend/app ./app
-COPY backend/env.docker ./.env
-
-# Create uploads directory
-RUN mkdir -p uploads
+# Create uploads directory with correct ownership
+RUN mkdir -p uploads && chown denti:denti uploads
 
 # Set environment variables
 ENV PATH=/home/denti/.local/bin:$PATH
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
-
-# Set ownership
-RUN chown -R denti:denti /app /home/denti/.local
 
 # Switch to non-root user
 USER denti

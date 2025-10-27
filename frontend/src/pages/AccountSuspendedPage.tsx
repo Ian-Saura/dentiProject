@@ -1,24 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Ban, Mail, Phone, CreditCard, AlertTriangle } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { AlertTriangle, CreditCard, Mail } from 'lucide-react';
 
-export default function AccountSuspendedPage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  const handleContact = () => {
-    window.location.href = 'mailto:support@manny.com.ar?subject=Mi cuenta está suspendida';
-  };
-
+const AccountSuspendedPage: React.FC = () => {
   const handlePayment = () => {
-    window.location.href = 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=e3cbe4338d4d424abb2b4b3da6d229e1';
+    window.open('https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=e3cbe4338d4d424abb2b4b3da6d229e1', '_blank');
   };
 
   return (
@@ -26,107 +12,89 @@ export default function AccountSuspendedPage() {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-2xl w-full"
+        transition={{ duration: 0.5 }}
+        className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8"
       >
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-red-600 to-orange-600 p-8 text-white text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="relative">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex justify-center mb-4"
-              >
-                <div className="bg-white/20 p-6 rounded-full backdrop-blur-sm">
-                  <Ban className="w-16 h-16" />
-                </div>
-              </motion.div>
-              <h1 className="text-3xl font-black mb-2">Cuenta Suspendida</h1>
-              <p className="text-red-100">Tu acceso a Manny ha sido temporalmente suspendido</p>
-            </div>
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-red-100 to-orange-100 rounded-full mb-6"
+          >
+            <AlertTriangle className="h-12 w-12 text-red-600" />
+          </motion.div>
+
+          <h1 className="text-3xl font-black text-gray-900 mb-3">
+            Cuenta Suspendida
+          </h1>
+
+          <p className="text-gray-600 mb-6">
+            Tu período de prueba ha finalizado o tu suscripción está pendiente de pago.
+          </p>
+
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+            <h3 className="font-bold text-lg text-blue-900 mb-3">Plan Premium</h3>
+            <div className="text-4xl font-black text-blue-600 mb-2">$39.999</div>
+            <p className="text-sm text-blue-700 mb-4">Por mes</p>
+            <ul className="text-left space-y-2 text-sm text-blue-800">
+              <li className="flex items-center gap-2">
+                <span className="text-green-600">✓</span>
+                Acceso completo a todas las funciones
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-green-600">✓</span>
+                Analytics avanzados en tiempo real
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-green-600">✓</span>
+                Gestión ilimitada de pacientes
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-green-600">✓</span>
+                Reportes financieros detallados
+              </li>
+            </ul>
           </div>
 
-          {/* Content */}
-          <div className="p-8">
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-bold text-red-900 mb-1">Acceso Restringido</h3>
-                  <p className="text-sm text-red-800">
-                    Tu cuenta <strong>{user?.email || user?.username}</strong> ha sido marcada como inactiva por el administrador.
-                    Esto puede deberse a:
-                  </p>
-                  <ul className="list-disc list-inside text-sm text-red-800 mt-2 space-y-1">
-                    <li>Pago pendiente de verificación</li>
-                    <li>Vencimiento de suscripción</li>
-                    <li>Problema con tu forma de pago</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+          <button
+            onClick={handlePayment}
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 mb-4"
+          >
+            <CreditCard className="h-5 w-5" />
+            Activar Suscripción
+          </button>
 
-            <div className="space-y-4 mb-8">
-              <h3 className="font-bold text-gray-900 text-lg">¿Qué puedes hacer?</h3>
-              
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handlePayment}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3"
+          <p className="text-xs text-gray-500 mb-4">
+            Pago seguro a través de MercadoPago
+          </p>
+
+          <div className="border-t border-gray-200 pt-6">
+            <p className="text-sm text-gray-600 mb-3">
+              ¿Necesitás ayuda o tenés alguna consulta?
+            </p>
+            <div className="flex flex-col gap-2 text-sm">
+              <a
+                href="mailto:soporte@manny.com.ar"
+                className="text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 transition-colors"
               >
-                <CreditCard className="w-5 h-5" />
-                Renovar Suscripción ($39.999/mes)
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleContact}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3"
+                <Mail className="h-4 w-4" />
+                soporte@manny.com.ar
+              </a>
+              <a
+                href="mailto:info@manny.com.ar"
+                className="text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-2 transition-colors"
               >
-                <Mail className="w-5 h-5" />
-                Contactar Soporte
-              </motion.button>
-
-              <div className="text-center text-sm text-gray-600">
-                <p className="mb-2">¿Ya realizaste el pago?</p>
-                <p>Contacta al administrador para que verifique tu pago y reactive tu cuenta.</p>
-              </div>
+                <Mail className="h-4 w-4" />
+                info@manny.com.ar
+              </a>
             </div>
-
-            <div className="border-t pt-6">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleLogout}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-xl transition-colors"
-              >
-                Cerrar Sesión
-              </motion.button>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Info */}
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p className="mb-2">¿Necesitas ayuda?</p>
-          <div className="flex items-center justify-center gap-4">
-            <a href="mailto:support@manny.com.ar" className="flex items-center gap-1 hover:text-blue-600">
-              <Mail className="w-4 h-4" />
-              support@manny.com.ar
-            </a>
-            <span className="text-gray-400">|</span>
-            <a href="tel:+5491112345678" className="flex items-center gap-1 hover:text-blue-600">
-              <Phone className="w-4 h-4" />
-              +54 9 11 1234-5678
-            </a>
           </div>
         </div>
       </motion.div>
     </div>
   );
-}
+};
+
+export default AccountSuspendedPage;
 

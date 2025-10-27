@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.deps import get_current_user, TenantContext, require_roles
 from app.models import Usuario
+from app.models.consultas import Consulta
 from app.services import ImportCsvService
 
 router = APIRouter(prefix="/import", tags=["import"])
@@ -86,3 +87,36 @@ def import_csv(
             "total_ars": 0,
             "error": f"Error al procesar archivo: {str(e)}"
         }
+
+
+
+@router.post("/clear-hashes")
+def clear_my_import_hashes(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+    _ = Depends(require_roles()),
+):
+    """
+    Limpiar los hashes de importación del usuario actual.
+    Esto permite re-importar datos sin que sean detectados como duplicados.
+    
+    Disponible para todos los planes (trial, premium, enterprise).
+    """
+    # Limpiar los hashes del usuario actual
+    result = db.query(Consulta).filter(
+        Consulta.usuario_id == current_user.id,
+        Consulta.import_hash.isnot(None)
+    ).update({"import_hash": None})
+    
+    db.commit()
+    
+    return {
+        "message": f"Se limpiaron {result} hashes de importación",
+        "cleared_count": result
+    }
+
+    tenant = TenantContext(current_user)
+    content = file.file.read()
+    return ImportCsvService.importar_csv(
+        db, tenant.user_id, content, col_paciente, col_tratamiento, col_monto, col_fecha, col_medio_pago
+    )

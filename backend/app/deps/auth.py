@@ -6,7 +6,7 @@ import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt import PyJWTError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import get_settings
 from app.db.session import get_db
@@ -34,7 +34,8 @@ def get_current_user(
     except PyJWTError:
         raise credentials_exception
 
-    user = db.query(Usuario).filter(Usuario.username == username).first()
+    # Load user with role relationship eagerly
+    user = db.query(Usuario).options(joinedload(Usuario.role)).filter(Usuario.username == username).first()
     if user is None:
         raise credentials_exception
 

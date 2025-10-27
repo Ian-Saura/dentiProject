@@ -5,7 +5,7 @@ import { pacientesService } from '../services';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AnimatedCard from '../components/AnimatedCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, Search, Edit, Trash2, Users, Sparkles, X, BarChart3, ArrowUpDown, Plus, AlertCircle } from 'lucide-react';
+import { UserPlus, Search, Edit, Trash2, Users, Sparkles, X, BarChart3, ArrowUpDown, Plus, AlertCircle, CheckSquare, Square, UserX } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDateToDDMMYYYY, calculateAge } from '../utils/dateFormat';
 import { useAppMode } from '../contexts/AppModeContext';
@@ -39,6 +39,7 @@ const PacientesPage: React.FC = () => {
   const [editingPaciente, setEditingPaciente] = useState<Paciente | null>(null);
   const [sortBy, setSortBy] = useState<'nombre' | 'apellido' | 'fecha_registro'>('apellido');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [formData, setFormData] = useState<PacienteForm>({
     nombre: '',
     apellido: '',
@@ -111,6 +112,95 @@ const PacientesPage: React.FC = () => {
       queryClient.invalidateQueries('pacientes');
     }
   });
+
+  // Bulk delete patients mutation
+  const bulkDeleteMutation = useMutation(
+    async (ids: number[]) => {
+      await Promise.all(ids.map(id => pacientesService.deletePaciente(id)));
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('pacientes');
+        setSelectedIds(new Set());
+        toast.success('Pacientes eliminados correctamente');
+      },
+      onError: () => {
+        toast.error('Error al eliminar pacientes');
+      }
+    }
+  );
+
+  // Bulk mark as inactive mutation
+  const bulkInactivateMutation = useMutation(
+    async (ids: number[]) => {
+      await Promise.all(ids.map(id => 
+        pacientesService.updatePaciente(id, { activo: false } as any)
+      ));
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('pacientes');
+        setSelectedIds(new Set());
+        toast.success('Pacientes marcados como inactivos');
+      },
+      onError: () => {
+        toast.error('Error al marcar pacientes como inactivos');
+      }
+    }
+  );
+
+  // Selection handlers
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedPacientes.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedPacientes.map(p => p.id)));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleBulkDelete = () => {
+    const count = selectedIds.size;
+    if (count === 0) return;
+    
+    const confirmed = window.confirm(
+      `⚠️ ADVERTENCIA: Vas a ELIMINAR PERMANENTEMENTE ${count} paciente(s).\n\n` +
+      `Esto eliminará:\n` +
+      `• Todos los datos del paciente\n` +
+      `• Todas sus consultas\n` +
+      `• Todo el historial clínico\n` +
+      `• Todos los turnos asociados\n\n` +
+      `❌ Esta acción NO SE PUEDE DESHACER.\n\n` +
+      `¿Estás completamente seguro de que quieres continuar?`
+    );
+    
+    if (confirmed) {
+      bulkDeleteMutation.mutate(Array.from(selectedIds));
+    }
+  };
+
+  const handleBulkInactivate = () => {
+    const count = selectedIds.size;
+    if (count === 0) return;
+    
+    const confirmed = window.confirm(
+      `¿Marcar ${count} paciente(s) como inactivos?\n\n` +
+      `Los pacientes inactivos no aparecerán en las búsquedas pero podrás reactivarlos después.`
+    );
+    
+    if (confirmed) {
+      bulkInactivateMutation.mutate(Array.from(selectedIds));
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -399,6 +489,54 @@ const PacientesPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Bulk Actions Bar */}
+        {sortedPacientes && sortedPacientes.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <button
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium"
+            >
+              {selectedIds.size === sortedPacientes.length ? (
+                <>
+                  <CheckSquare className="h-4 w-4" />
+                  <span>Deseleccionar Todos</span>
+                </>
+              ) : (
+                <>
+                  <Square className="h-4 w-4" />
+                  <span>Seleccionar Todos ({sortedPacientes.length})</span>
+                </>
+              )}
+            </button>
+            
+            {selectedIds.size > 0 && (
+              <>
+                <span className="text-sm text-gray-600 font-medium">
+                  {selectedIds.size} seleccionado{selectedIds.size > 1 ? 's' : ''}
+                </span>
+                
+                <button
+                  onClick={handleBulkInactivate}
+                  disabled={bulkInactivateMutation.isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  <UserX className="h-4 w-4" />
+                  <span>Marcar como Inactivos</span>
+                </button>
+                
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleteMutation.isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Eliminar Permanentemente</span>
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
         {sortedPacientes?.length === 0 ? (
           <AnimatedCard delay={0.2}>
             <div className="text-center py-16 px-6">
@@ -437,6 +575,24 @@ const PacientesPage: React.FC = () => {
                   {/* Header with Avatar */}
                   <div className="bg-gradient-dental p-5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    
+                    {/* Checkbox for selection */}
+                    <div className="absolute top-3 left-3 z-20">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelect(paciente.id);
+                        }}
+                        className="w-6 h-6 rounded bg-white/20 backdrop-blur-sm border-2 border-white/50 hover:bg-white/30 flex items-center justify-center transition-all"
+                      >
+                        {selectedIds.has(paciente.id) ? (
+                          <CheckSquare className="h-4 w-4 text-white fill-white" />
+                        ) : (
+                          <Square className="h-4 w-4 text-white" />
+                        )}
+                      </button>
+                    </div>
+
                     <div className="relative z-10 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">

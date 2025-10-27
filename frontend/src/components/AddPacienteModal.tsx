@@ -435,3 +435,17 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
 
 export default AddPacienteModal;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

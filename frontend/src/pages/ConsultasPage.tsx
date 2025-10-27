@@ -64,6 +64,23 @@ const ConsultasPage: React.FC = () => {
     );
   }
 
+  // Filtrar consultas por paciente o tratamiento
+  const filteredConsultas = consultasData?.data.filter((consulta) => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const pacienteNombre = consulta.paciente 
+      ? `${consulta.paciente.nombre} ${consulta.paciente.apellido}`.toLowerCase()
+      : '';
+    const tratamiento = (
+      consulta.prestacion_usuario?.nombre_personalizado || 
+      consulta.prestacion_usuario?.prestacion?.nombre || 
+      ''
+    ).toLowerCase();
+    
+    return pacienteNombre.includes(searchLower) || tratamiento.includes(searchLower);
+  }) || [];
+
   return (
     <div className="space-y-6">
       {/* Premium Header */}
@@ -113,7 +130,7 @@ const ConsultasPage: React.FC = () => {
       </motion.div>
 
       {/* Instagram-Style Stats */}
-      {consultasData?.data && consultasData.data.length > 0 && (
+      {filteredConsultas && filteredConsultas.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <AnimatedCard delay={0.1}>
             <motion.div
@@ -137,7 +154,7 @@ const ConsultasPage: React.FC = () => {
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Ingresos Total</div>
                 <div className="text-2xl font-black">
-                  ${consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${filteredConsultas.reduce((sum, c) => sum + c.monto_ars, 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </div>
             </motion.div>
@@ -152,7 +169,7 @@ const ConsultasPage: React.FC = () => {
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Promedio</div>
                 <div className="text-2xl font-black">
-                  ${(consultasData.data.reduce((sum, c) => sum + c.monto_ars, 0) / consultasData.data.length).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${(filteredConsultas.reduce((sum, c) => sum + c.monto_ars, 0) / filteredConsultas.length).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </div>
             </motion.div>
@@ -167,7 +184,7 @@ const ConsultasPage: React.FC = () => {
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Este Mes</div>
                 <div className="text-4xl font-black">
-                  {consultasData.data.filter(c => {
+                  {filteredConsultas.filter(c => {
                     const date = new Date(c.fecha_consulta);
                     const now = new Date();
                     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
@@ -188,7 +205,7 @@ const ConsultasPage: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-500 h-5 w-5" />
                 <input
                   type="text"
-                  placeholder="🔍 Buscar por paciente..."
+                  placeholder="🔍 Buscar por paciente o tratamiento..."
                   className="form-input pl-10 bg-white/50 backdrop-blur-sm border-primary-200 focus:border-primary-500 focus:ring-primary-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -234,7 +251,7 @@ const ConsultasPage: React.FC = () => {
           <div className="flex items-center justify-between p-6 border-b border-gray-200/50">
             <h3 className="text-xl font-bold gradient-text flex items-center gap-2">
               <Calendar className="h-6 w-6 text-dental-500" />
-              Prestaciones ({consultasData?.total || 0})
+              Prestaciones ({filteredConsultas.length}{searchTerm ? ` de ${consultasData?.total || 0}` : ''})
             </h3>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Filter className="h-5 w-5 text-primary-500" />
@@ -242,7 +259,7 @@ const ConsultasPage: React.FC = () => {
             </div>
           </div>
 
-          {consultasData?.data && consultasData.data.length > 0 ? (
+          {filteredConsultas && filteredConsultas.length > 0 ? (
             <>
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
@@ -259,7 +276,7 @@ const ConsultasPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {consultasData.data.map((consulta) => (
+                  {filteredConsultas.map((consulta) => (
                     <tr key={consulta.id}>
                       <td>
                         {formatDateToDDMMYYYY(consulta.fecha_consulta)}
@@ -320,7 +337,7 @@ const ConsultasPage: React.FC = () => {
 
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-gray-200">
-              {consultasData.data.map((consulta) => (
+              {filteredConsultas.map((consulta) => (
                 <motion.div
                   key={consulta.id}
                   initial={{ opacity: 0, y: 10 }}

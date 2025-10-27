@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Plus, Settings, Link as LinkIcon, Clock, Sliders, X, Menu, User, Edit, AlertTriangle } from 'lucide-react';
+import { Calendar, Plus, Settings, Link as LinkIcon, Clock, Sliders, X, Menu, User, Edit, AlertTriangle, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppMode } from '../contexts/AppModeContext';
@@ -23,14 +23,26 @@ export default function TurnosPage() {
   const [quickTurnoData, setQuickTurnoData] = useState<{ fecha: string; hora: string } | null>(null);
   const [editingTurno, setEditingTurno] = useState<Turno | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     loadTurnos();
     loadConfiguracion();
   }, [selectedDate]);
 
-  const loadTurnos = async () => {
+  // Auto-refresh cada 30 segundos para mostrar nuevos turnos reservados
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadTurnos();
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
+  }, [selectedDate]);
+
+  const loadTurnos = async (showToast = false) => {
     try {
+      if (showToast) setIsRefreshing(true);
+      
       const firstDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
       const lastDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
       
@@ -40,9 +52,15 @@ export default function TurnosPage() {
         limit: 500,
       });
       setTurnos(data);
+      
+      if (showToast) {
+        toast.success('✅ Turnos actualizados');
+      }
     } catch (error) {
       console.error('Error loading turnos:', error);
       toast.error('Error de red. Verifica tu conexión a internet.');
+    } finally {
+      if (showToast) setIsRefreshing(false);
     }
   };
 
@@ -107,7 +125,7 @@ export default function TurnosPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header mejorado con gradiente */}
-      <div className="bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 text-white shadow-lg rounded-2xl mx-4 mt-4 sm:mx-6 sm:mt-6">
         <div className="container mx-auto px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -122,6 +140,15 @@ export default function TurnosPage() {
 
             {/* Desktop buttons */}
             <div className="hidden md:flex gap-2">
+              <button
+                onClick={() => loadTurnos(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all backdrop-blur-sm text-sm font-medium disabled:opacity-50"
+                title="Actualizar turnos"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Actualizar
+              </button>
               <button
                 onClick={() => setShowLinks(true)}
                 className="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all backdrop-blur-sm text-sm font-medium"
@@ -495,7 +522,8 @@ export default function TurnosPage() {
 // Modal de configuración (simplificado y responsive)
 function ConfiguracionModal({ configuracion, onClose, onOpenAvanzada }: { configuracion: ConfiguracionTurnos | null; onClose: () => void; onOpenAvanzada: () => void }) {
   const [activo, setActivo] = useState(configuracion?.activo || false);
-  const [duraciones, setDuraciones] = useState<number[]>(configuracion?.duraciones_permitidas || [15, 30, 45, 60]);
+  const [duraciones, setDuraciones] = useState<number[]>(configuracion?.duraciones_permitidas || [30, 60]);
+  const [customDuration, setCustomDuration] = useState<number | ''>('');
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -556,8 +584,8 @@ function ConfiguracionModal({ configuracion, onClose, onOpenAvanzada }: { config
             <label className="block text-sm font-semibold mb-3 text-gray-900">
               Duraciones permitidas
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {[15, 30, 45, 60].map(dur => (
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {[30, 60].map(dur => (
                 <label key={dur} className="flex items-center gap-2 p-3 border-2 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
                   <input
                     type="checkbox"
@@ -574,6 +602,61 @@ function ConfiguracionModal({ configuracion, onClose, onOpenAvanzada }: { config
                   <span className="font-medium">{dur} min</span>
                 </label>
               ))}
+            </div>
+            
+            {/* Opción de duración personalizada */}
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-4">
+              <label className="block text-sm font-semibold mb-2 text-gray-900">
+                ⚙️ Duración personalizada
+              </label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="number"
+                  min="5"
+                  max="240"
+                  step="5"
+                  value={customDuration}
+                  onChange={(e) => setCustomDuration(e.target.value ? parseInt(e.target.value) : '')}
+                  placeholder="Ej: 45, 90, 120..."
+                  className="flex-1 px-3 py-2 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (customDuration && customDuration >= 5 && customDuration <= 240) {
+                      if (!duraciones.includes(customDuration)) {
+                        setDuraciones([...duraciones, customDuration].sort((a, b) => a - b));
+                      }
+                      setCustomDuration('');
+                    }
+                  }}
+                  disabled={!customDuration || customDuration < 5 || customDuration > 240}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium text-sm"
+                >
+                  Agregar
+                </button>
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Agrega duraciones personalizadas de 5 a 240 minutos
+              </p>
+              
+              {/* Mostrar duraciones personalizadas agregadas */}
+              {duraciones.filter(d => d !== 30 && d !== 60).length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {duraciones.filter(d => d !== 30 && d !== 60).map(dur => (
+                    <div key={dur} className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border-2 border-blue-300">
+                      <span className="text-sm font-medium">{dur} min</span>
+                      <button
+                        type="button"
+                        onClick={() => setDuraciones(duraciones.filter(d => d !== dur))}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

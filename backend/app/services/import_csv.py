@@ -32,6 +32,52 @@ class ImportCsvService:
         return hashlib.sha256(unique_string.encode()).hexdigest()
     
     @staticmethod
+    def _normalize_malformed_csv(content: bytes) -> bytes:
+        """
+        Normaliza CSVs mal formateados donde toda la fila está entre comillas.
+        
+        Ejemplo de entrada (MAL):
+        "01-03-2025,Daira Baez (transf),Endodoncia,""$100.000"",TRANSFERENCIA"
+        
+        Salida esperada (BIEN):
+        01-03-2025,"Daira Baez (transf)",Endodoncia,"$100.000",TRANSFERENCIA
+        """
+        try:
+            # Decodificar a string
+            text = content.decode('utf-8-sig')  # utf-8-sig elimina BOM si existe
+        except UnicodeDecodeError:
+            try:
+                text = content.decode('latin1')
+            except:
+                return content  # Si falla, devolver original
+        
+        lines = text.split('\n')
+        normalized_lines = []
+        
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Si es la cabecera, dejarla como está
+            if i == 0 or ',' not in line:
+                normalized_lines.append(line)
+                continue
+            
+            # Detectar si toda la línea está entre comillas
+            if line.startswith('"') and line.endswith('"'):
+                # Quitar comillas externas
+                line = line[1:-1]
+                # Reemplazar comillas dobles escapadas ("") por comillas simples (")
+                line = line.replace('""', '"')
+            
+            normalized_lines.append(line)
+        
+        # Re-unir y convertir a bytes
+        normalized_text = '\n'.join(normalized_lines)
+        return normalized_text.encode('utf-8')
+    
+    @staticmethod
     def importar_csv(
         db: Session, usuario_id: int, csv_content: bytes, col_paciente: str, col_tratamiento: str, col_monto: str,
         col_fecha: str = None, col_medio_pago: str = None
@@ -61,6 +107,9 @@ class ImportCsvService:
         print(f"  - Monto: {col_monto}")
         print(f"  - Fecha: {col_fecha or 'No especificada (usar hoy)'}")
         print(f"  - Medio de pago: {col_medio_pago or 'No especificado (usar efectivo)'}")
+        
+        # Pre-procesar CSV para normalizar formatos mal formateados
+        csv_content = ImportCsvService._normalize_malformed_csv(csv_content)
         
         # Leer CSV con manejo correcto de comillas para campos con comas
         encodings = ['utf-8', 'latin1', 'cp1252', 'iso-8859-1']

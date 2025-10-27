@@ -99,6 +99,11 @@ export const adminService = {
     return response.data;
   },
 
+  async clearImportHashes(userId: number) {
+    const response = await api.post(`/admin/users/${userId}/clear-import-hashes`);
+    return response.data;
+  },
+
   // Roles
   async listRoles(): Promise<Role[]> {
     const response = await api.get<Role[]>('/admin/roles');
