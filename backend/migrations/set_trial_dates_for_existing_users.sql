@@ -7,3 +7,4 @@ WHERE
     fecha_inicio_plan IS NULL OR fecha_vencimiento IS NULL;
 
 
+

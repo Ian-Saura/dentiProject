@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
-import { pacientesService } from '../services';
+import { pacientesService, consultasService } from '../services';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AnimatedCard from '../components/AnimatedCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, Search, Edit, Trash2, Users, Sparkles, X, BarChart3, ArrowUpDown, Plus, AlertCircle, CheckSquare, Square, UserX } from 'lucide-react';
+import { UserPlus, Search, Edit, Trash2, Users, Sparkles, X, BarChart3, ArrowUpDown, Plus, AlertCircle, CheckSquare, Square, UserX, GitMerge } from 'lucide-react';
+import MergePacientesModal from '../components/MergePacientesModal';
 import { toast } from 'react-hot-toast';
 import { formatDateToDDMMYYYY, calculateAge } from '../utils/dateFormat';
 import { useAppMode } from '../contexts/AppModeContext';
@@ -36,7 +37,9 @@ const PacientesPage: React.FC = () => {
   const navigate = useNavigate();
   const { mode } = useAppMode();
   const [showForm, setShowForm] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
   const [editingPaciente, setEditingPaciente] = useState<Paciente | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'nombre' | 'apellido' | 'fecha_registro'>('apellido');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -53,16 +56,57 @@ const PacientesPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Fetch patients
-  const { data: pacientes, isLoading, error } = useQuery<Paciente[]>(
+  const { data: pacientes, isLoading, error} = useQuery<Paciente[]>(
     'pacientes',
     () => pacientesService.getPacientes()
   );
 
-  // Sort patients
-  const sortedPacientes = React.useMemo(() => {
+  // Fetch all consultas to get prestaciones count per patient
+  const { data: consultasData } = useQuery(
+    'consultas',
+    () => consultasService.getConsultas({ limit: 5000 }),
+    { enabled: !!pacientes }
+  );
+
+  // Create a map of patient ID to consultas count
+  const consultasPorPaciente = React.useMemo(() => {
+    if (!consultasData?.data) return {};
+    const map: Record<number, number> = {};
+    consultasData.data.forEach((consulta: any) => {
+      if (consulta.paciente?.id) {
+        map[consulta.paciente.id] = (map[consulta.paciente.id] || 0) + 1;
+      }
+    });
+    return map;
+  }, [consultasData]);
+
+  // Filter and sort patients
+  const filteredAndSortedPacientes = React.useMemo(() => {
     if (!pacientes) return [];
     
-    return [...pacientes].sort((a, b) => {
+    // First, filter by search query
+    let filtered = pacientes;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = pacientes.filter(p => {
+        const nombreCompleto = `${p.nombre} ${p.apellido}`.toLowerCase();
+        const dni = p.dni?.toLowerCase() || '';
+        const email = p.email?.toLowerCase() || '';
+        const telefono = p.telefono?.toLowerCase() || '';
+        
+        return (
+          nombreCompleto.includes(query) ||
+          p.nombre.toLowerCase().includes(query) ||
+          p.apellido.toLowerCase().includes(query) ||
+          dni.includes(query) ||
+          email.includes(query) ||
+          telefono.includes(query)
+        );
+      });
+    }
+    
+    // Then, sort
+    return [...filtered].sort((a, b) => {
       let compareA, compareB;
       
       if (sortBy === 'nombre') {
@@ -81,7 +125,7 @@ const PacientesPage: React.FC = () => {
       if (compareA > compareB) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [pacientes, sortBy, sortOrder]);
+  }, [pacientes, sortBy, sortOrder, searchQuery]);
 
   // Create patient mutation
   const createMutation = useMutation(pacientesService.createPaciente, {
@@ -151,10 +195,10 @@ const PacientesPage: React.FC = () => {
 
   // Selection handlers
   const toggleSelectAll = () => {
-    if (selectedIds.size === sortedPacientes.length) {
+    if (selectedIds.size === filteredAndSortedPacientes.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(sortedPacientes.map(p => p.id)));
+      setSelectedIds(new Set(filteredAndSortedPacientes.map(p => p.id)));
     }
   };
 
@@ -299,15 +343,84 @@ const PacientesPage: React.FC = () => {
               </motion.p>
             </div>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowForm(true)}
-            className="btn-premium flex items-center space-x-2 text-base"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Nuevo Paciente</span>
-          </motion.button>
+          <div className="flex gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowMergeModal(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all flex items-center space-x-2 text-base shadow-lg"
+            >
+              <GitMerge className="h-5 w-5" />
+              <span>Fusionar Pacientes</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowForm(true)}
+              className="btn-premium flex items-center space-x-2 text-base"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Nuevo Paciente</span>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Search and Filter Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6"
+      >
+        <div className="glass rounded-2xl p-4 shadow-lg border border-white/20">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search Input */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, apellido, DNI, email o teléfono..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white/80 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent transition-all text-gray-700 placeholder-gray-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+
+            {/* Sort Controls */}
+            <div className="flex gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-4 py-2.5 bg-white/80 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 text-gray-700"
+              >
+                <option value="apellido">Apellido</option>
+                <option value="nombre">Nombre</option>
+                <option value="fecha_registro">Más recientes</option>
+              </select>
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="px-4 py-2.5 bg-white/80 border-2 border-gray-200 rounded-xl hover:bg-dental-50 transition-colors"
+                title={sortOrder === 'asc' ? 'Orden ascendente' : 'Orden descendente'}
+              >
+                <ArrowUpDown className="h-5 w-5 text-gray-700" />
+              </button>
+            </div>
+          </div>
+
+          {/* Results count */}
+          {searchQuery && (
+            <div className="mt-3 text-sm text-gray-600">
+              {filteredAndSortedPacientes.length} {filteredAndSortedPacientes.length === 1 ? 'resultado' : 'resultados'} encontrados
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -468,7 +581,7 @@ const PacientesPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <div>
             <h3 className="text-2xl font-bold gradient-text mb-1">Pacientes Registrados</h3>
-            <p className="text-gray-600">Gestiona tu cartera de pacientes ({sortedPacientes?.length || 0} pacientes)</p>
+            <p className="text-gray-600">Gestiona tu cartera de pacientes ({filteredAndSortedPacientes?.length || 0} pacientes)</p>
           </div>
           <div className="flex items-center gap-2">
             <select
@@ -490,13 +603,13 @@ const PacientesPage: React.FC = () => {
         </div>
 
         {/* Bulk Actions Bar */}
-        {sortedPacientes && sortedPacientes.length > 0 && (
+        {filteredAndSortedPacientes && filteredAndSortedPacientes.length > 0 && (
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <button
               onClick={toggleSelectAll}
               className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium"
             >
-              {selectedIds.size === sortedPacientes.length ? (
+              {selectedIds.size === filteredAndSortedPacientes.length ? (
                 <>
                   <CheckSquare className="h-4 w-4" />
                   <span>Deseleccionar Todos</span>
@@ -504,7 +617,7 @@ const PacientesPage: React.FC = () => {
               ) : (
                 <>
                   <Square className="h-4 w-4" />
-                  <span>Seleccionar Todos ({sortedPacientes.length})</span>
+                  <span>Seleccionar Todos ({filteredAndSortedPacientes.length})</span>
                 </>
               )}
             </button>
@@ -537,7 +650,7 @@ const PacientesPage: React.FC = () => {
           </div>
         )}
 
-        {sortedPacientes?.length === 0 ? (
+        {filteredAndSortedPacientes?.length === 0 ? (
           <AnimatedCard delay={0.2}>
             <div className="text-center py-16 px-6">
               <motion.div
@@ -566,7 +679,7 @@ const PacientesPage: React.FC = () => {
           </AnimatedCard>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedPacientes?.map((paciente: Paciente, index) => (
+            {filteredAndSortedPacientes?.map((paciente: Paciente, index) => (
               <AnimatedCard key={paciente.id} delay={index * 0.05}>
                 <motion.div
                   whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
@@ -669,6 +782,19 @@ const PacientesPage: React.FC = () => {
                       </div>
                     )}
 
+                    {/* Prestaciones Count */}
+                    <div className="mb-4 p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-green-700 font-medium">Prestaciones</div>
+                        <div className="text-2xl font-black text-green-600">
+                          {consultasPorPaciente[paciente.id] || 0}
+                        </div>
+                      </div>
+                      <div className="text-xs text-green-600 mt-1">
+                        {consultasPorPaciente[paciente.id] === 1 ? 'tratamiento realizado' : 'tratamientos realizados'}
+                      </div>
+                    </div>
+
                     {/* Actions */}
                     <div className="grid grid-cols-3 gap-2">
                       <motion.button
@@ -710,6 +836,12 @@ const PacientesPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Merge Patients Modal */}
+      <MergePacientesModal
+        isOpen={showMergeModal}
+        onClose={() => setShowMergeModal(false)}
+      />
     </div>
   );
 };

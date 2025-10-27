@@ -28,6 +28,7 @@ def list_consultas(
     to: str = Query(None),
     medio_pago: str = Query(None),
     paciente_q: str = Query(None),
+    paciente_id: int = Query(None),
 ):
     tenant = TenantContext(current_user)
     pagination = validate_pagination_params(limit, offset)
@@ -40,6 +41,8 @@ def list_consultas(
         filtros["medio_pago"] = medio_pago
     if paciente_q:
         filtros["paciente_q"] = paciente_q
+    if paciente_id:
+        filtros["paciente_id"] = paciente_id
 
     consultas, total = ConsultasService.list_consultas(
         db, tenant.user_id, **pagination, order_by=order_by, filtros=filtros

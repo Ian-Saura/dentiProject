@@ -221,6 +221,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
     setPatientSearchTerm(preselectedPatientName || '');
     setShowPatientDropdown(false);
     setSelectedPatientAlergias('');
+    setSelectedTeeth([]); // Limpiar dientes seleccionados
   };
 
   const handleClose = () => {
@@ -239,6 +240,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
     setSelectedPatientAlergias(patient.alergias || '');
     setPatientSearchTerm(`${patient.dni} - ${patient.nombre} ${patient.apellido}`);
     setShowPatientDropdown(false);
+    setSelectedTeeth([]); // Limpiar dientes seleccionados al cambiar de paciente
   };
 
   const handlePatientSearchChange = (value: string) => {
@@ -338,7 +340,8 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         fecha_consulta: dateInputToISO(formData.fecha_consulta) || formData.fecha_consulta,
         monto_ars: formData.monto_ars,
         medio_pago: formData.medio_pago,
-        dientes_tratados: selectedTeeth
+        dientes_tratados: selectedTeeth,
+        observaciones: formData.observaciones || undefined
       };
 
       if (editingConsulta) {
@@ -732,6 +735,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
 };
 
 export default AddConsultaModal;
+
 
 
 

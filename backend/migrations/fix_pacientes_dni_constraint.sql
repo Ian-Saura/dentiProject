@@ -59,3 +59,5 @@ CREATE INDEX IF NOT EXISTS idx_pacientes_usuario_dni ON pacientes (usuario_id, L
 
 
 
+
+

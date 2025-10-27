@@ -144,10 +144,15 @@ export default function QuickTurnoModal({
       return;
     }
 
+    if (duracion < 5) {
+      toast.error('La duración debe ser al menos 5 minutos');
+      return;
+    }
+
     setLoading(true);
     try {
       const url = editingTurno ? `/v1/turnos/${editingTurno.id}` : '/v1/turnos/';
-      const method = editingTurno ? 'PUT' : 'POST';
+      const method = editingTurno ? 'PATCH' : 'POST';
       
       const response = await fetch(url, {
         method,
@@ -167,14 +172,18 @@ export default function QuickTurnoModal({
         }),
       });
 
-      if (!response.ok) throw new Error(editingTurno ? 'Error al actualizar turno' : 'Error al crear turno');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Error response:', errorData);
+        throw new Error(errorData.detail || (editingTurno ? 'Error al actualizar turno' : 'Error al crear turno'));
+      }
 
       toast.success(editingTurno ? '✅ Turno actualizado exitosamente' : '✅ Turno creado exitosamente');
       onSuccess();
       handleClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
-      toast.error(editingTurno ? 'Error al actualizar el turno' : 'Error al crear el turno');
+      toast.error(error.message || (editingTurno ? 'Error al actualizar el turno' : 'Error al crear el turno'));
     } finally {
       setLoading(false);
     }
@@ -392,18 +401,43 @@ export default function QuickTurnoModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Duración
+                Duración *
               </label>
-              <select
-                value={duracion}
-                onChange={(e) => setDuracion(Number(e.target.value))}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value={15}>15 minutos</option>
-                <option value={30}>30 minutos</option>
-                <option value={45}>45 minutos</option>
-                <option value={60}>60 minutos</option>
-              </select>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="5"
+                  max="480"
+                  step="5"
+                  value={duracion}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val >= 5) setDuracion(val);
+                  }}
+                  className="w-28 px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium"
+                  placeholder="minutos"
+                />
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val > 0) setDuracion(val);
+                  }}
+                  className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                >
+                  <option value="">O elige rápido...</option>
+                  <option value={15}>15 min</option>
+                  <option value={30}>30 min</option>
+                  <option value={45}>45 min</option>
+                  <option value={60}>1 hora</option>
+                  <option value={90}>1.5 horas</option>
+                  <option value={120}>2 horas</option>
+                  <option value={180}>3 horas</option>
+                </select>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Ingresa cualquier duración o usa los atajos rápidos
+              </p>
             </div>
 
             {/* Info box */}

@@ -10,3 +10,4 @@ COMMENT ON COLUMN usuarios.password_hash IS 'Password hash for local authenticat
 
 
 
+

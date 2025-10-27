@@ -6,3 +6,4 @@ ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS reset_password_expires TIMESTAMP;
 CREATE INDEX IF NOT EXISTS idx_usuarios_reset_token ON usuarios(reset_password_token) WHERE reset_password_token IS NOT NULL;
 
 
+

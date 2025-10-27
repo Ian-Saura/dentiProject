@@ -169,7 +169,7 @@ export default function CalendarioTurnos({
     const isDayBlockedInAgenda = diasBloqueados.includes(selectedDateStr);
 
     // Generar slots de tiempo cada 30 minutos usando el rango configurado
-    const timeSlots = [];
+    const defaultTimeSlots = [];
     const [startHour, startMinute] = horaInicio.split(':').map(Number);
     const [endHour, endMinute] = horaFin.split(':').map(Number);
     
@@ -179,9 +179,17 @@ export default function CalendarioTurnos({
       
       for (let minute = startMin; minute < endMin; minute += 30) {
         const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-        timeSlots.push(timeStr);
+        defaultTimeSlots.push(timeStr);
       }
     }
+
+    // Agregar horarios custom de turnos que no coincidan con los slots por defecto
+    const customTimes = turnosDelDia
+      .map(t => t.hora_inicio.substring(0, 5))
+      .filter(hora => !defaultTimeSlots.includes(hora));
+    
+    // Combinar y ordenar todos los slots
+    const timeSlots = [...defaultTimeSlots, ...customTimes].sort();
 
     return (
       <div className="space-y-1">
@@ -197,46 +205,61 @@ export default function CalendarioTurnos({
           </div>
         )}
         {timeSlots.map((timeSlot) => {
-          // Buscar si hay un turno en este slot
+          // Buscar si hay un turno en este slot (excluir cancelados del bloqueo de slots)
           const turnoEnSlot = turnosDelDia.find(t => t.hora_inicio.substring(0, 5) === timeSlot);
           
-          if (turnoEnSlot) {
-            const config = estadoConfig[turnoEnSlot.estado];
+          // Si hay un turno cancelado, permitir crear nuevo turno en ese slot (mostrar el cancelado pero no bloquearlo)
+          const turnoActivoEnSlot = turnoEnSlot && turnoEnSlot.estado !== 'cancelado' ? turnoEnSlot : null;
+          
+          // Si este es un slot custom (no está en los defaults) y NO hay turno, no mostrarlo
+          const isCustomSlot = !defaultTimeSlots.includes(timeSlot);
+          if (isCustomSlot && !turnoEnSlot) {
+            return null;
+          }
+          
+          // Si hay un turno activo (no cancelado), mostrar el turno
+          if (turnoActivoEnSlot) {
+            const config = estadoConfig[turnoActivoEnSlot.estado];
             return (
               <div
                 key={timeSlot}
-                className={`p-3 sm:p-4 rounded-lg border-2 cursor-pointer hover:shadow-md transition-all ${config.color}`}
-                onClick={() => onTurnoClick?.(turnoEnSlot)}
+                className={`p-3 sm:p-4 rounded-lg border-2 cursor-pointer hover:shadow-md transition-all ${config.color} ${isCustomSlot ? 'ring-2 ring-purple-300' : ''}`}
+                onClick={() => onTurnoClick?.(turnoActivoEnSlot)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock className="w-4 h-4" />
                       <span className="font-semibold text-sm sm:text-base">
-                        {turnoEnSlot.hora_inicio.substring(0, 5)} - {turnoEnSlot.hora_fin.substring(0, 5)}
+                        {turnoActivoEnSlot.hora_inicio.substring(0, 5)} - {turnoActivoEnSlot.hora_fin.substring(0, 5)}
                       </span>
                       <span className="text-xs px-2 py-0.5 rounded bg-white/50">
-                        {turnoEnSlot.duracion_minutos} min
+                        {turnoActivoEnSlot.duracion_minutos} min
                       </span>
+                      {isCustomSlot && (
+                        <span className="text-xs px-2 py-0.5 rounded bg-purple-200 text-purple-800 font-medium" title="Horario personalizado">
+                          ⏰ Custom
+                        </span>
+                      )}
                     </div>
 
-                    {(turnoEnSlot.nombre_paciente || turnoEnSlot.apellido_paciente) && (
+                    {(turnoActivoEnSlot.nombre_paciente || turnoActivoEnSlot.apellido_paciente) && (
                       <div className="flex items-center gap-2 text-xs sm:text-sm mb-1">
                         <User className="w-3 h-3" />
-                        <span className="font-medium">{turnoEnSlot.nombre_paciente} {turnoEnSlot.apellido_paciente}</span>
+                        <span className="font-medium">{turnoActivoEnSlot.nombre_paciente} {turnoActivoEnSlot.apellido_paciente}</span>
                       </div>
                     )}
 
-                    {turnoEnSlot.telefono_paciente && (
+                    {turnoActivoEnSlot.telefono_paciente && (
                       <div className="flex items-center gap-2 text-xs sm:text-sm mb-1">
                         <Phone className="w-3 h-3" />
-                        <span>{turnoEnSlot.telefono_paciente}</span>
+                        <span>{turnoActivoEnSlot.telefono_paciente}</span>
                       </div>
                     )}
 
-                    {turnoEnSlot.motivo_consulta && (
+                    {turnoActivoEnSlot.motivo_consulta && (
                       <div className="text-xs sm:text-sm mt-2 italic text-gray-600">
-                        {turnoEnSlot.motivo_consulta}
+                        {turnoActivoEnSlot.motivo_consulta}
                       </div>
                     )}
                   </div>
@@ -252,13 +275,59 @@ export default function CalendarioTurnos({
             );
           }
 
-          // Slot vacío - clickeable para crear turno (excepto si el día está bloqueado)
+          // Slot disponible (vacío o con turno cancelado) - clickeable para crear turno
+          // Si hay un turno cancelado, mostrarlo pero permitir crear uno nuevo
+          const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+          
+          if (turnoEnSlot && turnoEnSlot.estado === 'cancelado') {
+            // Mostrar el turno cancelado de forma compacta y permitir crear uno nuevo
+            return (
+              <div key={timeSlot} className="space-y-1">
+                {/* Turno cancelado - mostrar de forma compacta */}
+                <div
+                  className="p-2 rounded-lg border border-red-300 bg-red-50 opacity-60 cursor-pointer hover:opacity-100 transition-opacity"
+                  onClick={() => onTurnoClick?.(turnoEnSlot)}
+                  title="Turno cancelado - Click para ver detalles"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 text-red-700">
+                      <XCircle className="w-3 h-3" />
+                      <span className="line-through">{turnoEnSlot.nombre_paciente} {turnoEnSlot.apellido_paciente}</span>
+                    </div>
+                    <span className="text-red-600 font-medium">Cancelado</span>
+                  </div>
+                </div>
+                {/* Botón para crear nuevo turno en este slot */}
+                <button
+                  onClick={() => onSlotClick?.(dateStr, timeSlot)}
+                  disabled={isDayBlockedInAgenda}
+                  className={`w-full p-2 sm:p-3 rounded-lg border-2 border-dashed text-left ${
+                    isDayBlockedInAgenda 
+                      ? 'border-red-200 bg-red-50 cursor-not-allowed opacity-50' 
+                      : 'border-green-300 bg-green-50 hover:border-green-500 hover:bg-green-100 transition-all group'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-green-600 group-hover:text-green-700">
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="text-sm sm:text-base font-medium">{timeSlot}</span>
+                      <span className="text-xs">(disponible)</span>
+                    </div>
+                    <div className="opacity-70 group-hover:opacity-100 transition-opacity">
+                      <Plus className="w-4 h-4 text-green-600" />
+                    </div>
+                  </div>
+                </button>
+              </div>
+            );
+          }
+          
+          // Slot completamente vacío
           return (
             <button
               key={timeSlot}
               onClick={() => {
                 if (isDayBlockedInAgenda) return;
-                const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
                 onSlotClick?.(dateStr, timeSlot);
               }}
               disabled={isDayBlockedInAgenda}

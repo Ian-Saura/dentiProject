@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { calculadoraService, analyticsService } from '@/services';
-import { Calculator, DollarSign, Clock, Package, Sparkles, TrendingUp, Target } from 'lucide-react';
+import { Calculator, DollarSign, Clock, Package, Sparkles, TrendingUp, Target, HelpCircle } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { formatCurrency } from '@/utils/formatNumber';
 
@@ -16,6 +16,7 @@ const CalculadoraPage: React.FC = () => {
   });
   const [showPersonalizado, setShowPersonalizado] = useState(false);
   const [tratamientoPersonalizado, setTratamientoPersonalizado] = useState('');
+  const [showMaterialesHelp, setShowMaterialesHelp] = useState(false);
 
   // Get cost analysis for real-time cost
   const { data: costos } = useQuery(
@@ -198,9 +199,19 @@ const CalculadoraPage: React.FC = () => {
 
             {/* Materials Cost */}
             <div>
-              <label className="form-label flex items-center space-x-2">
-                <Package className="h-4 w-4" />
-                <span>Costo de materiales (ARS)</span>
+              <label className="form-label flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Package className="h-4 w-4" />
+                  <span>Costo de materiales (ARS)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowMaterialesHelp(!showMaterialesHelp)}
+                  className="ml-2 p-1.5 rounded-full hover:bg-blue-100 transition-colors group"
+                  title="¿Cómo calcular el costo de materiales?"
+                >
+                  <HelpCircle className="h-5 w-5 text-blue-500 group-hover:text-blue-600" />
+                </button>
               </label>
               <input
                 type="number"
@@ -209,6 +220,100 @@ const CalculadoraPage: React.FC = () => {
                 value={formData.costo_materiales_ars}
                 onChange={(e) => setFormData({ ...formData, costo_materiales_ars: parseFloat(e.target.value) || 0 })}
               />
+              
+              {/* Help Tooltip */}
+              <AnimatePresence>
+                {showMaterialesHelp && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl p-4 shadow-lg overflow-hidden"
+                  >
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="bg-blue-500 rounded-full p-2 flex-shrink-0">
+                        <Package className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-blue-900 text-base mb-1">
+                          💡 ¿Cómo calcular el costo de materiales?
+                        </h4>
+                        <p className="text-sm text-blue-800 mb-2">
+                          Los costos variables son los insumos específicos de cada tratamiento: guantes, anestesia, composite, gasas, etc.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3 text-sm text-blue-900">
+                      <div className="bg-white/60 rounded-lg p-3 border border-blue-200">
+                        <p className="font-semibold mb-2">📊 Fórmula base:</p>
+                        <code className="block bg-blue-900 text-blue-50 px-3 py-2 rounded font-mono text-xs">
+                          Costo por uso = Precio del paquete ÷ Cantidad de usos
+                        </code>
+                      </div>
+                      
+                      <div className="bg-white/60 rounded-lg p-3 border border-blue-200">
+                        <p className="font-semibold mb-2">✏️ Ejemplos prácticos:</p>
+                        <ul className="space-y-1 text-xs">
+                          <li>• <strong>Guantes:</strong> caja $8.000 ÷ 50 pares = <strong>$160/paciente</strong></li>
+                          <li>• <strong>Anestesia:</strong> caja $15.000 ÷ 50 tubos = <strong>$300/tubo</strong></li>
+                          <li>• <strong>Composite:</strong> jeringa $12.000 ÷ 8 usos = <strong>$1.500/restauración</strong></li>
+                          <li>• <strong>Gasas:</strong> paquete $3.000 ÷ 200 = $15 c/u × 5 = <strong>$75/tratamiento</strong></li>
+                        </ul>
+                      </div>
+                      
+                      <div className="bg-white/60 rounded-lg p-3 border border-blue-200">
+                        <p className="font-semibold mb-2">📝 Ejemplo completo - Operatoria Simple:</p>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span>Guantes</span>
+                            <span className="font-mono">$160</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Barbijo</span>
+                            <span className="font-mono">$50</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Anestesia</span>
+                            <span className="font-mono">$300</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Composite</span>
+                            <span className="font-mono">$1.500</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Adhesivo</span>
+                            <span className="font-mono">$200</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Gasas y otros</span>
+                            <span className="font-mono">$75</span>
+                          </div>
+                          <div className="flex justify-between border-t border-blue-300 pt-1 mt-1 font-bold">
+                            <span>TOTAL</span>
+                            <span className="font-mono text-blue-600">$2.285</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3">
+                        <p className="text-xs text-yellow-900">
+                          <strong>💡 Tip:</strong> Si no sabés exactamente cuántos usos da un material, estimá conservadoramente. 
+                          Es mejor sobrestimar un poco que subestimar y perder plata.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => setShowMaterialesHelp(false)}
+                      className="mt-3 w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium text-sm transition-colors"
+                    >
+                      Entendido ✓
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Note: Always uses the cost from parameters (either calculated or manual) */}

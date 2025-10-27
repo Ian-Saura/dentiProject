@@ -6,3 +6,4 @@ COMMENT ON COLUMN usuarios.ultima_verificacion_pago IS 'Last payment verificatio
 COMMENT ON COLUMN usuarios.pago_verificado IS 'Payment verified flag';
 
 
+

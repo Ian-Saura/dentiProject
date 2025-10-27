@@ -67,4 +67,11 @@ export const consultasService = {
     });
     return response.data.data || response.data;
   },
+
+  async getConsultasByPacienteId(pacienteId: number): Promise<Consulta[]> {
+    const response = await api.get<{ data: Consulta[]; total: number }>('/consultas/', {
+      params: { paciente_id: pacienteId, limit: 1000 }
+    });
+    return response.data.data || response.data;
+  },
 };

@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
 import Odontograma from '@/components/Odontograma';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, DollarSign, Activity, TrendingUp, Clock, CreditCard, FileText, Plus, Sparkles, User, Edit, Phone, Mail, MessageCircle, MapPin, Hash, CalendarPlus, CalendarCheck, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, Activity, CreditCard, FileText, Plus, Sparkles, User, Edit, Phone, Mail, MessageCircle, MapPin, Hash, CalendarPlus, CalendarCheck, AlertTriangle } from 'lucide-react';
 import ClinicalNotesModal from '@/components/ClinicalNotesModal';
 import AddConsultaModal from '@/components/AddConsultaModal';
 import AddPacienteModal from '@/components/AddPacienteModal';
@@ -30,15 +30,22 @@ const PatientDashboardPage: React.FC = () => {
   // Decode the patient name from URL
   const patientName = encodedPatientName ? decodeURIComponent(encodedPatientName) : null;
 
-  // Fetch patient consultations
-  const { data: consultas = [], isLoading: loadingConsultas } = useQuery(
-    ['patient-consultas', patientName],
-    () => patientName ? consultasService.getConsultasByPaciente(patientName) : Promise.resolve([]),
+  // Fetch patient consultations - use ID if available, otherwise name
+  const { data: consultas = [], isLoading: loadingConsultas, refetch: refetchConsultas } = useQuery(
+    ['patient-consultas', patientId, patientName],
+    () => {
+      if (patientId) {
+        return consultasService.getConsultasByPacienteId(patientId);
+      } else if (patientName) {
+        return consultasService.getConsultasByPaciente(patientName);
+      }
+      return Promise.resolve([]);
+    },
     { 
-      enabled: !!patientName,
+      enabled: !!patientName || !!patientId,
       onSuccess: (data) => {
-        // Get patient ID from first consultation
-        if (data && data.length > 0 && data[0].paciente) {
+        // Get patient ID from first consultation if not already set
+        if (data && data.length > 0 && data[0].paciente && !patientId) {
           setPatientId(data[0].paciente.id);
         }
       }
@@ -91,12 +98,14 @@ const PatientDashboardPage: React.FC = () => {
     return patient;
   }, [pacientesData, patientName]);
   
-  // Update patientId when currentPatient is found
+  // Update patientId when currentPatient is found and refetch consultas
   React.useEffect(() => {
     if (currentPatient && currentPatient.id !== patientId) {
       setPatientId(currentPatient.id);
+      // Refetch consultations with the correct patient ID
+      setTimeout(() => refetchConsultas(), 100);
     }
-  }, [currentPatient, patientId]);
+  }, [currentPatient, patientId, refetchConsultas]);
   
   // Debug: Log para verificar el estado de carga
   React.useEffect(() => {
@@ -112,13 +121,13 @@ const PatientDashboardPage: React.FC = () => {
     });
   }, [patientName, loadingPatients, loadingConsultas, pacientesData, currentPatient, patientId]);
 
-  // Get next upcoming appointment
+  // Get next upcoming appointment (consultas pendientes)
   const nextAppointment = consultas
     .filter(c => {
-      const consultaDate = new Date(c.fecha_hora);
-      return consultaDate > new Date() && (c.estado === 'pendiente' || c.estado === 'confirmada');
+      const consultaDate = new Date(c.fecha_consulta);
+      return consultaDate > new Date() && c.estado === 'pendiente';
     })
-    .sort((a, b) => new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime())[0];
+    .sort((a, b) => new Date(a.fecha_consulta).getTime() - new Date(b.fecha_consulta).getTime())[0];
 
   // Filter consultations by period (always calculate, even if loading)
   const filteredConsultas = consultas.filter(consulta => {
@@ -144,10 +153,10 @@ const PatientDashboardPage: React.FC = () => {
   const totalConsultas = filteredConsultas.length;
 
   // Clinical notes handlers
-  const handleAddClinicalNote = (consultationId: number) => {
-    setSelectedConsultationId(consultationId);
-    setShowClinicalModal(true);
-  };
+  // const handleAddClinicalNote = (consultationId: number) => {
+  //   setSelectedConsultationId(consultationId);
+  //   setShowClinicalModal(true);
+  // };
 
   const handleSaveClinicalNote = (note: any) => {
     // In a real app, this would save to the backend
@@ -184,12 +193,12 @@ const PatientDashboardPage: React.FC = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  // Get first and last consultation dates
-  const sortedConsultas = [...filteredConsultas].sort((a, b) => 
-    new Date(a.fecha_consulta).getTime() - new Date(b.fecha_consulta).getTime()
-  );
-  const primeraConsulta = sortedConsultas[0];
-  const ultimaConsulta = sortedConsultas[sortedConsultas.length - 1];
+  // Get first and last consultation dates (commented out for now, may be useful later)
+  // const sortedConsultas = [...filteredConsultas].sort((a, b) => 
+  //   new Date(a.fecha_consulta).getTime() - new Date(b.fecha_consulta).getTime()
+  // );
+  // const primeraConsulta = sortedConsultas[0];
+  // const ultimaConsulta = sortedConsultas[sortedConsultas.length - 1];
 
   // Early returns AFTER all hooks
   if (loadingConsultas) {
@@ -450,12 +459,9 @@ const PatientDashboardPage: React.FC = () => {
               {nextAppointment && (
                 <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1 whitespace-nowrap">
                   <CalendarCheck className="h-3 w-3" />
-                  {new Date(nextAppointment.fecha_hora).toLocaleDateString('es-AR', {
+                  {new Date(nextAppointment.fecha_consulta).toLocaleDateString('es-AR', {
                     day: '2-digit',
                     month: 'short'
-                  })} {new Date(nextAppointment.fecha_hora).toLocaleTimeString('es-AR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
                   })}
                 </span>
               )}
@@ -488,7 +494,7 @@ const PatientDashboardPage: React.FC = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => window.open(`https://wa.me/${currentPatient.telefono.replace(/\D/g, '')}`)}
+                  onClick={() => window.open(`https://wa.me/${currentPatient.telefono?.replace(/\D/g, '') || ''}`)}
                   className="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-3 rounded-lg flex flex-col items-center justify-center gap-1 transition-all border border-white/30"
                 >
                   <MessageCircle className="h-5 w-5" />
