@@ -26,13 +26,18 @@
 - Conversión automática a formato internacional
 
 ### 2. Gestión de Suscripciones 💳
-**Nueva página para que los usuarios gestionen su suscripción**
+**Nueva página para que los usuarios gestionen su suscripción con múltiples opciones de pago**
 
-- Visualización del estado actual (Trial/Premium)
-- Días restantes del trial
-- Fecha de inicio y expiración
-- Link directo a Mercado Pago para pago
-- Lista de beneficios del plan Premium
+- ✅ Visualización del estado actual (Trial/Premium)
+- ✅ Días restantes del trial
+- ✅ Fecha de inicio y expiración
+- ✅ **Dos opciones de pago disponibles:**
+  - 💳 **MercadoPago** ($39.999 ARS/mes) - Ideal para Argentina
+  - 💵 **OneInfinite** ($30 USD/mes) - Ideal para internacional (Costa Rica, etc.)
+- ✅ Alerta informativa para usuarios internacionales
+- ✅ Precios en ambas monedas (ARS y USD)
+- ✅ Lista completa de beneficios del plan Premium
+- ✅ Información de seguridad y procesamiento de pagos
 
 ### 3. Centro de Ayuda (FAQs) ❓
 **Sección de preguntas frecuentes integrada**
@@ -201,9 +206,19 @@ docker logs -f denti_backend | grep -i twilio
 
 ---
 
-**Versión**: 2.0  
+**Versión**: 2.1  
 **Fecha**: 29 de Octubre, 2025  
 **Branch**: `feat/new-architecture`
 
-**🎉 ¡Todo listo para producción!**
+## 🆕 Actualización 2.1 - Opciones de Pago Internacionales
+
+### Cambios en esta versión:
+- ✅ Agregada opción de pago **OneInfinite** para usuarios internacionales
+- ✅ Precios actualizados mostrando ARS y USD
+- ✅ Alerta informativa para usuarios fuera de Argentina
+- ✅ Botones diferenciados para cada método de pago
+- ✅ Documentación completa de opciones de pago ([PAYMENT_OPTIONS.md](PAYMENT_OPTIONS.md))
+
+**🎉 ¡Todo listo para producción internacional!**
+
 
