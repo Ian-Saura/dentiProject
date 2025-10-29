@@ -10,20 +10,27 @@ import {
   ExternalLink,
   Clock,
   TrendingUp,
-  Shield
+  Shield,
+  Globe,
+  DollarSign
 } from 'lucide-react';
 import { plansService } from '@/services';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const MERCADOPAGO_LINK = 'https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=e3cbe4338d4d424abb2b4b3da6d229e1';
+const ONEINFINITE_LINK = 'https://onei.la/mEt';
 
 const SubscriptionPage: React.FC = () => {
   const { data: planStatus, isLoading } = useQuery('plan-status', () => 
     plansService.getMyPlanStatus()
   );
 
-  const handlePayment = () => {
+  const handlePaymentMercadoPago = () => {
     window.open(MERCADOPAGO_LINK, '_blank');
+  };
+
+  const handlePaymentOneInfinite = () => {
+    window.open(ONEINFINITE_LINK, '_blank');
   };
 
   if (isLoading) {
@@ -187,9 +194,13 @@ const SubscriptionPage: React.FC = () => {
 
               {/* Precio */}
               <div className="mb-6">
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline gap-2 mb-2">
                   <span className="text-5xl font-black">$39.999</span>
                   <span className="text-xl text-blue-100">ARS/mes</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold">$30</span>
+                  <span className="text-lg text-blue-100">USD/mes</span>
                 </div>
               </div>
 
@@ -221,18 +232,59 @@ const SubscriptionPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* CTA Button */}
+              {/* CTA Buttons */}
               {!isPremium && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handlePayment}
-                  className="w-full bg-white text-blue-600 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                >
-                  <CreditCard className="w-5 h-5" />
-                  {isTrial ? 'Activar Suscripción' : 'Renovar Suscripción'}
-                  <ExternalLink className="w-4 h-4" />
-                </motion.button>
+                <>
+                  {/* Alerta para usuarios internacionales */}
+                  <div className="bg-amber-500/20 backdrop-blur-sm border-2 border-amber-300/50 rounded-xl p-3 mb-4">
+                    <div className="flex items-start gap-2">
+                      <Globe className="w-5 h-5 text-amber-200 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-white mb-1">
+                          🌎 Para usuarios fuera de Argentina
+                        </p>
+                        <p className="text-xs text-blue-100">
+                          Si estás en Costa Rica u otro país, o prefieres pagar en USD, utiliza <strong>OneInfinite</strong>. 
+                          Para Argentina, ambas opciones funcionan, pero <strong>MercadoPago</strong> puede ser más familiar.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botón MercadoPago */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handlePaymentMercadoPago}
+                    className="w-full bg-white text-blue-600 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 mb-3"
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    {isTrial ? 'Pagar con MercadoPago (ARS)' : 'Renovar con MercadoPago'}
+                    <ExternalLink className="w-4 h-4" />
+                  </motion.button>
+
+                  {/* Botón OneInfinite */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handlePaymentOneInfinite}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                  >
+                    <DollarSign className="w-5 h-5" />
+                    {isTrial ? 'Pagar con OneInfinite (USD)' : 'Renovar con OneInfinite'}
+                    <ExternalLink className="w-4 h-4" />
+                  </motion.button>
+
+                  <div className="mt-4 space-y-2">
+                    <p className="text-xs text-blue-100 text-center flex items-center justify-center gap-1">
+                      <Shield className="w-3 h-3" />
+                      Pagos seguros procesados por MercadoPago y OneInfinite
+                    </p>
+                    <p className="text-xs text-blue-200 text-center">
+                      💡 Ambas opciones incluyen los mismos beneficios Premium
+                    </p>
+                  </div>
+                </>
               )}
 
               {isPremium && (
@@ -242,11 +294,6 @@ const SubscriptionPage: React.FC = () => {
                   <p className="text-sm text-blue-100 mt-1">Gracias por confiar en Manny</p>
                 </div>
               )}
-
-              <p className="text-xs text-blue-100 text-center mt-4 flex items-center justify-center gap-1">
-                <Shield className="w-3 h-3" />
-                Pago seguro procesado por MercadoPago
-              </p>
             </div>
           </motion.div>
         </div>
