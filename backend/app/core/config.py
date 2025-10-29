@@ -42,6 +42,24 @@ class Settings(BaseSettings):
 
     cors_origins: Optional[str] = Field(default="*", alias="CORS_ORIGINS")
 
+    # Twilio Configuration
+    twilio_account_sid: str = Field(
+        default="",  # Set via TWILIO_ACCOUNT_SID env var
+        alias="TWILIO_ACCOUNT_SID"
+    )
+    twilio_auth_token: str = Field(
+        default="",  # Set via TWILIO_AUTH_TOKEN env var
+        alias="TWILIO_AUTH_TOKEN"
+    )
+    twilio_whatsapp_from: str = Field(
+        default="whatsapp:+14155238886",  # Twilio Sandbox WhatsApp number
+        alias="TWILIO_WHATSAPP_FROM"
+    )
+    twilio_sms_from: str = Field(
+        default="",  # Set via TWILIO_SMS_FROM env var (optional)
+        alias="TWILIO_SMS_FROM"
+    )
+
     class Config:
         env_file = ".env"
         case_sensitive = False

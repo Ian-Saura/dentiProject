@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
+import { Link } from 'react-router-dom';
 import { calculadoraService, analyticsService } from '@/services';
 import { Calculator, DollarSign, Clock, Package, Sparkles, TrendingUp, Target, HelpCircle } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -314,6 +315,21 @@ const CalculadoraPage: React.FC = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
+              
+              {/* FAQ Reference Tip */}
+              <div className="mt-3 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <div className="bg-purple-500 rounded-full p-1.5 flex-shrink-0">
+                    <HelpCircle className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-purple-900">
+                      <strong>💡 Recordatorio:</strong> Para calcular el costo de materiales de cada tratamiento, 
+                      consultá la guía detallada en <Link to="/faqs" className="underline font-semibold hover:text-purple-700 transition-colors">Ayuda / FAQs</Link>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Note: Always uses the cost from parameters (either calculated or manual) */}

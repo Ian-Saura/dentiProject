@@ -5,7 +5,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
 import AddConsultaModal from '@/components/AddConsultaModal';
 import { motion } from 'framer-motion';
-import { Calendar, DollarSign, TrendingUp, Filter, ChevronDown, Plus, Search, Edit, Trash2, Sparkles } from 'lucide-react';
+import { Calendar, Filter, Plus, Search, Edit, Trash2, Sparkles } from 'lucide-react';
 import { formatDateToDDMMYYYY } from '@/utils/dateFormat';
 
 const ConsultasPage: React.FC = () => {
@@ -140,7 +140,7 @@ const ConsultasPage: React.FC = () => {
               <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-8 -mt-8 blur-xl"></div>
               <div className="relative z-10">
                 <div className="text-xs font-medium text-white/80 mb-1">Total Prestaciones</div>
-                <div className="text-4xl font-black">{consultasData.total}</div>
+                <div className="text-4xl font-black">{consultasData?.total || 0}</div>
               </div>
             </motion.div>
           </AnimatedCard>
@@ -271,6 +271,7 @@ const ConsultasPage: React.FC = () => {
                     <th>Tratamiento</th>
                     <th>Monto</th>
                     <th>Medio de Pago</th>
+                    <th>Observaciones</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                   </tr>
@@ -297,6 +298,15 @@ const ConsultasPage: React.FC = () => {
                       </td>
                       <td>
                         <span className="capitalize">{consulta.medio_pago}</span>
+                      </td>
+                      <td>
+                        {consulta.observaciones ? (
+                          <span className="text-sm text-gray-700 line-clamp-2" title={consulta.observaciones}>
+                            {consulta.observaciones}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-sm">-</span>
+                        )}
                       </td>
                       <td>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -384,6 +394,14 @@ const ConsultasPage: React.FC = () => {
                       <span className="text-gray-600">Medio de Pago:</span>
                       <span className="capitalize text-gray-900">{consulta.medio_pago}</span>
                     </div>
+                    {consulta.observaciones && (
+                      <div className="flex flex-col pt-2 border-t border-gray-200">
+                        <span className="text-gray-600 mb-1">📝 Observaciones:</span>
+                        <span className="text-gray-700 text-xs">
+                          {consulta.observaciones}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2">

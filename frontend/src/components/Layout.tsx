@@ -17,6 +17,8 @@ import {
   Shield,
   Sparkles,
   Clock,
+  HelpCircle,
+  CreditCard,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -37,6 +39,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Calculadora', href: '/calculadora', icon: Calculator },
     { name: 'Configuración', href: '/configuracion', icon: Settings },
     { name: 'Importar Datos', href: '/import', icon: Upload },
+    { name: 'Mi Suscripción', href: '/subscription', icon: CreditCard },
+    { name: 'Ayuda / FAQs', href: '/faqs', icon: HelpCircle },
     ...(isAdmin ? [{ name: 'Admin Panel', href: '/admin', icon: Shield }] : []),
   ];
 

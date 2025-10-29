@@ -15,6 +15,8 @@ import {
   ChevronRight,
   BarChart3,
   Clock,
+  HelpCircle,
+  CreditCard,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -33,6 +35,8 @@ const OperationalLayout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Turnos', href: '/operational/turnos', icon: Clock, emoji: '📅', color: 'from-blue-500 to-cyan-500' },
     { name: 'Pacientes', href: '/operational/pacientes', icon: Users, emoji: '👥', color: 'from-purple-500 to-pink-500' },
     { name: 'Prestaciones', href: '/operational/prestaciones', icon: FileText, emoji: '📋', color: 'from-green-500 to-emerald-500' },
+    { name: 'Mi Suscripción', href: '/subscription', icon: CreditCard, emoji: '💳', color: 'from-indigo-500 to-purple-500' },
+    { name: 'Ayuda / FAQs', href: '/faqs', icon: HelpCircle, emoji: '❓', color: 'from-orange-500 to-amber-500' },
   ];
 
   const switchToAnalytical = () => {

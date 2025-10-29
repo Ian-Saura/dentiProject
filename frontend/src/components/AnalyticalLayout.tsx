@@ -20,6 +20,8 @@ import {
   Clock,
   Zap,
   ChevronRight,
+  HelpCircle,
+  CreditCard,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -39,6 +41,8 @@ const AnalyticalLayout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Configuración de Costos', href: '/analytical/configuracion', icon: Settings },
     { name: 'Calculadora', href: '/analytical/calculadora', icon: Calculator },
     { name: 'Importar', href: '/analytical/import', icon: Upload },
+    { name: 'Mi Suscripción', href: '/subscription', icon: CreditCard },
+    { name: 'Ayuda / FAQs', href: '/faqs', icon: HelpCircle },
     ...(isAdmin ? [{ name: 'Admin', href: '/analytical/admin', icon: Shield }] : []),
   ];
 

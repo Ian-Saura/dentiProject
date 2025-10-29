@@ -35,6 +35,7 @@ import PrivacidadPage from '@/pages/PrivacidadPage';
 import ProfilePage from '@/pages/ProfilePage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import SubscriptionPage from '@/pages/SubscriptionPage';
 
 // Google OAuth Client ID
 const GOOGLE_CLIENT_ID = '814453800673-39hb3apvtc1d5bdo68k9cq83isn75n2j.apps.googleusercontent.com';
@@ -114,6 +115,26 @@ const AppRoutes: React.FC = () => {
       <Route 
         path="/faq" 
         element={<FAQPage />} 
+      />
+      <Route 
+        path="/faqs" 
+        element={
+          <ProtectedRoute>
+            <AnalyticalLayout>
+              <FAQPage />
+            </AnalyticalLayout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/subscription" 
+        element={
+          <ProtectedRoute>
+            <AnalyticalLayout>
+              <SubscriptionPage />
+            </AnalyticalLayout>
+          </ProtectedRoute>
+        } 
       />
       <Route 
         path="/login" 

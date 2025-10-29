@@ -100,9 +100,14 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         tratamiento: editingConsulta.prestacion_usuario.nombre_personalizado,
         monto_ars: editingConsulta.monto_ars,
         medio_pago: editingConsulta.medio_pago,
-        fecha_consulta: editingConsulta.fecha_consulta.split('T')[0]
+        fecha_consulta: editingConsulta.fecha_consulta.split('T')[0],
+        observaciones: editingConsulta.observaciones || ''
       });
       setPatientSearchTerm(`${editingConsulta.paciente.dni} - ${editingConsulta.paciente.nombre} ${editingConsulta.paciente.apellido}`);
+      // Load selected teeth if available
+      if (editingConsulta.dientes_tratados && editingConsulta.dientes_tratados.length > 0) {
+        setSelectedTeeth(editingConsulta.dientes_tratados);
+      }
     }
   }, [editingConsulta]);
 

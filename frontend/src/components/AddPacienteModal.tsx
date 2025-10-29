@@ -16,6 +16,7 @@ interface PacienteForm {
   obra_social?: string;
   alergias?: string;
   medicamentos_actuales?: string;
+  observaciones_medicas?: string;
 }
 
 interface AddPacienteModalProps {
@@ -44,7 +45,8 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
     fecha_nacimiento: '',
     obra_social: '',
     alergias: '',
-    medicamentos_actuales: ''
+    medicamentos_actuales: '',
+    observaciones_medicas: ''
   });
 
   const [touched, setTouched] = useState({
@@ -161,7 +163,8 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
       fecha_nacimiento: '',
       obra_social: '',
       alergias: '',
-      medicamentos_actuales: ''
+      medicamentos_actuales: '',
+      observaciones_medicas: ''
     });
     setTouched({
       nombre: false,
@@ -244,22 +247,26 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                 <CreditCard className="w-4 h-4" />
-                DNI * {editingPatientId && <span className="text-xs text-gray-500">(no editable)</span>}
+                DNI * 
+                {formData.dni?.startsWith('CSV-') && (
+                  <span className="text-xs text-amber-600 font-medium">⚠️ DNI temporal - actualízalo</span>
+                )}
+                {editingPatientId && (
+                  <span className="text-xs text-blue-600">✏️ editable</span>
+                )}
               </label>
               <input
                 type="text"
                 value={formData.dni}
                 onChange={(e) => {
-                  if (!editingPatientId) {
-                    setFormData({ ...formData, dni: e.target.value });
-                    if (touched.dni) setTouched({ ...touched, dni: true });
-                  }
+                  setFormData({ ...formData, dni: e.target.value });
+                  if (touched.dni) setTouched({ ...touched, dni: true });
                 }}
                 onBlur={() => setTouched({ ...touched, dni: true })}
-                disabled={!!editingPatientId}
+                disabled={false}
                 className={`w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 rounded-xl focus:outline-none focus:ring-2 transition-colors ${
-                  editingPatientId 
-                    ? 'bg-gray-100 cursor-not-allowed text-gray-600'
+                  formData.dni?.startsWith('CSV-')
+                    ? 'border-amber-400 focus:border-amber-500 focus:ring-amber-500 bg-amber-50'
                     : touched.dni && (!formData.dni || formData.dni.length < 7)
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
                     : 'border-gray-300 focus:border-dental-500 focus:ring-dental-500'
@@ -381,6 +388,19 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                     rows={2}
                   />
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-red-700 mb-1">
+                    📋 Observaciones Médicas
+                  </label>
+                  <textarea
+                    value={formData.observaciones_medicas}
+                    onChange={(e) => setFormData({ ...formData, observaciones_medicas: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border-2 border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    placeholder="Ej: Hipertensión controlada, antecedentes de..."
+                    rows={2}
+                  />
+                </div>
               </div>
             </div>
 
@@ -395,7 +415,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
             </div>
 
             {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4 sticky bottom-0 bg-white/80 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-0 -mb-4 sm:mb-0 rounded-b-2xl">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-6">
               <button
                 type="button"
                 onClick={handleClose}
@@ -434,6 +454,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
 };
 
 export default AddPacienteModal;
+
 
 
 

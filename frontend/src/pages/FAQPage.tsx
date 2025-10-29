@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   HelpCircle,
   ChevronDown,
@@ -247,46 +248,53 @@ const faqData = [
 
 const FAQPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+  // Detectar si estamos en la versión autenticada (/faqs) o pública (/faq)
+  const isAuthenticatedPage = location.pathname === '/faqs' || isAuthenticated;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      {/* Header */}
-      <div className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              <span className="font-medium">Volver al inicio</span>
-            </button>
-            
-            <div className="flex items-center space-x-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/login')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+      {/* Header - Solo mostrar en versión pública */}
+      {!isAuthenticatedPage && (
+        <div className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Iniciar Sesión
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/register')}
-                className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-sm"
-              >
-                Probar Gratis
-              </motion.button>
+                <ArrowLeft className="h-5 w-5" />
+                <span className="font-medium">Volver al inicio</span>
+              </button>
+              
+              <div className="flex items-center space-x-3">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  Iniciar Sesión
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate('/register')}
+                  className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-sm"
+                >
+                  Probar Gratis
+                </motion.button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Hero Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <section className={`${isAuthenticatedPage ? 'py-8' : 'py-16'} px-4 sm:px-6 lg:px-8`}>
         <div className="container mx-auto max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -298,7 +306,7 @@ const FAQPage: React.FC = () => {
               <HelpCircle className="h-5 w-5 text-purple-600" />
               <span className="text-purple-600 font-bold text-sm">Preguntas Frecuentes</span>
             </div>
-            <h1 className="text-4xl sm:text-6xl font-black text-gray-900 mb-4">
+            <h1 className={`${isAuthenticatedPage ? 'text-3xl sm:text-5xl' : 'text-4xl sm:text-6xl'} font-black text-gray-900 mb-4`}>
               Finanzas para Odontólogos
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -363,85 +371,89 @@ const FAQPage: React.FC = () => {
             ))}
           </div>
 
-          {/* CTA at bottom */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-16 bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 rounded-3xl p-8 sm:p-12 text-center shadow-2xl"
-          >
-            <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
-              ¿Listo para tomar control de tus finanzas?
-            </h3>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Comenzá gratis hoy. Sin tarjeta de crédito. Configuración en minutos.
-            </p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/register')}
-              className="px-10 py-5 bg-white text-blue-600 rounded-2xl font-black text-lg shadow-2xl hover:shadow-3xl transition-all inline-flex items-center justify-center space-x-2"
+          {/* CTA at bottom - Solo en versión pública */}
+          {!isAuthenticatedPage && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="mt-16 bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 rounded-3xl p-8 sm:p-12 text-center shadow-2xl"
             >
-              <span>Probar Gratis 14 Días</span>
-              <ArrowLeft className="h-6 w-6 rotate-180" />
-            </motion.button>
-          </motion.div>
+              <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
+                ¿Listo para tomar control de tus finanzas?
+              </h3>
+              <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+                Comenzá gratis hoy. Sin tarjeta de crédito. Configuración en minutos.
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/register')}
+                className="px-10 py-5 bg-white text-blue-600 rounded-2xl font-black text-lg shadow-2xl hover:shadow-3xl transition-all inline-flex items-center justify-center space-x-2"
+              >
+                <span>Probar Gratis 14 Días</span>
+                <ArrowLeft className="h-6 w-6 rotate-180" />
+              </motion.button>
+            </motion.div>
+          )}
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8 mt-16">
-        <div className="container mx-auto text-center">
-          <div className="mb-4">
-            <img 
-              src="/Gemini_Generated_Image_hffliphffliphffl.png" 
-              alt="Manny" 
-              className="h-10 w-auto brightness-0 invert mx-auto"
-            />
-          </div>
-          <p className="text-gray-400 text-sm mb-4">
-            Sistema de gestión integral para profesionales de la salud
-          </p>
-          <div className="flex items-center justify-center space-x-6 text-sm">
-            <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition-colors">
-              Inicio
-            </button>
-            <span className="text-gray-600">•</span>
-            <button onClick={() => navigate('/login')} className="text-gray-400 hover:text-white transition-colors">
-              Iniciar Sesión
-            </button>
-            <span className="text-gray-600">•</span>
-            <a href="https://instagram.com/manny.app" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-              Instagram
-            </a>
-          </div>
-          <div className="mt-6 pt-6 border-t border-gray-700">
-            <p className="text-gray-400 text-sm mb-3">
-              ¿Tenés alguna pregunta que no está aquí?
+      {/* Footer - Solo en versión pública */}
+      {!isAuthenticatedPage && (
+        <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8 mt-16">
+          <div className="container mx-auto text-center">
+            <div className="mb-4">
+              <img 
+                src="/Gemini_Generated_Image_hffliphffliphffl.png" 
+                alt="Manny" 
+                className="h-10 w-auto brightness-0 invert mx-auto"
+              />
+            </div>
+            <p className="text-gray-400 text-sm mb-4">
+              Sistema de gestión integral para profesionales de la salud
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-sm">
-              <a 
-                href="mailto:soporte@manny.com.ar" 
-                className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                <Mail className="w-4 h-4" />
-                soporte@manny.com.ar
-              </a>
-              <span className="hidden sm:inline text-gray-600">•</span>
-              <a 
-                href="mailto:info@manny.com.ar" 
-                className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                <Mail className="w-4 h-4" />
-                info@manny.com.ar
+            <div className="flex items-center justify-center space-x-6 text-sm">
+              <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition-colors">
+                Inicio
+              </button>
+              <span className="text-gray-600">•</span>
+              <button onClick={() => navigate('/login')} className="text-gray-400 hover:text-white transition-colors">
+                Iniciar Sesión
+              </button>
+              <span className="text-gray-600">•</span>
+              <a href="https://instagram.com/manny.app" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                Instagram
               </a>
             </div>
+            <div className="mt-6 pt-6 border-t border-gray-700">
+              <p className="text-gray-400 text-sm mb-3">
+                ¿Tenés alguna pregunta que no está aquí?
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-sm">
+                <a 
+                  href="mailto:soporte@manny.com.ar" 
+                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  <Mail className="w-4 h-4" />
+                  soporte@manny.com.ar
+                </a>
+                <span className="hidden sm:inline text-gray-600">•</span>
+                <a 
+                  href="mailto:info@manny.com.ar" 
+                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  <Mail className="w-4 h-4" />
+                  info@manny.com.ar
+                </a>
+              </div>
+            </div>
+            <div className="mt-6 text-gray-500 text-xs">
+              © 2025 Manny. Todos los derechos reservados.
+            </div>
           </div>
-          <div className="mt-6 text-gray-500 text-xs">
-            © 2025 Manny. Todos los derechos reservados.
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 };

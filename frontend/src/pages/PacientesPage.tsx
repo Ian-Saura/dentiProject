@@ -7,6 +7,7 @@ import AnimatedCard from '../components/AnimatedCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Search, Edit, Trash2, Users, Sparkles, X, BarChart3, ArrowUpDown, Plus, AlertCircle, CheckSquare, Square, UserX, GitMerge } from 'lucide-react';
 import MergePacientesModal from '../components/MergePacientesModal';
+import AddPacienteModal from '../components/AddPacienteModal';
 import { toast } from 'react-hot-toast';
 import { formatDateToDDMMYYYY, calculateAge } from '../utils/dateFormat';
 import { useAppMode } from '../contexts/AppModeContext';
@@ -21,16 +22,9 @@ interface Paciente {
   fecha_nacimiento?: string;
   obra_social?: string;
   activo: boolean;
-}
-
-interface PacienteForm {
-  nombre: string;
-  apellido: string;
-  dni?: string;
-  email?: string;
-  telefono?: string;
-  fecha_nacimiento?: string;
-  obra_social?: string;
+  alergias?: string;
+  medicamentos_actuales?: string;
+  observaciones_medicas?: string;
 }
 
 const PacientesPage: React.FC = () => {
@@ -43,16 +37,6 @@ const PacientesPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'nombre' | 'apellido' | 'fecha_registro'>('apellido');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [formData, setFormData] = useState<PacienteForm>({
-    nombre: '',
-    apellido: '',
-    dni: '',
-    email: '',
-    telefono: '',
-    fecha_nacimiento: '',
-    obra_social: ''
-  });
-
   const queryClient = useQueryClient();
 
   // Fetch patients
@@ -126,29 +110,6 @@ const PacientesPage: React.FC = () => {
       return 0;
     });
   }, [pacientes, sortBy, sortOrder, searchQuery]);
-
-  // Create patient mutation
-  const createMutation = useMutation(pacientesService.createPaciente, {
-    onSuccess: () => {
-      queryClient.invalidateQueries('pacientes');
-      setShowForm(false);
-      resetForm();
-    }
-  });
-
-  // Update patient mutation
-  const updateMutation = useMutation(
-    ({ id, data }: { id: number; data: PacienteForm }) => 
-      pacientesService.updatePaciente(id, data),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('pacientes');
-        setEditingPaciente(null);
-        setShowForm(false);
-        resetForm();
-      }
-    }
-  );
 
   // Delete patient mutation
   const deleteMutation = useMutation(pacientesService.deletePaciente, {
@@ -246,49 +207,8 @@ const PacientesPage: React.FC = () => {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      nombre: '',
-      apellido: '',
-      dni: '',
-      email: '',
-      telefono: '',
-      fecha_nacimiento: '',
-      obra_social: ''
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Prepare data, removing empty optional fields
-    const dataToSend = {
-      ...formData,
-      email: formData.email?.trim() === '' ? undefined : formData.email,
-      telefono: formData.telefono?.trim() === '' ? undefined : formData.telefono,
-      fecha_nacimiento: formData.fecha_nacimiento === '' ? undefined : formData.fecha_nacimiento,
-      obra_social: formData.obra_social?.trim() === '' ? undefined : formData.obra_social,
-      dni: formData.dni?.trim() === '' ? undefined : formData.dni,
-    };
-    
-    if (editingPaciente) {
-      updateMutation.mutate({ id: editingPaciente.id, data: dataToSend });
-    } else {
-      createMutation.mutate(dataToSend);
-    }
-  };
-
   const handleEdit = (paciente: Paciente) => {
     setEditingPaciente(paciente);
-    setFormData({
-      nombre: paciente.nombre,
-      apellido: paciente.apellido,
-      dni: paciente.dni || '',
-      email: paciente.email || '',
-      telefono: paciente.telefono || '',
-      fecha_nacimiento: paciente.fecha_nacimiento || '',
-      obra_social: paciente.obra_social || ''
-    });
     setShowForm(true);
   };
 
@@ -296,12 +216,6 @@ const PacientesPage: React.FC = () => {
     if (window.confirm('¿Está seguro de que desea eliminar este paciente?')) {
       deleteMutation.mutate(id);
     }
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setEditingPaciente(null);
-    resetForm();
   };
 
   if (isLoading) return <LoadingSpinner />;
@@ -424,157 +338,32 @@ const PacientesPage: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Premium Form Modal */}
-      <AnimatePresence>
-        {showForm && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={handleCancel}
-              className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
-            >
-              <div className="glass rounded-3xl p-8 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 pointer-events-auto">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
-                    <Sparkles className="h-6 w-6 text-dental-500" />
-                    {editingPaciente ? 'Editar Paciente' : 'Nuevo Paciente'}
-                  </h2>
-                  <button
-                    onClick={handleCancel}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <X className="h-6 w-6" />
-                  </button>
-                </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre *
-                </label>
-                <input
-                  type="text"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Apellido *
-                </label>
-                <input
-                  type="text"
-                  value={formData.apellido}
-                  onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  DNI * <span className="text-xs text-gray-500 font-normal">(obligatorio)</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.dni}
-                  onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="12345678"
-                  minLength={7}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Obra Social <span className="text-xs text-gray-500 font-normal">(opcional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.obra_social}
-                  onChange={(e) => setFormData({ ...formData, obra_social: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="OSDE, Swiss Medical, etc. (opcional)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span className="text-xs text-gray-500 font-normal">(opcional)</span>
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="email@ejemplo.com (opcional)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono <span className="text-xs text-gray-500 font-normal">(opcional)</span>
-                </label>
-                <input
-                  type="tel"
-                  value={formData.telefono}
-                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="+54 9 11 1234-5678 (opcional)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha de Nacimiento <span className="text-xs text-gray-500 font-normal">(opcional)</span>
-                </label>
-                <input
-                  type="date"
-                  value={formData.fecha_nacimiento}
-                  onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={createMutation.isLoading || updateMutation.isLoading}
-                  className="flex-1 btn-premium disabled:opacity-50"
-                >
-                  {createMutation.isLoading || updateMutation.isLoading ? 'Guardando...' : 'Guardar'}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="button"
-                  onClick={handleCancel}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-4 rounded-xl transition-colors font-medium"
-                >
-                  Cancelar
-                </motion.button>
-              </div>
-            </form>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Add/Edit Paciente Modal */}
+      <AddPacienteModal
+        isOpen={showForm}
+        onClose={() => {
+          setShowForm(false);
+          setEditingPaciente(null);
+        }}
+        editingPatientId={editingPaciente?.id}
+        initialData={editingPaciente ? {
+          nombre: editingPaciente.nombre,
+          apellido: editingPaciente.apellido,
+          dni: editingPaciente.dni,
+          email: editingPaciente.email,
+          telefono: editingPaciente.telefono,
+          fecha_nacimiento: editingPaciente.fecha_nacimiento,
+          obra_social: editingPaciente.obra_social,
+          alergias: editingPaciente.alergias,
+          medicamentos_actuales: editingPaciente.medicamentos_actuales,
+          observaciones_medicas: editingPaciente.observaciones_medicas
+        } : undefined}
+        onSuccess={() => {
+          setShowForm(false);
+          setEditingPaciente(null);
+          queryClient.invalidateQueries('pacientes');
+        }}
+      />
 
       {/* Premium Patients Grid */}
       <div>

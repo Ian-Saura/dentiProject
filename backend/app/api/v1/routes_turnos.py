@@ -28,6 +28,8 @@ from app.schemas.turnos import (
 from app.repositories import turnos as turnos_repo
 from app.repositories import link_turnos as link_turnos_repo
 from app.services.turnos_service import TurnosService
+from app.services.recordatorios_service import RecordatoriosService
+from loguru import logger
 
 router = APIRouter(prefix="/turnos", tags=["turnos"])
 
@@ -112,7 +114,25 @@ def create_turno(
         )
         turno.paciente_id = paciente.id
     
-    return turnos_repo.create_turno(db, turno, tenant.user_id)
+    turno_creado = turnos_repo.create_turno(db, turno, tenant.user_id)
+    
+    # Enviar confirmación automática cuando el profesional agenda el turno
+    try:
+        logger.info(f"📱 Intentando enviar confirmación para turno {turno_creado.id}")
+        result = RecordatoriosService.enviar_confirmacion_turno(
+            db=db,
+            turno=turno_creado,
+            metodo="whatsapp"  # Usar WhatsApp
+        )
+        logger.info(f"✅ Resultado envío confirmación: {result}")
+    except Exception as e:
+        # No fallar si el envío de confirmación tiene problemas
+        # El turno se creó exitosamente de todos modos
+        logger.error(f"❌ Error al enviar confirmación automática: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+    
+    return turno_creado
 
 
 @router.get("/{turno_id}", response_model=TurnoResponse)
@@ -198,6 +218,24 @@ def cancelar_turno(
     turno = turnos_repo.cancelar_turno(db, turno_id, tenant.user_id, request.motivo)
     if not turno:
         raise HTTPException(status_code=404, detail="Turno no encontrado")
+    
+    # Enviar notificación automática de cancelación
+    try:
+        logger.info(f"📱 Intentando enviar notificación de cancelación para turno {turno.id}")
+        result = RecordatoriosService.enviar_cancelacion_turno(
+            db=db,
+            turno=turno,
+            motivo=request.motivo,
+            metodo="whatsapp"  # Usar WhatsApp
+        )
+        logger.info(f"✅ Resultado envío cancelación: {result}")
+    except Exception as e:
+        # No fallar si el envío de notificación tiene problemas
+        # El turno se canceló exitosamente de todos modos
+        logger.error(f"❌ Error al enviar notificación de cancelación: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+    
     return turno
 
 
@@ -371,6 +409,9 @@ def reservar_turno_publico(
         token=token,
     )
     
+    # No se envía confirmación automática
+    # Solo se enviará recordatorio 24hs antes vía cron job
+    
     return turno_creado
 
 
@@ -532,5 +573,8 @@ def reservar_turno_con_token(
     
     # Incrementar contador de usos del link
     link_turnos_repo.increment_usage(db, link.id)
+    
+    # No se envía confirmación automática
+    # Solo se enviará recordatorio 24hs antes vía cron job
     
     return turno_creado

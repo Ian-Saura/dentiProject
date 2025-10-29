@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
 import Odontograma from '@/components/Odontograma';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, Activity, CreditCard, FileText, Plus, Sparkles, User, Edit, Phone, Mail, MessageCircle, MapPin, Hash, CalendarPlus, CalendarCheck, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, Activity, CreditCard, FileText, Plus, Sparkles, User, Edit, Phone, Mail, MessageCircle, MapPin, Hash, CalendarPlus, CalendarCheck, AlertTriangle, X } from 'lucide-react';
 import ClinicalNotesModal from '@/components/ClinicalNotesModal';
 import AddConsultaModal from '@/components/AddConsultaModal';
 import AddPacienteModal from '@/components/AddPacienteModal';
@@ -22,7 +22,9 @@ const PatientDashboardPage: React.FC = () => {
   const [showAddConsultaModal, setShowAddConsultaModal] = useState(false);
   const [showQuickAppointmentModal, setShowQuickAppointmentModal] = useState(false);
   const [showEditPacienteModal, setShowEditPacienteModal] = useState(false);
+  const [showConsultaDetailsModal, setShowConsultaDetailsModal] = useState(false);
   const [editingConsulta, setEditingConsulta] = useState<any>(null);
+  const [selectedConsulta, setSelectedConsulta] = useState<any>(null);
   const [selectedConsultationId, setSelectedConsultationId] = useState<number | null>(null);
   const [clinicalNotes, setClinicalNotes] = useState<any[]>([]);
   const [patientId, setPatientId] = useState<number | null>(null);
@@ -611,37 +613,50 @@ const PatientDashboardPage: React.FC = () => {
                       {/* Card del tratamiento */}
                       <motion.div
                         whileHover={{ scale: 1.01, x: 3 }}
-                        className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-all"
+                        onClick={() => {
+                          setSelectedConsulta(consulta);
+                          setShowConsultaDetailsModal(true);
+                        }}
+                        className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer"
                       >
-                        <div className="flex items-center justify-between gap-3 flex-wrap">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="text-xs font-bold text-gray-500 whitespace-nowrap">
-                              {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
-                            </span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                              consulta.estado === 'completada' ? 'bg-green-100 text-green-700' :
-                              consulta.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-red-100 text-red-700'
-                            }`}>
-                              {consulta.estado}
-                            </span>
-                            <h4 className="text-sm font-bold text-gray-900 truncate">
-                              {consulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
-                            </h4>
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-gray-600">
-                            {consulta.dientes_tratados && consulta.dientes_tratados.length > 0 && (
-                              <span className="flex items-center gap-1">
-                                🦷 {consulta.dientes_tratados.sort((a, b) => a - b).join(', ')}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <span className="text-xs font-bold text-gray-500 whitespace-nowrap">
+                                {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
                               </span>
-                            )}
-                            <span className="flex items-center gap-1 font-bold text-sm">
-                              ${consulta.monto_ars.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                            <span className="text-xs">
-                              {consulta.medio_pago}
-                            </span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                consulta.estado === 'completada' ? 'bg-green-100 text-green-700' :
+                                consulta.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {consulta.estado}
+                              </span>
+                              <h4 className="text-sm font-bold text-gray-900 truncate">
+                                {consulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
+                              </h4>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-gray-600">
+                              {consulta.dientes_tratados && consulta.dientes_tratados.length > 0 && (
+                                <span className="flex items-center gap-1">
+                                  🦷 {consulta.dientes_tratados.sort((a, b) => a - b).join(', ')}
+                                </span>
+                              )}
+                              <span className="flex items-center gap-1 font-bold text-sm">
+                                ${consulta.monto_ars.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                              <span className="text-xs">
+                                {consulta.medio_pago}
+                              </span>
+                            </div>
                           </div>
+                          {consulta.observaciones && (
+                            <div className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
+                              <span className="font-medium text-blue-700">💬 </span>
+                              <span className="line-clamp-1">{consulta.observaciones}</span>
+                              <span className="text-blue-600 text-xs ml-1">→ Click para ver más</span>
+                            </div>
+                          )}
                         </div>
                       </motion.div>
                     </motion.div>
@@ -774,7 +789,14 @@ const PatientDashboardPage: React.FC = () => {
                 {filteredConsultas
                   .sort((a, b) => new Date(b.fecha_consulta).getTime() - new Date(a.fecha_consulta).getTime())
                   .map((consulta) => (
-                    <tr key={consulta.id}>
+                    <tr 
+                      key={consulta.id}
+                      className="cursor-pointer hover:bg-blue-50 transition-colors"
+                      onClick={() => {
+                        setSelectedConsulta(consulta);
+                        setShowConsultaDetailsModal(true);
+                      }}
+                    >
                       <td>
                         {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </td>
@@ -796,7 +818,7 @@ const PatientDashboardPage: React.FC = () => {
                           {consulta.estado}
                         </span>
                       </td>
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-2">
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -827,7 +849,11 @@ const PatientDashboardPage: React.FC = () => {
                   key={consulta.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-2xl p-4 border-2 border-gray-200 shadow-sm"
+                  className="bg-white rounded-2xl p-4 border-2 border-gray-200 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all"
+                  onClick={() => {
+                    setSelectedConsulta(consulta);
+                    setShowConsultaDetailsModal(true);
+                  }}
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div>
@@ -856,11 +882,21 @@ const PatientDashboardPage: React.FC = () => {
                       <span className="text-gray-600">Pago:</span>
                       <span className="capitalize text-gray-900">{consulta.medio_pago}</span>
                     </div>
+                    {consulta.observaciones && (
+                      <div className="pt-2 border-t border-gray-200">
+                        <span className="text-gray-600 text-sm font-medium block mb-1">📝 Vista previa:</span>
+                        <p className="text-gray-700 text-xs bg-blue-50 rounded-lg p-2 border border-blue-200 line-clamp-2">
+                          {consulta.observaciones}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1 font-medium">Toca para ver más →</p>
+                      </div>
+                    )}
                   </div>
                   
                   <motion.button
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setEditingConsulta(consulta);
                       setShowAddConsultaModal(true);
                     }}
@@ -948,13 +984,149 @@ const PatientDashboardPage: React.FC = () => {
           fecha_nacimiento: currentPatient.fecha_nacimiento,
           obra_social: currentPatient.obra_social,
           alergias: currentPatient.alergias,
-          medicamentos_actuales: currentPatient.medicamentos_actuales
+          medicamentos_actuales: currentPatient.medicamentos_actuales,
+          observaciones_medicas: currentPatient.observaciones_medicas
         } : undefined}
         onSuccess={() => {
           refetchPatients();
           setShowEditPacienteModal(false);
         }}
       />
+
+      {/* Consulta Details Modal */}
+      {showConsultaDetailsModal && selectedConsulta && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]" onClick={() => setShowConsultaDetailsModal(false)}>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-200">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <FileText className="h-6 w-6 text-blue-600" />
+                  Detalles de la Prestación
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {new Date(selectedConsulta.fecha_consulta).toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowConsultaDetailsModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4">
+              {/* Tratamiento */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                <label className="text-sm font-semibold text-blue-800 block mb-1">Tratamiento</label>
+                <p className="text-lg font-bold text-blue-900">
+                  {selectedConsulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
+                </p>
+              </div>
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">Monto</label>
+                  <p className="text-xl font-bold text-gray-900">
+                    ${selectedConsulta.monto_ars.toLocaleString('es-AR')}
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">Medio de Pago</label>
+                  <p className="text-xl font-bold text-gray-900 capitalize">
+                    {selectedConsulta.medio_pago}
+                  </p>
+                </div>
+              </div>
+
+              {/* Estado */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label className="text-xs font-semibold text-gray-600 block mb-2">Estado</label>
+                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-semibold ${
+                  selectedConsulta.estado === 'completada' ? 'bg-green-100 text-green-800' :
+                  selectedConsulta.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {selectedConsulta.estado}
+                </span>
+              </div>
+
+              {/* Dientes Tratados */}
+              {selectedConsulta.dientes_tratados && selectedConsulta.dientes_tratados.length > 0 && (
+                <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
+                  <label className="text-sm font-semibold text-purple-800 block mb-2">🦷 Dientes Tratados</label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedConsulta.dientes_tratados.map((diente: number) => (
+                      <span key={diente} className="bg-purple-200 text-purple-900 px-3 py-1 rounded-full text-sm font-bold">
+                        {diente}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Observaciones */}
+              {selectedConsulta.observaciones && (
+                <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
+                  <label className="text-sm font-semibold text-green-800 block mb-2">📝 Observaciones del Tratamiento</label>
+                  <p className="text-gray-800 whitespace-pre-wrap">
+                    {selectedConsulta.observaciones}
+                  </p>
+                </div>
+              )}
+
+              {/* Descuento */}
+              {selectedConsulta.descuento_aplicado > 0 && (
+                <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+                  <label className="text-xs font-semibold text-orange-600 block mb-1">Descuento Aplicado</label>
+                  <p className="text-lg font-bold text-orange-900">
+                    {selectedConsulta.descuento_aplicado}%
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 mt-6 pt-4 border-t-2 border-gray-200">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setEditingConsulta(selectedConsulta);
+                  setShowConsultaDetailsModal(false);
+                  setShowAddConsultaModal(true);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                <Edit className="h-5 w-5" />
+                Editar Prestación
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowConsultaDetailsModal(false)}
+                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-semibold transition-colors"
+              >
+                Cerrar
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
