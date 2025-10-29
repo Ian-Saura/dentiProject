@@ -29,12 +29,7 @@ services:
     container_name: denti_backend
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://denti_user:denti_pass@db:5432/consultorio_db
-      - JWT_SECRET_KEY=super-secret-production-jwt-key-change-this-in-real-deployment
-      - CORS_ORIGINS=http://localhost:3000,http://localhost
-      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
-      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
-      - TWILIO_WHATSAPP_FROM=${TWILIO_WHATSAPP_FROM:-whatsapp:+14155238886}
+
     ports:
       - "8000:8000"
     depends_on:

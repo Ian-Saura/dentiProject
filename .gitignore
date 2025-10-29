@@ -98,3 +98,4 @@ Thumbs.db
 
 
 .env
+backend/env.docker
