@@ -12,7 +12,7 @@ import AddConsultaModal from '@/components/AddConsultaModal';
 import AddPacienteModal from '@/components/AddPacienteModal';
 import QuickAppointmentModal from '@/components/QuickAppointmentModal';
 import toast from 'react-hot-toast';
-import { formatDateToDDMMYYYY, calculateAge } from '@/utils/dateFormat';
+import { formatDateToDDMMYYYY, calculateAge, formatDateToShortLocal, formatDateToLongLocal } from '@/utils/dateFormat';
 
 const PatientDashboardPage: React.FC = () => {
   const { patientName: encodedPatientName } = useParams<{ patientName: string }>();
@@ -461,10 +461,7 @@ const PatientDashboardPage: React.FC = () => {
               {nextAppointment && (
                 <span className="text-xs bg-white/20 px-2 py-1 rounded-full flex items-center gap-1 whitespace-nowrap">
                   <CalendarCheck className="h-3 w-3" />
-                  {new Date(nextAppointment.fecha_consulta).toLocaleDateString('es-AR', {
-                    day: '2-digit',
-                    month: 'short'
-                  })}
+                  {formatDateToShortLocal(nextAppointment.fecha_consulta)}
                 </span>
               )}
             </div>
@@ -623,7 +620,7 @@ const PatientDashboardPage: React.FC = () => {
                           <div className="flex items-center justify-between gap-3 flex-wrap">
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                               <span className="text-xs font-bold text-gray-500 whitespace-nowrap">
-                                {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                                {formatDateToShortLocal(consulta.fecha_consulta)}
                               </span>
                               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                 consulta.estado === 'completada' ? 'bg-green-100 text-green-700' :
@@ -798,7 +795,7 @@ const PatientDashboardPage: React.FC = () => {
                       }}
                     >
                       <td>
-                        {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        {formatDateToDDMMYYYY(consulta.fecha_consulta)}
                       </td>
                       <td>
                         {consulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
@@ -858,7 +855,7 @@ const PatientDashboardPage: React.FC = () => {
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">
-                        {new Date(consulta.fecha_consulta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {formatDateToDDMMYYYY(consulta.fecha_consulta)}
                       </p>
                       <h4 className="font-bold text-gray-900">
                         {consulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}
@@ -1011,12 +1008,7 @@ const PatientDashboardPage: React.FC = () => {
                   Detalles de la Prestación
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  {new Date(selectedConsulta.fecha_consulta).toLocaleDateString('es-ES', { 
-                    weekday: 'long', 
-                    day: 'numeric', 
-                    month: 'long', 
-                    year: 'numeric' 
-                  })}
+                  {formatDateToLongLocal(selectedConsulta.fecha_consulta)}
                 </p>
               </div>
               <button

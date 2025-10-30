@@ -94,6 +94,111 @@ export const formatDateTimeToLocal = (date: string | Date | null | undefined): s
 };
 
 /**
+ * Formatea una fecha a formato corto (DD MMM) para timeline
+ * @param date - Fecha en formato ISO (YYYY-MM-DD) o Date object
+ * @returns Fecha formateada como "DD mes" o '-' si no hay fecha
+ */
+export const formatDateToShortLocal = (date: string | Date | null | undefined): string => {
+  if (!date) return '-';
+  
+  try {
+    let year: number, month: number, day: number;
+    
+    // Si es un string en formato YYYY-MM-DD, parsearlo directamente sin timezone
+    if (typeof date === 'string') {
+      const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+      const match = date.match(datePattern);
+      
+      if (match) {
+        const [, yearStr, monthStr, dayStr] = match;
+        year = parseInt(yearStr);
+        month = parseInt(monthStr) - 1; // JavaScript months are 0-indexed
+        day = parseInt(dayStr);
+      } else {
+        // Si tiene timestamp, usar UTC
+        const dateObj = new Date(date);
+        if (isNaN(dateObj.getTime())) return '-';
+        
+        year = dateObj.getUTCFullYear();
+        month = dateObj.getUTCMonth();
+        day = dateObj.getUTCDate();
+      }
+    } else {
+      // Si es un Date object
+      const dateObj = date;
+      if (isNaN(dateObj.getTime())) return '-';
+      
+      year = dateObj.getFullYear();
+      month = dateObj.getMonth();
+      day = dateObj.getDate();
+    }
+    
+    // Crear una fecha local sin conversión de timezone
+    const localDate = new Date(year, month, day);
+    
+    // Formatear usando toLocaleDateString
+    return localDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+  } catch (error) {
+    return '-';
+  }
+};
+
+/**
+ * Formatea una fecha a formato largo con día de la semana
+ * @param date - Fecha en formato ISO (YYYY-MM-DD) o Date object
+ * @returns Fecha formateada como "Lunes, 13 de enero de 2025" o '-' si no hay fecha
+ */
+export const formatDateToLongLocal = (date: string | Date | null | undefined): string => {
+  if (!date) return '-';
+  
+  try {
+    let year: number, month: number, day: number;
+    
+    // Si es un string en formato YYYY-MM-DD, parsearlo directamente sin timezone
+    if (typeof date === 'string') {
+      const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+      const match = date.match(datePattern);
+      
+      if (match) {
+        const [, yearStr, monthStr, dayStr] = match;
+        year = parseInt(yearStr);
+        month = parseInt(monthStr) - 1; // JavaScript months are 0-indexed
+        day = parseInt(dayStr);
+      } else {
+        // Si tiene timestamp, usar UTC
+        const dateObj = new Date(date);
+        if (isNaN(dateObj.getTime())) return '-';
+        
+        year = dateObj.getUTCFullYear();
+        month = dateObj.getUTCMonth();
+        day = dateObj.getUTCDate();
+      }
+    } else {
+      // Si es un Date object
+      const dateObj = date;
+      if (isNaN(dateObj.getTime())) return '-';
+      
+      year = dateObj.getFullYear();
+      month = dateObj.getMonth();
+      day = dateObj.getDate();
+    }
+    
+    // Crear una fecha local sin conversión de timezone
+    const localDate = new Date(year, month, day);
+    
+    // Formatear usando toLocaleDateString
+    return localDate.toLocaleDateString('es-ES', { 
+      weekday: 'long', 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+  } catch (error) {
+    return '-';
+  }
+};
+
+/**
  * Calcula la edad a partir de una fecha de nacimiento
  * @param birthDate - Fecha de nacimiento en cualquier formato
  * @returns Edad en años o null si no se puede calcular
