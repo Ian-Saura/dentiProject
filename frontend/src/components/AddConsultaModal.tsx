@@ -90,7 +90,8 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
 
   // Set editing data
   useEffect(() => {
-    if (editingConsulta) {
+    if (editingConsulta && isOpen) {
+      console.log('📝 Loading editing data for consulta ID:', editingConsulta.id);
       setFormData({
         paciente_id: editingConsulta.paciente.id,
         paciente_nombre: editingConsulta.paciente.nombre,
@@ -109,7 +110,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         setSelectedTeeth(editingConsulta.dientes_tratados);
       }
     }
-  }, [editingConsulta]);
+  }, [editingConsulta, isOpen]);
 
   // Reset scroll position when modal opens
   useEffect(() => {
@@ -350,8 +351,10 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
       };
 
       if (editingConsulta) {
+        console.log('🔄 Updating consulta with ID:', editingConsulta.id, 'Data:', consultaData);
         updateMutation.mutate({ id: editingConsulta.id, data: consultaData });
       } else {
+        console.log('➕ Creating new consulta. Data:', consultaData);
         createMutation.mutate(consultaData);
       }
     } catch (error) {

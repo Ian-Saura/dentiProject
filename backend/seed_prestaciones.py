@@ -25,6 +25,8 @@ def seed_prestaciones():
             {"nombre": "Corona", "descripcion": "Colocación de corona dental"},
             {"nombre": "Blanqueamiento", "descripcion": "Blanqueamiento dental"},
             {"nombre": "Ortodoncia", "descripcion": "Tratamiento de ortodoncia"},
+            {"nombre": "Prótesis Parcial Removible", "descripcion": "Prótesis parcial removible (PPR)"},
+            {"nombre": "Prótesis Total Removible", "descripcion": "Prótesis completa removible"},
         ]
         
         for prest_data in prestaciones:
@@ -42,6 +44,8 @@ def seed_prestaciones():
 
 if __name__ == "__main__":
     seed_prestaciones()
+
+
 
 
 

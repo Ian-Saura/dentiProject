@@ -110,6 +110,18 @@ def create_default_prestaciones():
                     categoria="Prevención",
                     tiempo_estimado_min=40
                 ),
+                Prestacion(
+                    codigo="PROT001",
+                    nombre="Prótesis Parcial Removible",
+                    categoria="Prótesis",
+                    tiempo_estimado_min=120
+                ),
+                Prestacion(
+                    codigo="PROT002",
+                    nombre="Prótesis Total Removible",
+                    categoria="Prótesis",
+                    tiempo_estimado_min=150
+                ),
             ]
             
             for prestacion in prestaciones:
