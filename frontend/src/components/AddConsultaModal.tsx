@@ -529,7 +529,9 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Tratamiento *
               </label>
-              <select
+              <input
+                type="text"
+                list="tratamientos-list"
                 value={formData.tratamiento}
                 onChange={(e) => {
                   const selectedTratamiento = e.target.value;
@@ -547,59 +549,41 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
                   });
                 }}
                 className="w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-500 focus:border-transparent"
-              >
+                placeholder="Escribe o selecciona un tratamiento..."
+                required
+              />
+              <datalist id="tratamientos-list">
                 {/* User's custom prestaciones first */}
-                {prestaciones && prestaciones.length > 0 ? (
+                {prestaciones && prestaciones.length > 0 && (
                   <>
-                    <optgroup label="Tus Prestaciones">
-                      {prestaciones
-                        .filter(p => p.activo)
-                        .sort((a, b) => (a.nombre_personalizado || '').localeCompare(b.nombre_personalizado || ''))
-                        .map(p => (
-                          <option key={p.id} value={p.nombre_personalizado}>
-                            {p.nombre_personalizado}
-                          </option>
-                        ))}
-                    </optgroup>
-                    <optgroup label="Prestaciones Comunes">
-                      <option value="Consulta">Consulta</option>
-                      <option value="Consulta de Urgencia">Consulta de Urgencia</option>
-                      <option value="Limpieza">Limpieza</option>
-                      <option value="Operatoria Simple">Operatoria Simple</option>
-                      <option value="Operatoria Compleja">Operatoria Compleja</option>
-                      <option value="Endodoncia">Endodoncia</option>
-                      <option value="Corona">Corona</option>
-                      <option value="Extracción Simple">Extracción Simple</option>
-                      <option value="Extracción Compleja">Extracción Compleja</option>
-                      <option value="Blanqueamiento">Blanqueamiento</option>
-                      <option value="Implante">Implante</option>
-                      <option value="Placa estabilizadora oclusal">Placa estabilizadora oclusal</option>
-                      <option value="Obra social">Obra social</option>
-                    </optgroup>
-                  </>
-                ) : (
-                  <>
-                    <option value="Consulta">Consulta</option>
-                    <option value="Consulta de Urgencia">Consulta de Urgencia</option>
-                    <option value="Limpieza">Limpieza</option>
-                    <option value="Operatoria Simple">Operatoria Simple</option>
-                    <option value="Operatoria Compleja">Operatoria Compleja</option>
-                    <option value="Endodoncia">Endodoncia</option>
-                    <option value="Corona">Corona</option>
-                    <option value="Extracción Simple">Extracción Simple</option>
-                    <option value="Extracción Compleja">Extracción Compleja</option>
-                    <option value="Blanqueamiento">Blanqueamiento</option>
-                    <option value="Implante">Implante</option>
-                    <option value="Placa estabilizadora oclusal">Placa estabilizadora oclusal</option>
-                    <option value="Obra social">Obra social</option>
+                    {prestaciones
+                      .filter(p => p.activo)
+                      .sort((a, b) => (a.nombre_personalizado || '').localeCompare(b.nombre_personalizado || ''))
+                      .map(p => (
+                        <option key={p.id} value={p.nombre_personalizado} />
+                      ))}
                   </>
                 )}
-              </select>
-              {prestaciones && prestaciones.length > 0 && (
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Si seleccionas una prestación que no tienes configurada, se creará automáticamente
-                </p>
-              )}
+                {/* Common prestaciones */}
+                <option value="Consulta" />
+                <option value="Consulta de Urgencia" />
+                <option value="Limpieza" />
+                <option value="Operatoria Simple" />
+                <option value="Operatoria Compleja" />
+                <option value="Endodoncia" />
+                <option value="Corona" />
+                <option value="Extracción Simple" />
+                <option value="Extracción Compleja" />
+                <option value="Blanqueamiento" />
+                <option value="Implante" />
+                <option value="Prótesis Parcial Removible" />
+                <option value="Prótesis Total Removible" />
+                <option value="Placa estabilizadora oclusal" />
+                <option value="Obra social" />
+              </datalist>
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Puedes escribir cualquier tratamiento personalizado. Si no existe, se creará automáticamente
+              </p>
             </div>
 
             {/* Amount */}
