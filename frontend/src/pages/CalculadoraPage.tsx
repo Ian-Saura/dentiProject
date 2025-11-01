@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
-import { calculadoraService, analyticsService } from '@/services';
+import { calculadoraService, analyticsService, configService } from '@/services';
 import { Calculator, DollarSign, Clock, Package, Sparkles, TrendingUp, Target, HelpCircle } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AnimatedCard from '@/components/AnimatedCard';
@@ -18,6 +18,12 @@ const CalculadoraPage: React.FC = () => {
   const [showPersonalizado, setShowPersonalizado] = useState(false);
   const [tratamientoPersonalizado, setTratamientoPersonalizado] = useState('');
   const [showMaterialesHelp, setShowMaterialesHelp] = useState(false);
+
+  // Get user configuration (includes profit margin preference)
+  const { data: config } = useQuery(
+    'configuracion',
+    configService.getConfig
+  );
 
   // Get cost analysis for real-time cost
   const { data: costos } = useQuery(
@@ -389,7 +395,33 @@ const CalculadoraPage: React.FC = () => {
 
               {calculateMutation.data.map((recomendacion, index) => {
                 const emojis = ['🟡', '🟢', '🔵', '🟣'];
-                const isRecommended = recomendacion.margen.includes('Competitivo');
+                
+                // Determine recommended based on user's configured margin
+                const userMargin = config?.margen_ganancia_porcentaje || 50; // Default to 50% if not configured
+                const marginMap: { [key: string]: number } = {
+                  'Supervivencia (25%)': 25,
+                  'Competitivo (50%)': 50,
+                  'Premium (75%)': 75,
+                  'Especialista (100%)': 100,
+                };
+                
+                // Find the margin option that best matches user's configured margin
+                const recomendacionMargin = marginMap[recomendacion.margen] || 50;
+                
+                // Check if this is the closest match to user's margin
+                // If user has 40%, we'll recommend Competitivo (50%) as it's closest
+                // If user has 70%, we'll recommend Premium (75%) as it's closest
+                let isRecommended = false;
+                if (calculateMutation.data) {
+                  const distances = calculateMutation.data.map(r => {
+                    const rMargin = marginMap[r.margen] || 50;
+                    return Math.abs(rMargin - userMargin);
+                  });
+                  const minDistance = Math.min(...distances);
+                  const currentDistance = Math.abs(recomendacionMargin - userMargin);
+                  isRecommended = currentDistance === minDistance;
+                }
+                
                 const costoBase = (formData.tiempo_horas * (costos?.costo_hora_ars || 29000)) + formData.costo_materiales_ars;
                 
                 return (
