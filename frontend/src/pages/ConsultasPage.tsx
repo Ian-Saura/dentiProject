@@ -41,6 +41,9 @@ const ConsultasPage: React.FC = () => {
   });
 
   const handleEdit = (consulta: any) => {
+    console.log('🔵 ConsultasPage - handleEdit called with consulta:', consulta);
+    console.log('🔵 ConsultasPage - Consulta ID:', consulta.id);
+    console.log('🔵 ConsultasPage - Full consulta object:', JSON.stringify(consulta, null, 2));
     setEditingConsulta(consulta);
     setShowModal(true);
   };

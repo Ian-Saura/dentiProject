@@ -91,8 +91,14 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
   // Set editing data
   useEffect(() => {
     if (editingConsulta && isOpen) {
-      console.log('📝 Loading editing data for consulta ID:', editingConsulta.id);
+      console.log('═══════════════════════════════════════════════════');
+      console.log('📝 AddConsultaModal - Received editingConsulta prop');
+      console.log('📝 Consulta ID:', editingConsulta.id);
+      console.log('📝 Paciente:', editingConsulta.paciente?.nombre, editingConsulta.paciente?.apellido);
+      console.log('📝 Tratamiento:', editingConsulta.prestacion_usuario?.nombre_personalizado);
       console.log('📝 Fecha from backend:', editingConsulta.fecha_consulta);
+      console.log('📝 Full editingConsulta:', JSON.stringify(editingConsulta, null, 2));
+      console.log('═══════════════════════════════════════════════════');
       setFormData({
         paciente_id: editingConsulta.paciente.id,
         paciente_nombre: editingConsulta.paciente.nombre,
@@ -353,9 +359,13 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
       };
 
       if (editingConsulta) {
-        console.log('🔄 Updating consulta with ID:', editingConsulta.id);
-        console.log('🔄 Update data:', JSON.stringify(consultaData, null, 2));
-        console.log('🔄 editingConsulta full object:', JSON.stringify(editingConsulta, null, 2));
+        console.log('═══════════════════════════════════════════════════');
+        console.log('🔄 UPDATING CONSULTA');
+        console.log('🔄 Consulta ID being updated:', editingConsulta.id);
+        console.log('🔄 Paciente in editingConsulta:', editingConsulta.paciente?.nombre, editingConsulta.paciente?.apellido);
+        console.log('🔄 Update data being sent:', JSON.stringify(consultaData, null, 2));
+        console.log('🔄 API call will be: PATCH /v1/consultas/' + editingConsulta.id);
+        console.log('═══════════════════════════════════════════════════');
         updateMutation.mutate({ id: editingConsulta.id, data: consultaData });
       } else {
         console.log('➕ Creating new consulta. Data:', consultaData);
