@@ -12,7 +12,7 @@ from app.db.base import Base
 class PrestacionUsuario(Base):
     __tablename__ = "prestaciones_usuario"
     __table_args__ = (
-        UniqueConstraint('usuario_id', 'prestacion_id', name='unique_usuario_prestacion'),
+        UniqueConstraint('usuario_id', 'nombre_personalizado', name='unique_usuario_nombre_personalizado'),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

@@ -312,18 +312,35 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
               // Invalidate cache to refresh prestaciones list
               queryClient.invalidateQueries('prestaciones-usuario');
             } else {
-              console.log('⚠️ Prestación no encontrada en catálogo, usando genérica');
-              // If not in catalog, create a generic one (use first available)
-              const genericPrestacion = basePrestacionesResponse[0];
-              if (genericPrestacion) {
-                const newPrestacion = await prestacionesService.createPrestacionUsuario({
-                  prestacion_id: genericPrestacion.id,
-                  nombre_personalizado: formData.tratamiento,
-                  margen_ganancia_porcentaje: 50
-                });
-                prestacionUsuarioId = newPrestacion.id;
-                console.log('✅ Nueva prestación genérica creada:', prestacionUsuarioId);
-                queryClient.invalidateQueries('prestaciones-usuario');
+              console.log('⚠️ Prestación no encontrada en catálogo, creando prestación personalizada única');
+              // For custom treatments not in catalog, find a base prestacion by category
+              // Use "Consulta General" as default base for custom treatments
+              const consultaBase = basePrestacionesResponse.find(p => 
+                p.nombre.toLowerCase().includes('consulta')
+              ) || basePrestacionesResponse[0]; // Fallback to first if no "Consulta" found
+              
+              if (consultaBase) {
+                console.log('📌 Usando prestación base:', consultaBase.nombre, 'para tratamiento:', formData.tratamiento);
+                
+                // Check if this EXACT custom treatment already exists
+                const existingCustom = prestaciones?.find(p => 
+                  p.nombre_personalizado === formData.tratamiento
+                );
+                
+                if (existingCustom) {
+                  console.log('✅ Tratamiento personalizado ya existe:', existingCustom.id);
+                  prestacionUsuarioId = existingCustom.id;
+                } else {
+                  // Create new unique custom treatment
+                  const newPrestacion = await prestacionesService.createPrestacionUsuario({
+                    prestacion_id: consultaBase.id,
+                    nombre_personalizado: formData.tratamiento,
+                    margen_ganancia_porcentaje: 50
+                  });
+                  prestacionUsuarioId = newPrestacion.id;
+                  console.log('✅ Nueva prestación personalizada creada:', prestacionUsuarioId, 'para:', formData.tratamiento);
+                  queryClient.invalidateQueries('prestaciones-usuario');
+                }
               } else {
                 console.error('❌ No hay prestaciones en el catálogo');
                 toast.error('Error: No hay prestaciones en el catálogo. Contacta al soporte.');

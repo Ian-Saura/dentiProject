@@ -75,21 +75,24 @@ def get_prestacion_usuario(db: Session, prestacion_id: int, usuario_id: int) -> 
 
 
 def create_prestacion_usuario(db: Session, dto: PrestacionUsuarioCreate, usuario_id: int) -> PrestacionUsuario:
-    # Check if prestacion_usuario already exists for this usuario_id and prestacion_id
-    existing_query = select(PrestacionUsuario).where(
-        PrestacionUsuario.usuario_id == usuario_id,
-        PrestacionUsuario.prestacion_id == dto.prestacion_id
-    )
-    existing = db.execute(existing_query).scalar_one_or_none()
-    
-    if existing:
-        # If already exists, update it with new values
-        update_data = dto.model_dump(exclude={'prestacion_id'})  # Don't update prestacion_id
-        for field, value in update_data.items():
-            setattr(existing, field, value)
-        db.commit()
-        db.refresh(existing)
-        return existing
+    # Check if prestacion_usuario already exists for this usuario_id and nombre_personalizado
+    # This allows multiple custom treatments using the same base prestacion
+    if dto.nombre_personalizado:
+        existing_query = select(PrestacionUsuario).where(
+            PrestacionUsuario.usuario_id == usuario_id,
+            PrestacionUsuario.nombre_personalizado == dto.nombre_personalizado
+        )
+        existing = db.execute(existing_query).scalar_one_or_none()
+        
+        if existing:
+            # If already exists with same custom name, update it with new values
+            update_data = dto.model_dump(exclude_unset=True)
+            for field, value in update_data.items():
+                if value is not None:  # Only update non-None values
+                    setattr(existing, field, value)
+            db.commit()
+            db.refresh(existing)
+            return existing
     
     # If doesn't exist, create new one
     prestacion = PrestacionUsuario(**dto.model_dump(), usuario_id=usuario_id)
