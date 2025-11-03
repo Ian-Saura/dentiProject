@@ -280,7 +280,17 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
       }
 
       // Step 1: Find or create prestacion_usuario
-      if (!prestacionUsuarioId && prestaciones) {
+      // IMPORTANT: If we're editing and the treatment name hasn't changed, 
+      // keep the original prestacion_usuario_id
+      const isEditingWithSameTreatment = editingConsulta && 
+        editingConsulta.prestacion_usuario?.nombre_personalizado === formData.tratamiento;
+      
+      if (isEditingWithSameTreatment) {
+        // Keep the original prestacion_usuario_id if treatment hasn't changed
+        prestacionUsuarioId = editingConsulta.prestacion_usuario.id;
+        console.log('✅ Manteniendo prestacion_usuario_id original:', prestacionUsuarioId, 'para:', formData.tratamiento);
+      } else if (!prestacionUsuarioId && prestaciones) {
+        // Only look for or create a new prestacion if we don't have one or treatment changed
         const existingPrestacion = prestaciones.find(p => 
           p.nombre_personalizado === formData.tratamiento
         );
