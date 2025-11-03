@@ -6,7 +6,7 @@ import { consultasService, pacientesService, prestacionesService } from '@/servi
 import toast from 'react-hot-toast';
 import AddPacienteModal from './AddPacienteModal';
 import Odontograma from './Odontograma';
-import { dateInputToISO } from '../utils/dateUtils';
+import { dateInputToISO, isoToDateInput } from '../utils/dateUtils';
 
 interface AddConsultaModalProps {
   isOpen: boolean;
@@ -92,6 +92,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
   useEffect(() => {
     if (editingConsulta && isOpen) {
       console.log('📝 Loading editing data for consulta ID:', editingConsulta.id);
+      console.log('📝 Fecha from backend:', editingConsulta.fecha_consulta);
       setFormData({
         paciente_id: editingConsulta.paciente.id,
         paciente_nombre: editingConsulta.paciente.nombre,
@@ -101,9 +102,10 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         tratamiento: editingConsulta.prestacion_usuario.nombre_personalizado,
         monto_ars: editingConsulta.monto_ars,
         medio_pago: editingConsulta.medio_pago,
-        fecha_consulta: editingConsulta.fecha_consulta.split('T')[0],
+        fecha_consulta: isoToDateInput(editingConsulta.fecha_consulta),
         observaciones: editingConsulta.observaciones || ''
       });
+      console.log('📝 Fecha converted for input:', isoToDateInput(editingConsulta.fecha_consulta));
       setPatientSearchTerm(`${editingConsulta.paciente.dni} - ${editingConsulta.paciente.nombre} ${editingConsulta.paciente.apellido}`);
       // Load selected teeth if available
       if (editingConsulta.dientes_tratados && editingConsulta.dientes_tratados.length > 0) {
@@ -351,7 +353,9 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
       };
 
       if (editingConsulta) {
-        console.log('🔄 Updating consulta with ID:', editingConsulta.id, 'Data:', consultaData);
+        console.log('🔄 Updating consulta with ID:', editingConsulta.id);
+        console.log('🔄 Update data:', JSON.stringify(consultaData, null, 2));
+        console.log('🔄 editingConsulta full object:', JSON.stringify(editingConsulta, null, 2));
         updateMutation.mutate({ id: editingConsulta.id, data: consultaData });
       } else {
         console.log('➕ Creating new consulta. Data:', consultaData);
