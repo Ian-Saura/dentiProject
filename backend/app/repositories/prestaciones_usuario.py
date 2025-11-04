@@ -85,13 +85,8 @@ def create_prestacion_usuario(db: Session, dto: PrestacionUsuarioCreate, usuario
         existing = db.execute(existing_query).scalar_one_or_none()
         
         if existing:
-            # If already exists with same custom name, update it with new values
-            update_data = dto.model_dump(exclude_unset=True)
-            for field, value in update_data.items():
-                if value is not None:  # Only update non-None values
-                    setattr(existing, field, value)
-            db.commit()
-            db.refresh(existing)
+            # If already exists with same custom name, just return it
+            # DO NOT update to avoid affecting other consultas that use this prestacion
             return existing
     
     # If doesn't exist, create new one
