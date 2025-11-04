@@ -75,21 +75,9 @@ def get_prestacion_usuario(db: Session, prestacion_id: int, usuario_id: int) -> 
 
 
 def create_prestacion_usuario(db: Session, dto: PrestacionUsuarioCreate, usuario_id: int) -> PrestacionUsuario:
-    # Check if prestacion_usuario already exists for this usuario_id and nombre_personalizado
-    # This allows multiple custom treatments using the same base prestacion
-    if dto.nombre_personalizado:
-        existing_query = select(PrestacionUsuario).where(
-            PrestacionUsuario.usuario_id == usuario_id,
-            PrestacionUsuario.nombre_personalizado == dto.nombre_personalizado
-        )
-        existing = db.execute(existing_query).scalar_one_or_none()
-        
-        if existing:
-            # If already exists with same custom name, just return it
-            # DO NOT update to avoid affecting other consultas that use this prestacion
-            return existing
-    
-    # If doesn't exist, create new one
+    # ALWAYS create a new prestacion_usuario
+    # Each consulta is unique and needs its own prestacion_usuario
+    # Even if the name is the same, they represent different services at different times
     prestacion = PrestacionUsuario(**dto.model_dump(), usuario_id=usuario_id)
     db.add(prestacion)
     db.commit()

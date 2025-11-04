@@ -290,20 +290,11 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         prestacionUsuarioId = editingConsulta.prestacion_usuario.id;
         console.log('✅ Manteniendo prestacion_usuario_id original:', prestacionUsuarioId, 'para:', formData.tratamiento);
       } else if (!prestacionUsuarioId) {
-        // Treatment changed or creating new: find or create prestacion
-        console.log('🔍 Tratamiento cambió o creando nuevo. Buscando/creando prestación para:', formData.tratamiento);
+        // Treatment changed or creating new: ALWAYS create a new unique prestacion
+        // Each consulta needs its own unique prestacion_usuario
+        console.log('🔍 Creando nueva prestación única para consulta. Tratamiento:', formData.tratamiento);
         
-        // First, check if this treatment already exists for this user
-        const existingPrestacion = prestaciones?.find(p => 
-          p.nombre_personalizado === formData.tratamiento
-        );
-        
-        if (existingPrestacion) {
-          prestacionUsuarioId = existingPrestacion.id;
-          console.log('✅ Prestación existente encontrada:', prestacionUsuarioId, 'para:', formData.tratamiento);
-        } else {
-          // Create new prestacion_usuario if not found
-          try {
+        try {
             console.log('🔍 Buscando prestación base para:', formData.tratamiento);
             // Find the base prestacion from catalog by name
             const basePrestacionesResponse = await prestacionesService.getPrestaciones();

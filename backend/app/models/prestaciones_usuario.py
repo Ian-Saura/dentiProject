@@ -11,9 +11,8 @@ from app.db.base import Base
 
 class PrestacionUsuario(Base):
     __tablename__ = "prestaciones_usuario"
-    __table_args__ = (
-        UniqueConstraint('usuario_id', 'nombre_personalizado', name='unique_usuario_nombre_personalizado'),
-    )
+    # No unique constraints - each consulta has its own unique prestacion_usuario
+    __table_args__ = ()
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     usuario_id: Mapped[int] = mapped_column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False)
