@@ -795,7 +795,14 @@ const PatientDashboardPage: React.FC = () => {
                       }}
                     >
                       <td>
-                        {formatDateToDDMMYYYY(consulta.fecha_consulta)}
+                        {(() => {
+                          console.log('🔍 DEBUG Fecha en tabla:', {
+                            raw: consulta.fecha_consulta,
+                            formatted: formatDateToDDMMYYYY(consulta.fecha_consulta),
+                            consultaId: consulta.id
+                          });
+                          return formatDateToDDMMYYYY(consulta.fecha_consulta);
+                        })()}
                       </td>
                       <td>
                         {consulta.prestacion_usuario?.nombre_personalizado || 'Sin especificar'}

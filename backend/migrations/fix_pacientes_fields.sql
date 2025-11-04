@@ -34,3 +34,7 @@ COMMENT ON COLUMN pacientes.observaciones_medicas IS 'Observaciones médicas del
 
 
 
+
+
+
+

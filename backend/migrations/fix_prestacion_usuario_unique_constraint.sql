@@ -21,3 +21,4 @@ ON prestaciones_usuario (usuario_id, prestacion_id);
 
 COMMIT;
 
+

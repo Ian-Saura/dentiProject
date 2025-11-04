@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
+from loguru import logger
 
 from app.models import PrestacionUsuario
 from app.schemas import PrestacionUsuarioCreate, PrestacionUsuarioUpdate
@@ -78,10 +79,13 @@ def create_prestacion_usuario(db: Session, dto: PrestacionUsuarioCreate, usuario
     # ALWAYS create a new prestacion_usuario
     # Each consulta is unique and needs its own prestacion_usuario
     # Even if the name is the same, they represent different services at different times
+    logger.info(f"🔧 create_prestacion_usuario called with: usuario_id={usuario_id}, dto={dto.model_dump()}")
     prestacion = PrestacionUsuario(**dto.model_dump(), usuario_id=usuario_id)
+    logger.info(f"🔧 About to insert prestacion_usuario into DB...")
     db.add(prestacion)
     db.commit()
     db.refresh(prestacion)
+    logger.info(f"🔧 prestacion_usuario created with ID: {prestacion.id}, nombre: {prestacion.nombre_personalizado}")
     return prestacion
 
 

@@ -289,7 +289,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         // Keep the original prestacion_usuario_id if treatment hasn't changed
         prestacionUsuarioId = editingConsulta.prestacion_usuario.id;
         console.log('✅ Manteniendo prestacion_usuario_id original:', prestacionUsuarioId, 'para:', formData.tratamiento);
-      } else if (!prestacionUsuarioId) {
+      } else {
         // Treatment changed or creating new: ALWAYS create a new unique prestacion
         // Each consulta needs its own unique prestacion_usuario
         console.log('🔍 Creando nueva prestación única para consulta. Tratamiento:', formData.tratamiento);

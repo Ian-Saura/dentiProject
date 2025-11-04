@@ -259,8 +259,8 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
                 type="text"
                 value={formData.dni}
                 onChange={(e) => {
-                  setFormData({ ...formData, dni: e.target.value });
-                  if (touched.dni) setTouched({ ...touched, dni: true });
+                    setFormData({ ...formData, dni: e.target.value });
+                    if (touched.dni) setTouched({ ...touched, dni: true });
                 }}
                 onBlur={() => setTouched({ ...touched, dni: true })}
                 disabled={false}
