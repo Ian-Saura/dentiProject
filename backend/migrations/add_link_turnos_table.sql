@@ -56,3 +56,5 @@ COMMENT ON COLUMN link_turnos.usos_totales IS 'Total number of appointments book
 
 
 
+
+
