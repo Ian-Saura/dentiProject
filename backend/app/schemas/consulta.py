@@ -24,6 +24,8 @@ class EstadoConsulta(str, enum.Enum):
 
 
 class ConsultaCreate(BaseModel):
+    model_config = {"extra": "forbid"}
+
     paciente_id: int
     prestacion_usuario_id: int
     fecha_consulta: date
@@ -38,11 +40,10 @@ class ConsultaCreate(BaseModel):
     notas_privadas: Optional[str] = Field(None, max_length=1000)
     descuento_aplicado: float = Field(0.0, ge=0, le=100)
 
-    class Config:
-        model_config = {"extra": "forbid"}
-
 
 class ConsultaUpdate(BaseModel):
+    model_config = {"extra": "forbid"}
+
     paciente_id: Optional[int] = None
     prestacion_usuario_id: Optional[int] = None
     fecha_consulta: Optional[date] = None
@@ -57,14 +58,12 @@ class ConsultaUpdate(BaseModel):
     notas_privadas: Optional[str] = Field(None, max_length=1000)
     descuento_aplicado: Optional[float] = Field(None, ge=0, le=100)
 
-    class Config:
-        model_config = {"extra": "forbid"}
-
 
 class PacienteSimple(BaseModel):
     id: int
     nombre: str
     apellido: Optional[str] = ""
+    dni: Optional[str] = None
     
     model_config = {"from_attributes": True}
 

@@ -3,10 +3,12 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class PacienteCreate(BaseModel):
+    model_config = {"extra": "forbid"}
+
     nombre: str = Field(..., max_length=100)
     apellido: str = Field(..., max_length=100)
     dni: str = Field(..., min_length=7, max_length=20, description="DNI obligatorio como identificador único")
@@ -21,11 +23,10 @@ class PacienteCreate(BaseModel):
     medicamentos_actuales: Optional[str] = Field(None, max_length=1000)
     observaciones_medicas: Optional[str] = Field(None, max_length=1000)
 
-    class Config:
-        model_config = {"extra": "forbid"}
-
 
 class PacienteUpdate(BaseModel):
+    model_config = {"extra": "forbid"}
+
     nombre: Optional[str] = Field(None, max_length=100)
     apellido: Optional[str] = Field(None, max_length=100)
     dni: Optional[str] = Field(None, max_length=20)
@@ -40,9 +41,6 @@ class PacienteUpdate(BaseModel):
     medicamentos_actuales: Optional[str] = Field(None, max_length=1000)
     observaciones_medicas: Optional[str] = Field(None, max_length=1000)
     activo: Optional[bool] = None
-
-    class Config:
-        model_config = {"extra": "forbid"}
 
 
 class PacienteOut(BaseModel):
@@ -63,16 +61,14 @@ class PacienteOut(BaseModel):
     fecha_registro: datetime  # Changed from date to datetime to match model
     activo: bool
 
-    @validator('email')
+    @field_validator('email', mode='before')
+    @classmethod
     def validate_email(cls, v):
         """Allow empty strings or None for email"""
-        if v is None or v == '' or v.strip() == '':
+        if v is None or v == '' or (isinstance(v, str) and v.strip() == ''):
             return None
-        # If it has content, validate it's a proper email
-        if '@' not in v:
+        if isinstance(v, str) and '@' not in v:
             raise ValueError('Email debe contener @')
         return v
 
-    class Config:
-        from_attributes = True
-        model_config = {"exclude_none": True}
+    model_config = {"from_attributes": True}

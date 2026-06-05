@@ -590,8 +590,7 @@ const PacientesPage: React.FC = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => {
-                          const fullName = `${paciente.nombre}${paciente.apellido ? ' ' + paciente.apellido : ''}`.trim();
-                          navigate(`/${mode}/pacientes/${encodeURIComponent(fullName)}/dashboard`);
+                          navigate(`/${mode}/pacientes/${paciente.id}/dashboard`);
                         }}
                         className="flex flex-col items-center gap-1 p-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-colors"
                       >

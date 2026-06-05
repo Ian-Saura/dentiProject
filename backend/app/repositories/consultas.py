@@ -76,6 +76,8 @@ def count_consultas(
             query = query.where(Consulta.fecha_consulta <= filtros["to"])
         if "medio_pago" in filtros and filtros["medio_pago"]:
             query = query.where(Consulta.medio_pago == filtros["medio_pago"])
+        if "paciente_id" in filtros and filtros["paciente_id"]:
+            query = query.where(Consulta.paciente_id == filtros["paciente_id"])
         if "paciente_q" in filtros and filtros["paciente_q"]:
             q = filtros["paciente_q"]
             query = query.join(Paciente, Consulta.paciente_id == Paciente.id).where(

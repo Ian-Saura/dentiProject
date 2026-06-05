@@ -110,9 +110,8 @@ export default function TurnosPage() {
   };
 
   const handleGoToPatientDashboard = () => {
-    if (turnoSeleccionado) {
-      const fullName = `${turnoSeleccionado.nombre_paciente} ${turnoSeleccionado.apellido_paciente}`;
-      navigate(`/${mode}/pacientes/${encodeURIComponent(fullName)}/dashboard`);
+    if (turnoSeleccionado?.paciente_id) {
+      navigate(`/${mode}/pacientes/${turnoSeleccionado.paciente_id}/dashboard`);
     }
   };
 

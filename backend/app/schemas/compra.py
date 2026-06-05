@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 
 
 class CompraCreate(BaseModel):
+    model_config = {"extra": "forbid"}
+
     insumo_basico_id: int
     cantidad: float = Field(..., gt=0)
     precio_total_ars: float = Field(..., gt=0)
@@ -16,11 +18,10 @@ class CompraCreate(BaseModel):
     fecha_vencimiento: Optional[date] = None
     observaciones: Optional[str] = Field(None, max_length=1000)
 
-    class Config:
-        model_config = {"extra": "forbid"}
-
 
 class CompraUpdate(BaseModel):
+    model_config = {"extra": "forbid"}
+
     insumo_basico_id: Optional[int] = None
     cantidad: Optional[float] = Field(None, gt=0)
     precio_total_ars: Optional[float] = Field(None, gt=0)
@@ -29,9 +30,6 @@ class CompraUpdate(BaseModel):
     lote: Optional[str] = Field(None, max_length=50)
     fecha_vencimiento: Optional[date] = None
     observaciones: Optional[str] = Field(None, max_length=1000)
-
-    class Config:
-        model_config = {"extra": "forbid"}
 
 
 class CompraOut(BaseModel):
@@ -46,6 +44,4 @@ class CompraOut(BaseModel):
     observaciones: Optional[str]
     fecha_creacion: date
 
-    class Config:
-        from_attributes = True
-        model_config = {"exclude_none": True}
+    model_config = {"from_attributes": True}

@@ -15,7 +15,7 @@ import toast from 'react-hot-toast';
 import { formatDateToDDMMYYYY, calculateAge, formatDateToShortLocal, formatDateToLongLocal } from '@/utils/dateFormat';
 
 const PatientDashboardPage: React.FC = () => {
-  const { patientName: encodedPatientName } = useParams<{ patientName: string }>();
+  const { patientId: patientIdParam } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [showClinicalModal, setShowClinicalModal] = useState(false);
@@ -27,101 +27,33 @@ const PatientDashboardPage: React.FC = () => {
   const [selectedConsulta, setSelectedConsulta] = useState<any>(null);
   const [selectedConsultationId, setSelectedConsultationId] = useState<number | null>(null);
   const [clinicalNotes, setClinicalNotes] = useState<any[]>([]);
-  const [patientId, setPatientId] = useState<number | null>(null);
 
-  // Decode the patient name from URL
-  const patientName = encodedPatientName ? decodeURIComponent(encodedPatientName) : null;
+  const patientId = patientIdParam ? parseInt(patientIdParam, 10) : null;
 
-  // Fetch patient consultations - use ID if available, otherwise name
+  // Fetch patient by ID directly
+  const { data: currentPatient, refetch: refetchPatients, isLoading: loadingPatients } = useQuery(
+    ['paciente', patientId],
+    () => pacientesService.getPaciente(patientId!),
+    {
+      enabled: !!patientId && !isNaN(patientId),
+    }
+  );
+
+  const patientName = currentPatient ? `${currentPatient.nombre} ${currentPatient.apellido}` : null;
+
+  // Fetch patient consultations by ID
   const { data: consultas = [], isLoading: loadingConsultas, refetch: refetchConsultas } = useQuery(
-    ['patient-consultas', patientId, patientName],
+    ['patient-consultas', patientId],
     () => {
       if (patientId) {
         return consultasService.getConsultasByPacienteId(patientId);
-      } else if (patientName) {
-        return consultasService.getConsultasByPaciente(patientName);
       }
       return Promise.resolve([]);
     },
     { 
-      enabled: !!patientName || !!patientId,
-      onSuccess: (data) => {
-        // Get patient ID from first consultation if not already set
-        if (data && data.length > 0 && data[0].paciente && !patientId) {
-          setPatientId(data[0].paciente.id);
-        }
-      }
+      enabled: !!patientId,
     }
   );
-
-  // Fetch patient details to get ID and full patient info
-  const { data: pacientesData, refetch: refetchPatients, isLoading: loadingPatients } = useQuery(
-    'pacientes',
-    () => pacientesService.getPacientes(),
-    {
-      enabled: !!patientName,
-      onSuccess: (data) => {
-        if (data && patientName) {
-          const patient = data.find(p => `${p.nombre} ${p.apellido}` === patientName);
-          if (patient) {
-            setPatientId(patient.id);
-          }
-        }
-      }
-    }
-  );
-
-  // Get full patient data - Try exact match first, then partial match
-  const currentPatient = React.useMemo(() => {
-    if (!pacientesData || !patientName) return undefined;
-    
-    // Try exact match first (nombre + apellido)
-    let patient = pacientesData.find(p => `${p.nombre} ${p.apellido}` === patientName);
-    
-    // If not found, try matching just nombre or apellido
-    if (!patient) {
-      patient = pacientesData.find(p => 
-        p.nombre === patientName || 
-        p.apellido === patientName ||
-        `${p.apellido} ${p.nombre}` === patientName
-      );
-    }
-    
-    // If still not found, try case-insensitive partial match
-    if (!patient) {
-      const lowerName = patientName.toLowerCase();
-      patient = pacientesData.find(p => 
-        p.nombre.toLowerCase().includes(lowerName) ||
-        p.apellido.toLowerCase().includes(lowerName) ||
-        `${p.nombre} ${p.apellido}`.toLowerCase() === lowerName
-      );
-    }
-    
-    return patient;
-  }, [pacientesData, patientName]);
-  
-  // Update patientId when currentPatient is found and refetch consultas
-  React.useEffect(() => {
-    if (currentPatient && currentPatient.id !== patientId) {
-      setPatientId(currentPatient.id);
-      // Refetch consultations with the correct patient ID
-      setTimeout(() => refetchConsultas(), 100);
-    }
-  }, [currentPatient, patientId, refetchConsultas]);
-  
-  // Debug: Log para verificar el estado de carga
-  React.useEffect(() => {
-    console.log('Debug PatientDashboard:', {
-      patientName,
-      loadingPatients,
-      loadingConsultas,
-      hasPacientesData: !!pacientesData,
-      pacientesCount: pacientesData?.length,
-      currentPatient: currentPatient ? `${currentPatient.nombre} ${currentPatient.apellido}` : null,
-      patientId,
-      allPatientNames: pacientesData?.map(p => `${p.nombre} ${p.apellido}`).slice(0, 5)
-    });
-  }, [patientName, loadingPatients, loadingConsultas, pacientesData, currentPatient, patientId]);
 
   // Get next upcoming appointment (consultas pendientes)
   const nextAppointment = consultas

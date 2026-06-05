@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 from datetime import date, time, datetime, timedelta
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, func
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
@@ -59,7 +59,7 @@ def count_turnos(
     paciente_id: Optional[int] = None,
 ) -> int:
     """Cuenta turnos del profesional con filtros opcionales"""
-    query = select(Turno).where(Turno.usuario_id == usuario_id)
+    query = select(func.count(Turno.id)).where(Turno.usuario_id == usuario_id)
 
     if fecha_desde:
         query = query.where(Turno.fecha >= fecha_desde)
@@ -70,8 +70,7 @@ def count_turnos(
     if paciente_id:
         query = query.where(Turno.paciente_id == paciente_id)
 
-    result = db.execute(query)
-    return len(result.scalars().all())
+    return db.execute(query).scalar() or 0
 
 
 def get_turno(db: Session, turno_id: int, usuario_id: int) -> Optional[Turno]:

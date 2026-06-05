@@ -29,6 +29,7 @@ from app.services.user_service import UserService
 from app.services.google_auth import GoogleAuthService
 from app.services.auditoria import AuditoriaService
 from app.services.password_reset import PasswordResetService
+from loguru import logger
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -326,15 +327,9 @@ async def forgot_password(
     reset_code = PasswordResetService.create_reset_token(db, request_data.email)
     
     if reset_code:
-        # TODO: Aquí enviar el código por email
-        # Por ahora, en desarrollo, lo retornamos (SOLO PARA TESTING)
-        # En producción, solo enviar por email y retornar success
-        return {
-            "message": "Si el email existe, recibirás un código de verificación",
-            "reset_code": reset_code  # REMOVER EN PRODUCCIÓN
-        }
+        # TODO: Send the code via email (e.g. SendGrid, SES, etc.)
+        logger.info(f"Password reset code generated for {request_data.email}")
     
-    # Siempre retornar éxito para no revelar si el email existe
     return {
         "message": "Si el email existe, recibirás un código de verificación"
     }

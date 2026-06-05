@@ -101,6 +101,7 @@ class TurnoUpdate(BaseModel):
     paciente_id: Optional[int] = None
     nombre_paciente: Optional[str] = None
     apellido_paciente: Optional[str] = None
+    dni_paciente: Optional[str] = None
     telefono_paciente: Optional[str] = None
     email_paciente: Optional[str] = None
     motivo_consulta: Optional[str] = None

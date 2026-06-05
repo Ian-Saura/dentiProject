@@ -86,20 +86,30 @@ def create_turno(
     """Crea un nuevo turno desde el panel del profesional"""
     tenant = TenantContext(current_user)
     
-    # Verificar disponibilidad
-    disponible = turnos_repo.check_disponibilidad(
-        db=db,
-        usuario_id=tenant.user_id,
-        fecha=turno.fecha,
-        hora_inicio=turno.hora_inicio,
-        duracion_minutos=turno.duracion_minutos,
-    )
-    
-    if not disponible:
+    if turno.fecha < date.today():
         raise HTTPException(
             status_code=400,
-            detail="Ya existe un turno en ese horario"
+            detail="No se puede crear un turno en una fecha pasada"
         )
+    
+    # Check if overlap is allowed by configuration
+    config = turnos_repo.get_configuracion_turnos(db, tenant.user_id)
+    permitir_superposicion = config.permitir_superposicion if config else False
+    
+    if not permitir_superposicion:
+        disponible = turnos_repo.check_disponibilidad(
+            db=db,
+            usuario_id=tenant.user_id,
+            fecha=turno.fecha,
+            hora_inicio=turno.hora_inicio,
+            duracion_minutos=turno.duracion_minutos,
+        )
+        
+        if not disponible:
+            raise HTTPException(
+                status_code=400,
+                detail="Ya existe un turno en ese horario"
+            )
     
     # Si se proporciona DNI, buscar o crear paciente automáticamente
     if turno.dni_paciente and not turno.paciente_id:
@@ -450,6 +460,12 @@ def cancelar_turno_publico(
     turno = turnos_repo.get_turno_by_token(db, token)
     if not turno:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    
+    if turno.estado in ('cancelado', 'completado'):
+        raise HTTPException(
+            status_code=400,
+            detail=f"No se puede cancelar un turno con estado '{turno.estado}'"
+        )
     
     turno.estado = 'cancelado'
     if request.motivo:

@@ -325,7 +325,7 @@ class RecordatoriosService:
         """
         # Get patient phone and name
         telefono = turno.telefono_paciente or (turno.paciente.telefono if turno.paciente else None)
-        nombre_paciente = turno.paciente_nombre or (turno.paciente.nombre if turno.paciente else "paciente")
+        nombre_paciente = turno.nombre_paciente or (turno.paciente.nombre if turno.paciente else "paciente")
         
         # Si no hay teléfono, no enviar (no es error)
         if not telefono or telefono.strip() == "":

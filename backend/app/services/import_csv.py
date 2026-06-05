@@ -310,8 +310,9 @@ class ImportCsvService:
                             prestaciones_map[tratamiento_key] = prestacion_usuario_id
                             print(f"  ➕ Fila {fila_num}: Tratamiento nuevo: '{tratamiento_name}' (ID: {prestacion_usuario_id}, Base: {prestacion_base.nombre})")
                         except Exception as e:
-                            # Hacer rollback de la sesión para poder continuar
                             db.rollback()
+                            consultas_creadas.clear()
+                            total_ars = 0
                             
                             # Si falla por duplicado, buscar la prestación existente
                             if "unique_usuario_prestacion" in str(e).lower() or "duplicate" in str(e).lower():
@@ -428,7 +429,11 @@ class ImportCsvService:
                 errores_detalle.append(error_msg)
                 print(f"  ❌ {error_msg}")
                 print(f"     Traceback: {traceback.format_exc()}")
+                # Rollback wipes ALL flushed data (including prior rows), so
+                # reset the success counters to avoid reporting phantom inserts.
                 db.rollback()
+                consultas_creadas.clear()
+                total_ars = 0
                 continue
 
         # Commit final

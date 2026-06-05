@@ -115,17 +115,26 @@ def normalizar_medio_pago(medio_pago):
         'cash': 'efectivo',
         'transferencia': 'transferencia',
         'transfer': 'transferencia',
+        'transf': 'transferencia',
         'débito': 'debito',
         'debito': 'debito',
         'debit': 'debito',
+        'tarjeta de debito': 'debito',
+        'tarjeta de débito': 'debito',
+        'tarjeta debito': 'debito',
         'crédito': 'credito',
         'credito': 'credito',
         'credit': 'credito',
+        'tarjeta de credito': 'credito',
+        'tarjeta de crédito': 'credito',
+        'tarjeta credito': 'credito',
+        'tarjeta': 'credito',
         'mercado pago': 'mercadopago',
         'mercadopago': 'mercadopago',
         'mp': 'mercadopago',
         'otros': 'otro',
-        'other': 'otro'
+        'other': 'otro',
+        'otro': 'otro',
     }
 
-    return normalizaciones.get(medio_clean, medio_pago.strip().lower())
+    return normalizaciones.get(medio_clean, 'otro')

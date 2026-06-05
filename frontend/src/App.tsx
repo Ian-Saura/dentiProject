@@ -234,7 +234,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/analytical/pacientes/:patientName/dashboard"
+        path="/analytical/pacientes/:patientId/dashboard"
         element={
           <ProtectedRoute>
             <AnalyticalLayout>
@@ -326,7 +326,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/operational/pacientes/:patientName/dashboard"
+        path="/operational/pacientes/:patientId/dashboard"
         element={
           <ProtectedRoute>
             <OperationalLayout>

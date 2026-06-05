@@ -7,7 +7,7 @@ VPS_USER="root"
 VPS_IP="66.97.44.23"
 VPS_PORT="5661"
 VPS_PASSWORD="EfHrx&0P1U3aFb"
-PROJECT_DIR="/opt/dentiproject"
+PROJECT_DIR="/root/dentiproject"
 
 # Colors
 GREEN='\033[0;32m'

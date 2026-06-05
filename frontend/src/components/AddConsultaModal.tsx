@@ -366,7 +366,7 @@ const AddConsultaModal: React.FC<AddConsultaModalProps> = ({
         monto_ars: formData.monto_ars,
         medio_pago: formData.medio_pago,
         dientes_tratados: selectedTeeth,
-        observaciones: formData.observaciones || undefined
+        observaciones: formData.observaciones?.trim() || null
       };
 
       if (editingConsulta) {

@@ -40,6 +40,4 @@ class PrestacionOut(BaseModel):
     activo: bool
     fecha_creacion: datetime
 
-    class Config:
-        from_attributes = True
-        model_config = {"exclude_none": True}
+    model_config = {"from_attributes": True}

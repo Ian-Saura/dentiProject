@@ -55,17 +55,23 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
     dni: false
   });
 
-  // Set initial data if provided
+  // Track whether initial data has been loaded to avoid resetting on parent re-renders.
+  // initialData is an inline object whose reference changes every render, so we
+  // compare by editingPatientId instead to run only when a different patient is loaded.
+  const [loadedPatientId, setLoadedPatientId] = useState<number | null | undefined>(null);
+
   useEffect(() => {
-    if (initialData) {
+    if (initialData && editingPatientId !== loadedPatientId) {
       setFormData(prev => ({
         ...prev,
         ...initialData,
-        // Convertir fecha ISO a formato del input date
         fecha_nacimiento: isoToDateInput(initialData.fecha_nacimiento) || initialData.fecha_nacimiento || ''
       }));
+      setLoadedPatientId(editingPatientId);
+    } else if (!initialData && !editingPatientId && loadedPatientId !== null) {
+      setLoadedPatientId(null);
     }
-  }, [initialData]);
+  }, [initialData, editingPatientId, loadedPatientId]);
 
   const createMutation = useMutation(pacientesService.createPaciente, {
     onSuccess: (data) => {
@@ -135,15 +141,20 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
       return;
     }
 
-    // Prepare data, removing empty fields if not provided
+    // Prepare data for submission.
+    // When updating, send null for cleared optional fields so the backend actually
+    // clears them (undefined is omitted from JSON and exclude_unset=True skips it).
+    // When creating, use undefined so the backend applies its own defaults.
+    const emptyVal = editingPatientId ? null : undefined;
     const dataToSend = {
       ...formData,
-      email: formData.email?.trim() === '' ? undefined : formData.email,
-      telefono: formData.telefono?.trim() === '' ? undefined : formData.telefono,
-      fecha_nacimiento: dateInputToISO(formData.fecha_nacimiento),
-      obra_social: formData.obra_social?.trim() === '' ? undefined : formData.obra_social,
-      alergias: formData.alergias?.trim() === '' ? undefined : formData.alergias,
-      medicamentos_actuales: formData.medicamentos_actuales?.trim() === '' ? undefined : formData.medicamentos_actuales,
+      email: formData.email?.trim() === '' ? emptyVal : formData.email,
+      telefono: formData.telefono?.trim() === '' ? emptyVal : formData.telefono,
+      fecha_nacimiento: dateInputToISO(formData.fecha_nacimiento) ?? emptyVal,
+      obra_social: formData.obra_social?.trim() === '' ? emptyVal : formData.obra_social,
+      alergias: formData.alergias?.trim() === '' ? emptyVal : formData.alergias,
+      medicamentos_actuales: formData.medicamentos_actuales?.trim() === '' ? emptyVal : formData.medicamentos_actuales,
+      observaciones_medicas: formData.observaciones_medicas?.trim() === '' ? emptyVal : formData.observaciones_medicas,
     };
 
     if (editingPatientId) {
@@ -171,6 +182,7 @@ const AddPacienteModal: React.FC<AddPacienteModalProps> = ({
       apellido: false,
       dni: false
     });
+    setLoadedPatientId(null);
     onClose();
   };
 

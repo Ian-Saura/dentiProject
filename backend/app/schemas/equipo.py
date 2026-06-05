@@ -17,6 +17,8 @@ class EquipoCreate(BaseModel):
 
 
 class EquipoUpdate(BaseModel):
+    model_config = {"extra": "forbid"}
+
     nombre_equipo: Optional[str] = Field(None, max_length=150)
     monto_compra_usd: Optional[float] = Field(None, gt=0)
     fecha_compra: Optional[date] = None
@@ -25,9 +27,6 @@ class EquipoUpdate(BaseModel):
     modelo: Optional[str] = Field(None, max_length=100)
     observaciones: Optional[str] = Field(None, max_length=1000)
     activo: Optional[bool] = None
-
-    class Config:
-        model_config = {"extra": "forbid"}
 
 
 class EquipoOut(BaseModel):
@@ -42,6 +41,4 @@ class EquipoOut(BaseModel):
     activo: bool
     fecha_creacion: datetime  # Changed from date to datetime to match model
 
-    class Config:
-        from_attributes = True
-        model_config = {"exclude_none": True}
+    model_config = {"from_attributes": True}

@@ -62,16 +62,16 @@ export const consultasService = {
   },
 
   async getConsultasByPaciente(pacienteNombre: string): Promise<Consulta[]> {
-    const response = await api.get<{ data: Consulta[]; total: number }>('/consultas/', {
+    const response = await api.get<Consulta[]>('/consultas/', {
       params: { paciente_q: pacienteNombre, limit: 1000 }
     });
-    return response.data.data || response.data;
+    return response.data;
   },
 
   async getConsultasByPacienteId(pacienteId: number): Promise<Consulta[]> {
-    const response = await api.get<{ data: Consulta[]; total: number }>('/consultas/', {
+    const response = await api.get<Consulta[]>('/consultas/', {
       params: { paciente_id: pacienteId, limit: 1000 }
     });
-    return response.data.data || response.data;
+    return response.data;
   },
 };

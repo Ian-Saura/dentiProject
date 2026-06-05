@@ -20,14 +20,13 @@ class GastoCreate(BaseModel):
 
 
 class GastoUpdate(BaseModel):
+    model_config = {"extra": "forbid"}
+
     concepto: Optional[str] = Field(None, max_length=100)
     monto_mensual: Optional[float] = Field(None, ge=0)
     moneda: Optional[MonedaGasto] = None
     observaciones: Optional[str] = Field(None, max_length=1000)
     activo: Optional[bool] = None
-
-    class Config:
-        model_config = {"extra": "forbid"}
 
 
 class GastoOut(BaseModel):
@@ -41,6 +40,4 @@ class GastoOut(BaseModel):
     fecha_creacion: datetime
     fecha_actualizacion: datetime
 
-    class Config:
-        from_attributes = True
-        model_config = {"exclude_none": True}
+    model_config = {"from_attributes": True}

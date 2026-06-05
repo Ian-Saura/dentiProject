@@ -20,11 +20,32 @@ const ConsultasPage: React.FC = () => {
 
   const queryClient = useQueryClient();
 
+  const getDateRange = (filter: string) => {
+    const now = new Date();
+    switch (filter) {
+      case 'Este mes': {
+        const from = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { from: from.toISOString().split('T')[0], to: now.toISOString().split('T')[0] };
+      }
+      case 'Último mes': {
+        const from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const to = new Date(now.getFullYear(), now.getMonth(), 0);
+        return { from: from.toISOString().split('T')[0], to: to.toISOString().split('T')[0] };
+      }
+      case 'Este año': {
+        const from = new Date(now.getFullYear(), 0, 1);
+        return { from: from.toISOString().split('T')[0], to: now.toISOString().split('T')[0] };
+      }
+      default:
+        return {};
+    }
+  };
+
   const { data: consultasData, isLoading } = useQuery(
     ['consultas', filters],
     () => consultasService.getConsultas({
-      limit: filters.cantidad === 'Todas' ? 100 : parseInt(filters.cantidad),
-      order_by: filters.ordenar_por,
+      limit: filters.cantidad === 'Todas' ? 10000 : parseInt(filters.cantidad),
+      ...getDateRange(filters.mostrar_desde),
     }),
     { keepPreviousData: true }
   );

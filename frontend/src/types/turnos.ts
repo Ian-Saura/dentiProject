@@ -11,6 +11,7 @@ export interface Turno {
   estado: EstadoTurno;
   nombre_paciente?: string;
   apellido_paciente?: string;
+  dni_paciente?: string;
   telefono_paciente?: string;
   email_paciente?: string;
   motivo_consulta?: string;
@@ -31,6 +32,7 @@ export interface TurnoCreate {
   paciente_id?: number;
   nombre_paciente?: string;
   apellido_paciente?: string;
+  dni_paciente?: string;
   telefono_paciente?: string;
   email_paciente?: string;
   motivo_consulta?: string;
@@ -118,10 +120,14 @@ export interface DisponibilidadResponse {
 }
 
 export interface LinkTurnoResponse {
+  id: number;
+  token: string;
   url: string;
   duracion_minutos: number;
   activo: boolean;
-  mensaje_bienvenida?: string;
+  mensaje_personalizado?: string;
+  usos_totales: number;
+  fecha_creacion: string;
 }
 
 export interface EstadisticasTurnos {

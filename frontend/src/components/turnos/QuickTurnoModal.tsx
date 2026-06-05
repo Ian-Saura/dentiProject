@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Phone, Clock, Save, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { dateInputToISO } from '../../utils/dateUtils';
+import api from '../../services/api';
 
 interface Paciente {
   id: number;
@@ -57,10 +58,10 @@ export default function QuickTurnoModal({
   const [pacienteId, setPacienteId] = useState<number | null>(null);
   const [searching, setSearching] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [loadedTurnoId, setLoadedTurnoId] = useState<number | null>(null);
 
-  // Inicializar valores si estamos editando
   useEffect(() => {
-    if (editingTurno) {
+    if (editingTurno && editingTurno.id !== loadedTurnoId) {
       setNombre(editingTurno.nombre_paciente);
       setApellido(editingTurno.apellido_paciente);
       setDni(editingTurno.dni_paciente || '');
@@ -70,8 +71,9 @@ export default function QuickTurnoModal({
       if (editingTurno.nombre_paciente && editingTurno.apellido_paciente) {
         setSearchTerm(`${editingTurno.nombre_paciente} ${editingTurno.apellido_paciente}${editingTurno.dni_paciente ? ' - DNI: ' + editingTurno.dni_paciente : ''}`);
       }
+      setLoadedTurnoId(editingTurno.id);
     }
-  }, [editingTurno]);
+  }, [editingTurno, loadedTurnoId]);
 
   // Buscar pacientes mientras escribe
   useEffect(() => {
@@ -84,22 +86,11 @@ export default function QuickTurnoModal({
 
       setSearching(true);
       try {
-        const response = await fetch(`/v1/pacientes/?q=${encodeURIComponent(searchTerm)}&limit=5`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-          },
+        const response = await api.get('/pacientes/', {
+          params: { q: searchTerm, limit: 5 },
         });
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Pacientes encontrados:', data); // Debug
-          setPacientes(data);
-          setShowDropdown(true); // Mostrar siempre para indicar "sin resultados"
-        } else {
-          console.error('Error en respuesta:', response.status);
-          setPacientes([]);
-          setShowDropdown(false);
-        }
+        setPacientes(response.data);
+        setShowDropdown(true);
       } catch (error) {
         console.error('Error buscando pacientes:', error);
         setPacientes([]);
@@ -151,39 +142,29 @@ export default function QuickTurnoModal({
 
     setLoading(true);
     try {
-      const url = editingTurno ? `/v1/turnos/${editingTurno.id}` : '/v1/turnos/';
-      const method = editingTurno ? 'PATCH' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-        body: JSON.stringify({
-          fecha: dateInputToISO(fechaSeleccionada) || fechaSeleccionada,
-          hora_inicio: horaSeleccionada,
-          duracion_minutos: duracion,
-          paciente_id: pacienteId, // Si seleccionó un paciente existente
-          nombre_paciente: nombre,
-          apellido_paciente: apellido,
-          dni_paciente: dni, // DNI obligatorio
-          telefono_paciente: telefono || undefined,
-        }),
-      });
+      const turnoData = {
+        fecha: dateInputToISO(fechaSeleccionada) || fechaSeleccionada,
+        hora_inicio: horaSeleccionada,
+        duracion_minutos: duracion,
+        paciente_id: pacienteId || undefined,
+        nombre_paciente: nombre,
+        apellido_paciente: apellido,
+        dni_paciente: dni,
+        telefono_paciente: telefono || undefined,
+      };
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Error response:', errorData);
-        throw new Error(errorData.detail || (editingTurno ? 'Error al actualizar turno' : 'Error al crear turno'));
+      if (editingTurno) {
+        await api.patch(`/turnos/${editingTurno.id}`, turnoData);
+      } else {
+        await api.post('/turnos/', turnoData);
       }
 
-      toast.success(editingTurno ? '✅ Turno actualizado exitosamente' : '✅ Turno creado exitosamente');
+      toast.success(editingTurno ? 'Turno actualizado exitosamente' : 'Turno creado exitosamente');
       onSuccess();
       handleClose();
     } catch (error: any) {
-      console.error('Error:', error);
-      toast.error(error.message || (editingTurno ? 'Error al actualizar el turno' : 'Error al crear el turno'));
+      const detail = error.response?.data?.detail;
+      toast.error(detail || (editingTurno ? 'Error al actualizar el turno' : 'Error al crear el turno'));
     } finally {
       setLoading(false);
     }
@@ -192,8 +173,14 @@ export default function QuickTurnoModal({
   const handleClose = () => {
     setNombre('');
     setApellido('');
+    setDni('');
     setTelefono('');
     setDuracion(30);
+    setSearchTerm('');
+    setSelectedPaciente(null);
+    setPacienteId(null);
+    setShowDropdown(false);
+    setLoadedTurnoId(null);
     onClose();
   };
 
@@ -465,12 +452,12 @@ export default function QuickTurnoModal({
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Creando...</span>
+                    <span>{editingTurno ? 'Guardando...' : 'Creando...'}</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>Crear Turno</span>
+                    <span>{editingTurno ? 'Guardar Cambios' : 'Crear Turno'}</span>
                   </>
                 )}
               </button>

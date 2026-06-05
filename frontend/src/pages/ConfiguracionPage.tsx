@@ -143,6 +143,10 @@ const ConfiguracionPage: React.FC = () => {
       queryClient.invalidateQueries('equipos');
       setShowEquipoForm(false);
       resetEquipoForm();
+      toast.success('Equipo creado correctamente');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.detail || 'Error al crear equipo');
     }
   });
 
@@ -164,7 +168,13 @@ const ConfiguracionPage: React.FC = () => {
   );
 
   const deleteEquipoMutation = useMutation(equiposService.deleteEquipo, {
-    onSuccess: () => queryClient.invalidateQueries('equipos')
+    onSuccess: () => {
+      queryClient.invalidateQueries('equipos');
+      toast.success('Equipo eliminado');
+    },
+    onError: () => {
+      toast.error('Error al eliminar equipo');
+    }
   });
 
   // Expense mutations
@@ -173,6 +183,10 @@ const ConfiguracionPage: React.FC = () => {
       queryClient.invalidateQueries('gastos');
       setShowGastoForm(false);
       resetGastoForm();
+      toast.success('Gasto creado correctamente');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.detail || 'Error al crear gasto');
     }
   });
 
@@ -184,12 +198,22 @@ const ConfiguracionPage: React.FC = () => {
         setEditingGasto(null);
         setShowGastoForm(false);
         resetGastoForm();
+        toast.success('Gasto actualizado correctamente');
+      },
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.detail || 'Error al actualizar gasto');
       }
     }
   );
 
   const deleteGastoMutation = useMutation(gastosService.deleteGasto, {
-    onSuccess: () => queryClient.invalidateQueries('gastos')
+    onSuccess: () => {
+      queryClient.invalidateQueries('gastos');
+      toast.success('Gasto eliminado');
+    },
+    onError: () => {
+      toast.error('Error al eliminar gasto');
+    }
   });
 
   // Config mutation

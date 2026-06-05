@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Clock, User, Save } from 'lucide-react';
 import { useMutation, useQueryClient } from 'react-query';
-import { consultasService } from '../services';
+import { turnosService } from '../services';
 import toast from 'react-hot-toast';
 import { dateInputToISO } from '../utils/dateUtils';
 
@@ -31,12 +31,12 @@ const QuickAppointmentModal: React.FC<QuickAppointmentModalProps> = ({
   });
 
   const createMutation = useMutation(
-    (data: any) => consultasService.createConsulta(data),
+    (data: any) => turnosService.createTurno(data),
     {
       onSuccess: () => {
+        queryClient.invalidateQueries('turnos');
         queryClient.invalidateQueries('patient-consultas');
-        queryClient.invalidateQueries('consultas');
-        toast.success('🎉 Turno agendado exitosamente');
+        toast.success('Turno agendado exitosamente');
         if (onSuccess) {
           onSuccess();
         }
@@ -52,29 +52,23 @@ const QuickAppointmentModal: React.FC<QuickAppointmentModalProps> = ({
     e.preventDefault();
     
     if (!formData.fecha) {
-      toast.error('❌ La fecha es obligatoria');
+      toast.error('La fecha es obligatoria');
       return;
     }
     
     if (!formData.hora) {
-      toast.error('❌ La hora es obligatoria');
+      toast.error('La hora es obligatoria');
       return;
     }
 
-    // Combine date and time
     const fechaCorregida = dateInputToISO(formData.fecha) || formData.fecha;
-    const fechaHora = `${fechaCorregida}T${formData.hora}`;
     
     const dataToSend = {
       paciente_id: patientId,
-      fecha_hora: fechaHora,
-      estado: 'pendiente',
-      tipo: 'turno',
-      notas_clinicas: formData.notas || `Turno agendado para ${patientName}`,
-      // Optional fields for minimal turno
-      prestaciones: [],
-      monto_total: 0,
-      metodo_pago: 'pendiente'
+      fecha: fechaCorregida,
+      hora_inicio: formData.hora,
+      duracion_minutos: parseInt(formData.duracion),
+      motivo_consulta: formData.notas || undefined,
     };
 
     createMutation.mutate(dataToSend);
